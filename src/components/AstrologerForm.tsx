@@ -259,10 +259,17 @@ export default function AstrologerForm({ mode, initialData, onSnack }: Props) {
         setSlotDurations(slotsData?.slots || []);
 
         if (isEdit && initialData?._id) {
-          const cpRes = await fetch(`${base_url}api/admin/get_consultation_price?astrologerId=${initialData._id}`);
+          const cpRes = await fetch(`${base_url}api/admin/get-consultation-price`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ astrologerId: initialData._id }),
+          });
+
           if (cpRes.ok) {
             const cpData = await cpRes.json();
             setConsultationPrices(cpData?.data || []);
+          } else {
+            console.error('Failed to fetch consultation prices');
           }
         }
       } catch (err) {
@@ -357,26 +364,22 @@ export default function AstrologerForm({ mode, initialData, onSnack }: Props) {
 
     const formData = new FormData();
 
-    // ---- BASIC FIELDS ----
     Object.entries(form).forEach(([key, value]) => {
       if (Array.isArray(value)) value.forEach(v => formData.append(`${key}[]`, v));
       else formData.append(key, value);
     });
 
-    // ---- FILES ----
     if (image.bytes) formData.append('profileImage', image.bytes);
     if (bankProof.bytes) formData.append('bank_proof_image', bankProof.bytes);
     if (idProof.bytes) formData.append('id_proof_image', idProof.bytes);
     bulkImages.forEach(img => img.bytes && formData.append('multipleImages', img.bytes));
     bulkVideos.forEach(vid => vid.bytes && formData.append('multipleVideos', vid.bytes));
 
-    // ---- ARRAY FIELDS ----
     selectedSkills.forEach(id => formData.append('skill[]', id));
     selectedRemedies.forEach(id => formData.append('remedies[]', id));
     selectedMainExpertise.forEach(id => formData.append('mainExpertise[]', id));
     selectedLanguages.forEach(lang => formData.append('language[]', lang));
 
-    // ---- CONSULTATION PRICES ----
     consultationPrices.forEach((cp, i) => {
       formData.append(`consultationPrices[${i}][duration]`, cp.duration._id);
       formData.append(`consultationPrices[${i}][price]`, cp.price.toString());
@@ -831,6 +834,7 @@ export default function AstrologerForm({ mode, initialData, onSnack }: Props) {
           slotDurations={slotDurations}
           consultationPrices={consultationPrices}
           setConsultationPrices={setConsultationPrices}
+          onSnack={onSnack}
         />
       )}
     </Grid>
@@ -838,64 +842,164 @@ export default function AstrologerForm({ mode, initialData, onSnack }: Props) {
 }
 
 /* ────────────────────── CONSULTATION PRICE SECTION ────────────────────── */
-const ConsultationPriceSection = ({
-  astrologerId,
-  slotDurations,
-  consultationPrices,
-  setConsultationPrices,
-}: {
+interface ConsultationPriceSectionProps {
   astrologerId: string;
   slotDurations: SlotDuration[];
   consultationPrices: ConsultationPrice[];
   setConsultationPrices: React.Dispatch<React.SetStateAction<ConsultationPrice[]>>;
+  onSnack: (snack: { open: boolean; message: string }) => void;
+}
+
+const ConsultationPriceSection: React.FC<ConsultationPriceSectionProps> = ({
+  astrologerId,
+  slotDurations,
+  consultationPrices,
+  setConsultationPrices,
+  onSnack,
 }) => {
   const [duration, setDuration] = useState('');
   const [price, setPrice] = useState('');
+  const [adding, setAdding] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
-  const handleAdd = () => {
-    if (!duration || !price) return;
-    const newPrice: ConsultationPrice = {
-      _id: `cp${Date.now()}`,
-      duration: slotDurations.find(s => s._id === duration)!,
-      price: Number(price),
-    };
-    setConsultationPrices(prev => [...prev, newPrice]);
-    setDuration('');
-    setPrice('');
+  const handleAdd = async () => {
+    if (!duration || !price) {
+      onSnack({ open: true, message: 'Select duration and enter price' });
+      return;
+    }
+
+    // prevent duplicate duration
+    if (consultationPrices.some(p => p.duration._id === duration)) {
+      onSnack({ open: true, message: 'This duration already exists' });
+      return;
+    }
+
+    setAdding(true);
+    try {
+      const res = await fetch(`${base_url}api/admin/consultation-price`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          astrologerId,
+          durationId: duration,
+          price: Number(price),
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        const newPrice: ConsultationPrice = {
+          _id: data?.data?._id || `cp${Date.now()}`,
+          duration: slotDurations.find(s => s._id === duration)!,
+          price: Number(price),
+        };
+        setConsultationPrices(prev => [...prev, newPrice]);
+        setDuration('');
+        setPrice('');
+        onSnack({ open: true, message: 'Price added' });
+      } else {
+        onSnack({ open: true, message: data.message || 'Failed to add price' });
+      }
+    } catch (err) {
+      onSnack({ open: true, message: 'Network error' });
+    } finally {
+      setAdding(false);
+    }
   };
 
-  const handleDelete = (durationId: string) => {
-    setConsultationPrices(prev => prev.filter(p => p.duration._id !== durationId));
+  const handleDelete = async (durationId: string) => {
+    setDeleting(durationId);
+    try {
+      const res = await fetch(`${base_url}api/admin/delete-consultation-price`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ astrologerId, durationId }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setConsultationPrices(prev => prev.filter(p => p.duration._id !== durationId));
+        onSnack({ open: true, message: 'Price removed' });
+      } else {
+        onSnack({ open: true, message: data.message || 'Failed to delete' });
+      }
+    } catch (err) {
+      onSnack({ open: true, message: 'Network error' });
+    } finally {
+      setDeleting(null);
+    }
   };
 
   return (
     <Box mt={4} p={3} bgcolor="#fff" borderRadius={2} boxShadow={1}>
       <Typography variant="h6">Consultation Price</Typography>
-      <Grid container spacing={2} mt={2}>
-        <Grid item xs={6}>
+
+      <Grid container spacing={2} mt={2} alignItems="flex-end">
+        <Grid item xs={5}>
           <FormControl fullWidth>
             <InputLabel>Duration</InputLabel>
-            <Select value={duration} onChange={e => setDuration(e.target.value)}>
-              {slotDurations.filter(s => s.active).map(s => (
-                <MenuItem key={s._id} value={s._id}>{s.slotDuration}</MenuItem>
-              ))}
+            <Select value={duration} onChange={e => setDuration(e.target.value)} disabled={adding}>
+              {slotDurations
+                .filter(s => s.active && !consultationPrices.some(p => p.duration._id === s._id))
+                .map(s => (
+                  <MenuItem key={s._id} value={s._id}>
+                    {s.slotDuration}
+                  </MenuItem>
+                ))}
             </Select>
           </FormControl>
         </Grid>
+
         <Grid item xs={4}>
-          <TextField fullWidth label="Price" type="number" value={price} onChange={e => setPrice(e.target.value)} />
+          <TextField
+            fullWidth
+            label="Price (INR)"
+            type="number"
+            value={price}
+            onChange={e => setPrice(e.target.value)}
+            disabled={adding}
+            inputProps={{ min: 0, step: 1 }}
+          />
         </Grid>
-        <Grid item xs={2}>
-          <Button variant="contained" onClick={handleAdd}>Add</Button>
+
+        <Grid item xs={3}>
+          <Button
+            variant="contained"
+            onClick={handleAdd}
+            disabled={adding || !duration || !price}
+            startIcon={adding ? <CircularProgress size={16} /> : null}
+          >
+            {adding ? 'Adding…' : 'Add'}
+          </Button>
         </Grid>
       </Grid>
+
       <Box mt={3}>
-        {consultationPrices.map((p, i) => (
-          <Box key={p._id} display="flex" justifyContent="space-between" alignItems="center" p={1} borderBottom="1px solid #eee">
-            <Typography>{i + 1}. {p.duration.slotDuration} – ₹{p.price}</Typography>
-            <IconButton onClick={() => handleDelete(p.duration._id)}><DeleteSvg /></IconButton>
-          </Box>
-        ))}
+        {consultationPrices.length === 0 ? (
+          <Typography color="textSecondary">No consultation prices set yet.</Typography>
+        ) : (
+          consultationPrices.map((p, i) => (
+            <Box
+              key={p.duration._id}
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
+              p={1}
+              borderBottom="1px solid #eee"
+            >
+              <Typography>
+                {i + 1}. {p.duration.slotDuration} – ₹{p.price}
+              </Typography>
+              <IconButton
+                onClick={() => handleDelete(p.duration._id)}
+                disabled={deleting === p.duration._id}
+                size="small"
+              >
+                {deleting === p.duration._id ? <CircularProgress size={20} /> : <DeleteSvg />}
+              </IconButton>
+            </Box>
+          ))
+        )}
       </Box>
     </Box>
   );

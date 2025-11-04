@@ -110,8 +110,6 @@ interface EditPayload {
   status?: "pending" | "paid" | "processing" | "delivered";
 }
 
-const API_BASE_URL = "https://api.acharyalavbhushan.com";
-
 const ReportOrders: React.FC = () => {
   // Get today's date in YYYY-MM-DD format
   const getTodayDate = () => moment().format("YYYY-MM-DD");
@@ -204,7 +202,7 @@ const ReportOrders: React.FC = () => {
       if (!filters.includeDeleted) qs.delete("includeDeleted");
 
       const response = await fetch(
-        `${API_BASE_URL}/api/admin/life-journey-orders?${qs.toString()}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/life-journey-orders?${qs.toString()}`,
         { headers: getAuthHeaders() }
       );
 
@@ -241,7 +239,7 @@ const ReportOrders: React.FC = () => {
       });
       
       const response = await fetch(
-        `${API_BASE_URL}/api/admin/life-journey-orders/stats?${qs.toString()}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/life-journey-orders/stats?${qs.toString()}`,
         { headers: getAuthHeaders() }
       );
 
@@ -362,7 +360,7 @@ const ReportOrders: React.FC = () => {
     try {
       const idOrOrder = activeRow?._id || activeRow?.orderID;
       const response = await fetch(
-        `${API_BASE_URL}/api/admin/life-journey-orders/${idOrOrder}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/life-journey-orders/${idOrOrder}`,
         {
           method: "PATCH",
           headers: getAuthHeaders(),
@@ -402,7 +400,7 @@ const ReportOrders: React.FC = () => {
     try {
       const idOrOrder = row?._id || row?.orderID;
       const response = await fetch(
-        `${API_BASE_URL}/api/admin/life-journey-orders/${idOrOrder}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/life-journey-orders/${idOrOrder}`,
         {
           method: "DELETE",
           headers: getAuthHeaders(),
@@ -432,7 +430,7 @@ const ReportOrders: React.FC = () => {
     try {
       const idOrOrder = row?._id || row?.orderID;
       const response = await fetch(
-        `${API_BASE_URL}/api/admin/life-journey-orders/${idOrOrder}/restore`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/life-journey-orders/${idOrOrder}/restore`,
         {
           method: "POST",
           headers: getAuthHeaders(),
@@ -552,7 +550,7 @@ const ReportOrders: React.FC = () => {
       });
       
       const res = await fetch(
-        `${API_BASE_URL}/api/admin/life-journey-orders/export?${qs.toString()}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/life-journey-orders/export?${qs.toString()}`,
         {
           method: "POST",
           headers: { Authorization: "Bearer " + token },
