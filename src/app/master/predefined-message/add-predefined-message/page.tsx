@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { base_url } from '@/lib/api-routes';
 import Swal from 'sweetalert2';
 
 type MessageType = 'Astrologer' | 'Customer' | '';
 
-const AddPredefinedMessage = () => {
+// Separate component that uses useSearchParams
+function AddPredefinedMessageForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -141,144 +142,165 @@ const AddPredefinedMessage = () => {
   };
 
   return (
-    <>
-      {/* Form Section */}
+    <div
+      style={{
+        padding: '20px',
+        backgroundColor: '#fff',
+        marginBottom: '20px',
+        boxShadow: '0px 0px 5px lightgrey',
+        borderRadius: '10px',
+      }}
+    >
       <div
         style={{
-          padding: '20px',
-          backgroundColor: '#fff',
-          marginBottom: '20px',
-          boxShadow: '0px 0px 5px lightgrey',
-          borderRadius: '10px',
+          fontSize: '22px',
+          fontWeight: '500',
+          color: '#000',
+          marginBottom: '30px',
         }}
       >
-        <div
-          style={{
-            fontSize: '22px',
-            fontWeight: '500',
-            color: '#000',
-            marginBottom: '30px',
-          }}
-        >
-          {inputFieldDetail.mode === 'Add' ? 'Add Predefined Message' : 'Edit Predefined Message'}
-        </div>
-
-        <form onSubmit={handleSubmit}>
-          <div style={{ display: 'grid', gap: '20px' }}>
-            {/* Select Type */}
-            <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
-                Select Type <span style={{ color: 'red' }}>*</span>
-              </label>
-              <select
-                name="type"
-                value={inputFieldDetail.type}
-                onChange={handleInputField}
-                onFocus={() => handleInputFieldError('type', '')}
-                disabled={isSubmitting}
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  borderRadius: '6px',
-                  border: inputFieldError.type ? '1px solid red' : '1px solid #ccc',
-                  fontSize: '15px',
-                  outline: 'none',
-                  backgroundColor: '#fff',
-                  cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                  opacity: isSubmitting ? 0.6 : 1,
-                }}
-              >
-                <option value="" disabled>---Select Type---</option>
-                <option value="Astrologer">Astrologer</option>
-                <option value="Customer">Customer</option>
-              </select>
-              {inputFieldError.type && (
-                <p style={{ color: 'red', fontSize: '13px', margin: '5px 0 0' }}>
-                  {inputFieldError.type}
-                </p>
-              )}
-            </div>
-
-            {/* Message */}
-            <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
-                Message <span style={{ color: 'red' }}>*</span>
-              </label>
-              <textarea
-                name="message"
-                value={inputFieldDetail.message}
-                onChange={handleInputField}
-                onFocus={() => handleInputFieldError('message', '')}
-                placeholder="Enter your predefined message..."
-                rows={5}
-                disabled={isSubmitting}
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  borderRadius: '6px',
-                  border: inputFieldError.message ? '1px solid red' : '1px solid #ccc',
-                  fontSize: '15px',
-                  outline: 'none',
-                  resize: 'vertical',
-                  fontFamily: 'inherit',
-                  lineHeight: '1.5',
-                  cursor: isSubmitting ? 'not-allowed' : 'text',
-                  opacity: isSubmitting ? 0.6 : 1,
-                }}
-              />
-              {inputFieldError.message && (
-                <p style={{ color: 'red', fontSize: '13px', margin: '5px 0 0' }}>
-                  {inputFieldError.message}
-                </p>
-              )}
-            </div>
-
-            {/* Submit and Cancel Buttons */}
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                style={{
-                  fontWeight: '500',
-                  backgroundColor: isSubmitting ? '#ccc' : '#e63946',
-                  color: '#fff',
-                  padding: '10px 20px',
-                  borderRadius: '5px',
-                  cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                  fontSize: '15px',
-                  border: 'none',
-                  outline: 'none',
-                }}
-              >
-                {isSubmitting 
-                  ? (inputFieldDetail.mode === 'Add' ? 'Creating...' : 'Updating...') 
-                  : (inputFieldDetail.mode === 'Add' ? 'Add Message' : 'Update Message')
-                }
-              </button>
-              
-              <button
-                type="button"
-                onClick={handleCancel}
-                disabled={isSubmitting}
-                style={{
-                  fontWeight: '500',
-                  backgroundColor: '#6b7280',
-                  color: '#fff',
-                  padding: '10px 20px',
-                  borderRadius: '5px',
-                  cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                  fontSize: '15px',
-                  border: 'none',
-                  outline: 'none',
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </form>
+        {inputFieldDetail.mode === 'Add' ? 'Add Predefined Message' : 'Edit Predefined Message'}
       </div>
-    </>
+
+      <form onSubmit={handleSubmit}>
+        <div style={{ display: 'grid', gap: '20px' }}>
+          {/* Select Type */}
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+              Select Type <span style={{ color: 'red' }}>*</span>
+            </label>
+            <select
+              name="type"
+              value={inputFieldDetail.type}
+              onChange={handleInputField}
+              onFocus={() => handleInputFieldError('type', '')}
+              disabled={isSubmitting}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                borderRadius: '6px',
+                border: inputFieldError.type ? '1px solid red' : '1px solid #ccc',
+                fontSize: '15px',
+                outline: 'none',
+                backgroundColor: '#fff',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                opacity: isSubmitting ? 0.6 : 1,
+              }}
+            >
+              <option value="" disabled>---Select Type---</option>
+              <option value="Astrologer">Astrologer</option>
+              <option value="Customer">Customer</option>
+            </select>
+            {inputFieldError.type && (
+              <p style={{ color: 'red', fontSize: '13px', margin: '5px 0 0' }}>
+                {inputFieldError.type}
+              </p>
+            )}
+          </div>
+
+          {/* Message */}
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+              Message <span style={{ color: 'red' }}>*</span>
+            </label>
+            <textarea
+              name="message"
+              value={inputFieldDetail.message}
+              onChange={handleInputField}
+              onFocus={() => handleInputFieldError('message', '')}
+              placeholder="Enter your predefined message..."
+              rows={5}
+              disabled={isSubmitting}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                borderRadius: '6px',
+                border: inputFieldError.message ? '1px solid red' : '1px solid #ccc',
+                fontSize: '15px',
+                outline: 'none',
+                resize: 'vertical',
+                fontFamily: 'inherit',
+                lineHeight: '1.5',
+                cursor: isSubmitting ? 'not-allowed' : 'text',
+                opacity: isSubmitting ? 0.6 : 1,
+              }}
+            />
+            {inputFieldError.message && (
+              <p style={{ color: 'red', fontSize: '13px', margin: '5px 0 0' }}>
+                {inputFieldError.message}
+              </p>
+            )}
+          </div>
+
+          {/* Submit and Cancel Buttons */}
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              style={{
+                fontWeight: '500',
+                backgroundColor: isSubmitting ? '#ccc' : '#e63946',
+                color: '#fff',
+                padding: '10px 20px',
+                borderRadius: '5px',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                fontSize: '15px',
+                border: 'none',
+                outline: 'none',
+              }}
+            >
+              {isSubmitting 
+                ? (inputFieldDetail.mode === 'Add' ? 'Creating...' : 'Updating...') 
+                : (inputFieldDetail.mode === 'Add' ? 'Add Message' : 'Update Message')
+              }
+            </button>
+            
+            <button
+              type="button"
+              onClick={handleCancel}
+              disabled={isSubmitting}
+              style={{
+                fontWeight: '500',
+                backgroundColor: '#6b7280',
+                color: '#fff',
+                padding: '10px 20px',
+                borderRadius: '5px',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                fontSize: '15px',
+                border: 'none',
+                outline: 'none',
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+// Main component with Suspense boundary
+const AddPredefinedMessage = () => {
+  return (
+    <Suspense fallback={
+      <div style={{
+        padding: '20px',
+        backgroundColor: '#fff',
+        marginBottom: '20px',
+        boxShadow: '0px 0px 5px lightgrey',
+        borderRadius: '10px',
+        textAlign: 'center',
+        minHeight: '200px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <div>Loading...</div>
+      </div>
+    }>
+      <AddPredefinedMessageForm />
+    </Suspense>
   );
 };
 
