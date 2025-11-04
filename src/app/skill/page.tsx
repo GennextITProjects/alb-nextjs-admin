@@ -13,10 +13,9 @@ interface Skill {
   updatedAt: string;
 }
 
-interface ApiResponse<T> {
-  skills: never[];
+interface ApiResponse {
+  skills: Skill[];
   success: boolean;
-  data: T;
   message?: string;
 }
 
@@ -30,15 +29,21 @@ const Skill = () => {
     try {
       setLoading(true);
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/get-skill`);
-      const data: ApiResponse<Skill[]> = await response.json();
+      const data: ApiResponse = await response.json();
       
       if (data.success) {
-        setSkillData(data.skills  || []);
+        // Sort in descending order by createdAt (newest first)
+        const sortedData = [...(data.skills || [])].sort((a, b) => {
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
+        setSkillData(sortedData);
       } else {
         console.error('Failed to fetch skills:', data.message);
+        setSkillData([]);
       }
     } catch (error) {
       console.error('Error fetching skills:', error);
+      setSkillData([]);
     } finally {
       setLoading(false);
     }
@@ -51,7 +56,7 @@ const Skill = () => {
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d33',
-      cancelButtonColor: '#d1d5db',
+      cancelButtonColor: '#6b7280',
       confirmButtonText: 'Delete',
       cancelButtonText: 'Cancel',
       reverseButtons: true
@@ -59,6 +64,16 @@ const Skill = () => {
 
     if (result.isConfirmed) {
       try {
+        // Show loading
+        Swal.fire({
+          title: 'Deleting...',
+          text: 'Please wait',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/delete-skill`, {
           method: 'POST',
           headers: {
@@ -70,25 +85,27 @@ const Skill = () => {
         const data = await response.json();
         
         if (data.success) {
-          Swal.fire(
-            'Deleted!',
-            'Skill has been deleted successfully.',
-            'success'
-          );
+          await Swal.fire({
+            icon: 'success',
+            title: 'Deleted!',
+            text: 'Skill has been deleted successfully.',
+            timer: 2000,
+            showConfirmButton: false
+          });
           getSkill();
         } else {
-          Swal.fire(
-            'Error!',
-            data.message || 'Failed to delete skill.',
-            'error'
-          );
+          await Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: data.message || 'Failed to delete skill.'
+          });
         }
       } catch (error) {
-        Swal.fire(
-          'Error!',
-          'Something went wrong while deleting skill.',
-          'error'
-        );
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error!',
+          text: 'Something went wrong while deleting skill.'
+        });
         console.error('Error deleting skill:', error);
       }
     }
@@ -98,7 +115,8 @@ const Skill = () => {
   const columns = [
     { 
       name: 'S.No.', 
-      selector: (row: Skill, index?: number) => (index || 0) + 1 
+      selector: (row: Skill, index?: number) => (index || 0) + 1,
+      width: '80px'
     },
     { 
       name: 'Main Expertise', 
@@ -128,7 +146,8 @@ const Skill = () => {
           </div>
         </div>
       ),
-      width: "180px"
+      width: "180px",
+      center: true
     },
   ];
 
