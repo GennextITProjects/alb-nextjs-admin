@@ -76,9 +76,9 @@ const AdminEarning: React.FC = () => {
   // DataTable Columns
   const columns = [
     {
-      name: 'S.No.',
+      name: '',
       selector: (row: AdminEarningRow) => adminEarningData.indexOf(row) + 1,
-      width: '80px',
+      width: '40px',
     },
     {
       name: 'Type',
@@ -88,14 +88,14 @@ const AdminEarning: React.FC = () => {
           {row?.type === 'live_video_call' ? 'Live Call' : row?.type}
         </div>
       ),
-      width: '150px',
+      width: '120px',
     },
     {
       name: 'Astrologers',
       selector: (row: AdminEarningRow) => {
         if (!row?.astrologerId) return '';
         if (typeof row.astrologerId === 'object' && row.astrologerId !== null) {
-          return (row.astrologerId as AstrologerDetails).astrologerName || '';
+          return (row.astrologerId as AstrologerDetails).astrologerName || 'N/A';
         }
         return 'N/A';
       },

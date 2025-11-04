@@ -20,7 +20,7 @@ const Language = () => {
     // DataTable Columns
     const categoryColumns = [
         { 
-            name: 'S.No.', 
+            name: 'S.No', 
             selector: (row: LanguageData, index?: number) => (index || 0) + 1, 
             width: '80px'
         },

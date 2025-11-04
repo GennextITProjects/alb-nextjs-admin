@@ -1,3 +1,4 @@
+//src/routes.ts
 import { Role } from "./validaton-schema";
 
 export const DEFAULT_LOGIN_REDIRECT: string = "/dashboard";

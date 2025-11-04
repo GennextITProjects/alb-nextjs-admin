@@ -1,3 +1,4 @@
+//src/components/layout/header.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -77,18 +78,18 @@ const Header: React.FC<HeaderProps> = ({ isSidebarOpen, onToggleSidebar }) => {
   };
 
   // Check user data and redirect if not logged in
-  useEffect(() => {
-    try {
-      const userData = localStorage.getItem("userDetails");
-      setData(userData);
-      if (!userData) {
-        router.push("/");
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }, [data, router]);
-
+// In header.tsx
+useEffect(() => {
+  if (typeof window === 'undefined') return;
+  
+  try {
+    const userData = localStorage.getItem("userDetails");
+    setData(userData);
+    // Don't redirect here - let middleware handle it
+  } catch (e) {
+    console.error(e);
+  }
+}, []);
   // Handle sidebar toggle on window resize
   // useEffect(() => {
   //   const handleResize = () => {

@@ -113,8 +113,8 @@ interface EditPayload {
 const API_BASE_URL = "https://api.acharyalavbhushan.com";
 
 const ReportOrders: React.FC = () => {
-  // Get today's date in DD/MM/YYYY format
-  const getTodayDate = () => moment().format("DD/MM/YYYY");
+  // Get today's date in YYYY-MM-DD format
+  const getTodayDate = () => moment().format("YYYY-MM-DD");
   
   // Calculate date ranges
   const getDateRange = (range: string) => {
@@ -122,18 +122,18 @@ const ReportOrders: React.FC = () => {
     switch (range) {
       case "today":
         return {
-          from: today.format("DD/MM/YYYY"),
-          to: today.format("DD/MM/YYYY")
+          from: today.format("YYYY-MM-DD"),
+          to: today.format("YYYY-MM-DD")
         };
       case "weekly":
         return {
-          from: today.subtract(7, 'days').format("DD/MM/YYYY"),
-          to: moment().format("DD/MM/YYYY")
+          from: today.subtract(7, 'days').format("YYYY-MM-DD"),
+          to: moment().format("YYYY-MM-DD")
         };
       case "monthly":
         return {
-          from: today.subtract(30, 'days').format("DD/MM/YYYY"),
-          to: moment().format("DD/MM/YYYY")
+          from: today.subtract(30, 'days').format("YYYY-MM-DD"),
+          to: moment().format("YYYY-MM-DD")
         };
       default:
         return { from: "", to: "" };
@@ -242,6 +242,7 @@ const ReportOrders: React.FC = () => {
       
       const response = await fetch(
         `${API_BASE_URL}/api/admin/life-journey-orders/stats?${qs.toString()}`,
+        { headers: getAuthHeaders() }
       );
 
       if (!response.ok) return;
@@ -504,7 +505,7 @@ const ReportOrders: React.FC = () => {
           r.paymentTxnId,
           r.razorpayOrderId,
           r.paymentAt
-            ? moment.tz(r.paymentAt, "Asia/Kolkata").format("DD/MM/YYYY hh:mm a")
+            ? moment.tz(r.paymentAt, "Asia/Kolkata").format("YYYY-MM-DD hh:mm a")
             : "",
           r.astroConsultation ? "Yes" : "No",
           r.consultationDate || "",
@@ -516,10 +517,10 @@ const ReportOrders: React.FC = () => {
           r.utm_term || "",
           r.utm_content || "",
           r.createdAt
-            ? moment.tz(r.createdAt, "Asia/Kolkata").format("DD/MM/YYYY hh:mm a")
+            ? moment.tz(r.createdAt, "Asia/Kolkata").format("YYYY-MM-DD hh:mm a")
             : "",
           r.deletedAt
-            ? moment.tz(r.deletedAt, "Asia/Kolkata").format("DD/MM/YYYY hh:mm a")
+            ? moment.tz(r.deletedAt, "Asia/Kolkata").format("YYYY-MM-DD hh:mm a")
             : "",
         ]
           .map((field) => `"${String(field).replace(/"/g, '""')}"`)
@@ -580,15 +581,15 @@ const ReportOrders: React.FC = () => {
   const columns = useMemo(
     () => [
       {
-        name: "S.No.",
+        name: "",
         selector: (_row: Order, idx?: number) =>
           (page - 1) * filters.limit + (idx || 0) + 1,
-        width: "70px",
+        width: "40px",
       },
       {
         name: "Order ID",
         selector: (row: Order) => row?.orderID || "—",
-        width: "120px",
+        width: "110px",
       },
       {
         name: "Plan",
@@ -598,7 +599,7 @@ const ReportOrders: React.FC = () => {
       {
         name: "Amount",
         selector: (row: Order) => row?.amount || "—",
-        width: "140px",
+        width: "120px",
       },
       {
         name: "Status",
@@ -606,12 +607,12 @@ const ReportOrders: React.FC = () => {
         cell: (row: Order) => (
           <span className="capitalize">{row?.status || "—"}</span>
         ),
-        width: "120px",
+        width: "80px",
       },
       {
         name: "Lang",
         selector: (row: Order) => row?.reportLanguage || "—",
-        width: "120px",
+        width: "90px",
       },
       {
         name: "Name",
@@ -621,22 +622,22 @@ const ReportOrders: React.FC = () => {
       {
         name: "WhatsApp",
         selector: (row: Order) => row?.whatsapp || "—",
-        width: "150px",
+        width: "120px",
       },
       {
         name: "Email",
         selector: (row: Order) => row?.email || "—",
-        width: "260px",
+        width: "240px",
       },
       {
         name: "Astro",
         selector: (row: Order) => (row?.astroConsultation ? "Yes" : "No"),
-        width: "100px",
+        width: "90px",
       },
       {
         name: "Express",
         selector: (row: Order) => (row?.expressDelivery ? "Yes" : "No"),
-        width: "110px",
+        width: "90px",
       },
       {
         name: "Paid At",
@@ -646,7 +647,7 @@ const ReportOrders: React.FC = () => {
                 .tz(row.paymentAt, "Asia/Kolkata")
                 .format("DD/MM/YYYY hh:mm a")
             : "—",
-        width: "200px",
+        width: "170px",
       },
       {
         name: "Created",
@@ -656,7 +657,7 @@ const ReportOrders: React.FC = () => {
                 .tz(row.createdAt, "Asia/Kolkata")
                 .format("DD/MM/YYYY hh:mm a")
             : "—",
-        width: "200px",
+        width: "170px",
       },
       {
         name: "Action",
@@ -986,7 +987,7 @@ const ReportOrders: React.FC = () => {
               ["whatsapp", "WhatsApp"],
               ["gender", "Gender"],
               ["reportLanguage", "Report Language"],
-              ["dateOfBirth", "DOB (DD/MM/YYYY)"],
+              ["dateOfBirth", "DOB (YYYY-MM-DD)"],
               ["timeOfBirth", "TOB (HH:mm)"],
               ["placeOfBirth", "Place of Birth"],
               ["placeOfBirthPincode", "POB Pincode"],
