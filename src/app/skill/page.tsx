@@ -126,7 +126,7 @@ const Skill = () => {
     },
     { 
       name: 'Created Date', 
-      selector: (row: Skill) => moment(row?.createdAt)?.format('DD-MMM-YYYY @ hh:mm a') 
+      selector: (row: Skill) => moment(row?.createdAt)?.format('DD/MM/YYYY @ hh:mm a') 
     },
     {
       name: 'Action',
@@ -156,7 +156,7 @@ const Skill = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div >
       <MainDatatable 
         data={skillData} 
         columns={columns} 
