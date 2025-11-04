@@ -163,13 +163,7 @@ const AdminEarning: React.FC = () => {
   return (
     <>
       <div
-        style={{
-          padding: '20px',
-          backgroundColor: '#fff',
-          marginBottom: '20px',
-          boxShadow: '0px 0px 5px lightgrey',
-          borderRadius: '10px',
-        }}
+       
       >
         <MainDatatable
           data={adminEarningData}

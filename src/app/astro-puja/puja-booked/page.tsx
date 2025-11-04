@@ -133,7 +133,9 @@ const PujaBooked: React.FC = () => {
         >
           <ViewSvg />
         </div>
-      )
+      ),
+      width: "180px",
+      center: true
     },
   ];
 
