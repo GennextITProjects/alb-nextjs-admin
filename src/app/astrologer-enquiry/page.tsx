@@ -21,7 +21,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { DeepSearchSpace } from '@/utils/common-function';
 
 import { Color } from '@/assets/colors';
-import MainDatatable from '@/components/datatable/MainDatatable';
+import MainDatatable from '@/components/common/MainDatatable';
 import { api_url, base_url, get_enquiry_astrologer } from '@/lib/api-routes';
 import { EditSvg, CrossSvg } from "@/components/svgs/page";
 
@@ -289,11 +289,10 @@ const AstrologerEnquiryClient = () => {
       cell: (row: Astrologer) => (
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
           <div
-            onClick={() =>
-              router.push(
-                `/astrologer/edit-astrologer?mode=Edit&state=${encodeURIComponent(JSON.stringify(row))}`
-              )
-            }
+             onClick={(e) => {
+                e.stopPropagation(); // Prevent row click if in a table
+                router.push(`/astrologer/edit-astrologer?id=${row._id}`);
+              }}
             style={{ cursor: 'pointer' }}
           >
             <EditSvg />
@@ -310,50 +309,16 @@ const AstrologerEnquiryClient = () => {
   // -----------------------------------------------------------------
   return (
     <>
-      <div
-        style={{
-          padding: '20px',
-          backgroundColor: '#fff',
-          marginBottom: '20px',
-          boxShadow: '0px 0px 5px lightgrey',
-          borderRadius: '10px',
-        }}
-      >
-        <DatatableHeading title="Astrologer Enquiry" data={astrologers} />
-
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            gap: '20px',
-            alignItems: 'center',
-            marginBottom: '20px',
-          }}
-        >
-          <input
-            type="search"
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            placeholder="Search your data..."
-            style={{
-              padding: '5px 10px',
-              borderRadius: '5px',
-              border: '1px solid #ccc',
-              boxShadow: '0px 0px 5px rgba(0,0,0,0.1)',
-              width: '100%',
-              maxWidth: '250px',
-              fontSize: '15px',
-              outline: 'none',
-            }}
-          />
-        </div>
-
+      
         <MainDatatable 
           columns={columns} 
           data={filteredData} 
+          title="Astrologer Enquiry"
+          url="/astrologer/astrologer-enquiry"
           isLoading={isLoading} 
+           addButtonActive={false} 
         />
-      </div>
+    
 
       {/* Wallet Modal */}
       <Dialog

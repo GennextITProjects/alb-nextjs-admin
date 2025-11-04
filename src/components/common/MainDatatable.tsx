@@ -522,7 +522,7 @@ const MainDatatable: React.FC<MainDatatableProps> = ({
                 </div>
               )}
 
-              {url && (
+              {url && addButtonActive &&(
                 <button 
                   onClick={onClickAdd}
                   className="font-medium bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded-2xl flex items-center gap-2 cursor-pointer transition-colors duration-200 text-sm border-none"

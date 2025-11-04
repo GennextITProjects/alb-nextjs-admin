@@ -1,15 +1,22 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import moment from 'moment';
-import { Avatar, Dialog, DialogContent, DialogTitle, IconButton } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import { TableColumn } from 'react-data-table-component';
+import React, { useEffect, useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import moment from "moment";
+import {
+  Avatar,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import { TableColumn } from "react-data-table-component";
+import Swal from "sweetalert2";
 import MainDatatable from "@/components/common/MainDatatable";
-import DatatableHeading from '@/components/datatable/DatatableHeading';
-import { base_url } from '@/lib/api-routes';
-import { DeleteSvg, EditSvg } from '@/components/svgs/page';
+import DatatableHeading from "@/components/datatable/DatatableHeading";
+import { base_url } from "@/lib/api-routes";
+import { DeleteSvg, EditSvg } from "@/components/svgs/page";
 
 // ---------------------------------------------------------------------
 // Types
@@ -43,7 +50,7 @@ interface TextModalState {
 // ---------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------
-const IMG_URL = process.env.NEXT_PUBLIC_IMG_URL || '/uploads/';
+const IMG_URL = process.env.NEXT_PUBLIC_IMG_URL || "/uploads/";
 
 // ---------------------------------------------------------------------
 // Utility: Deep Search
@@ -64,12 +71,12 @@ const AstroblogPage: React.FC = () => {
 
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [filteredData, setFilteredData] = useState<Blog[]>([]);
-  const [searchText, setSearchText] = useState('');
+  const [searchText, setSearchText] = useState("");
   const [loading, setLoading] = useState(true);
   const [textModal, setTextModal] = useState<TextModalState>({
     open: false,
-    title: '',
-    text: '',
+    title: "",
+    text: "",
   });
 
   // Fetch Blogs
@@ -77,39 +84,74 @@ const AstroblogPage: React.FC = () => {
     try {
       setLoading(true);
       const res = await fetch(`${base_url}api/admin/get_astro_blogs`);
-      if (!res.ok) throw new Error('Failed to fetch blogs');
+      if (!res.ok) throw new Error("Failed to fetch blogs");
       const data = await res.json();
       setBlogs(data.blogs || []);
       setFilteredData(data.blogs || []);
     } catch (err) {
-      console.error('Error fetching blogs:', err);
+      console.error("Error fetching blogs:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Delete Blog
-  const handleDelete = async (blogId: string) => {
-    if (!confirm('Are you sure you want to delete this blog?')) return;
+  // Delete Blog with SweetAlert
+  const handleDelete = async (blogId: string, blogTitle: string) => {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: `You want to delete blog "${blogTitle}"?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel'
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
+      // Show loading
+      Swal.fire({
+        title: 'Deleting...',
+        text: 'Please wait',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
       const res = await fetch(`${base_url}api/admin/delete_astro_blogs`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ blogId }),
       });
-      if (!res.ok) throw new Error('Failed to delete blog');
+      
+      if (!res.ok) throw new Error("Failed to delete blog");
 
       await fetchBlogs();
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Deleted!',
+        text: 'Blog has been deleted successfully',
+        timer: 2000,
+        showConfirmButton: false
+      });
     } catch (error) {
-      console.error('Error deleting blog:', error);
+      console.error("Error deleting blog:", error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to delete blog'
+      });
     }
   };
 
   // Edit: Store full blog in sessionStorage
   const handleEdit = (blog: Blog) => {
-    sessionStorage.setItem('editBlogData', JSON.stringify(blog));
-    router.push('/astro-blog/blog/add-blog');
+    sessionStorage.setItem("editBlogData", JSON.stringify(blog));
+    router.push("/astro-blog/blog/add-blog");
   };
 
   // Open Text Modal
@@ -118,7 +160,7 @@ const AstroblogPage: React.FC = () => {
   };
 
   const closeTextModal = () => {
-    setTextModal({ open: false, title: '', text: '' });
+    setTextModal({ open: false, title: "", text: "" });
   };
 
   // Search filtering
@@ -133,12 +175,12 @@ const AstroblogPage: React.FC = () => {
   // CSV Data
   const csvData: CSVRow[] = useMemo(() => {
     return filteredData.map((blog, index) => ({
-      'S.No.': index + 1,
-      'Title': blog.title,
-      'Category': blog.blogCategoryId?.blog_category || '-',
-      'Created By': blog.created_by,
-      'Date': moment(blog.createdAt).format('DD MMM YYYY'),
-      'View Count': blog.viewsCount,
+      "S.No.": index + 1,
+      Title: blog.title,
+      Category: blog.blogCategoryId?.blog_category || "-",
+      "Created By": blog.created_by,
+      Date: moment(blog.createdAt).format("DD MMM YYYY"),
+      "View Count": blog.viewsCount,
     }));
   }, [filteredData]);
 
@@ -146,80 +188,77 @@ const AstroblogPage: React.FC = () => {
   const columns: TableColumn<Blog>[] = useMemo(
     () => [
       {
-        name: 'S.No.',
+        name: "S.No.",
         selector: (_row, index) => (index !== undefined ? index + 1 : 0),
-        width: '80px',
+        width: "80px",
       },
       {
-        name: 'Title',
-        selector: (row) => row?.title || '-',
-        width: '150px',
+        name: "Title",
+        selector: (row) => row?.title || "-",
+        width: "150px",
       },
       {
-        name: 'Category',
-        selector: (row) => row?.blogCategoryId?.blog_category || '-',
+        name: "Category",
+        selector: (row) => row?.blogCategoryId?.blog_category || "-",
       },
       {
-        name: 'Description',
+        name: "Description",
         cell: (row) =>
           row?.description ? (
             <div
-              onClick={() => openTextModal('Description', row.description)}
+              onClick={() => openTextModal("Description", row.description)}
               dangerouslySetInnerHTML={{
-                __html: row.description.slice(0, 25) + '...',
+                __html: row.description.slice(0, 25) + "...",
               }}
-              style={{ cursor: 'pointer', color: '#1976d2' }}
+              style={{ cursor: "pointer", color: "#1976d2" }}
             />
           ) : (
             <span>N/A</span>
           ),
-        width: '200px',
+        width: "200px",
       },
       {
-        name: 'Created By',
-        selector: (row) => row?.created_by || '-',
-        width: '150px',
+        name: "Created By",
+        selector: (row) => row?.created_by || "-",
+        width: "150px",
       },
       {
-        name: 'Image',
+        name: "Image",
         cell: (row) => (
           <Avatar
-            src={row?.image ? `${IMG_URL}${row.image}` : ''}
+            src={row?.image ? `${IMG_URL}${row.image}` : ""}
             alt="Blog"
             sx={{ width: 40, height: 40 }}
           />
         ),
-        width: '100px',
+        width: "100px",
       },
       {
-        name: 'Date',
-        selector: (row) => moment(row?.createdAt).format('DD MMM YYYY'),
-        width: '150px',
+        name: "Date",
+        selector: (row) => moment(row?.createdAt).format("DD MMM YYYY"),
+        width: "150px",
       },
       {
-        name: 'View Count',
+        name: "View Count",
         selector: (row) => row?.viewsCount || 0,
-        width: '110px',
+        width: "110px",
       },
       {
-        name: 'Action',
+        name: "Action",
         cell: (row) => (
-          <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-            <div
-              onClick={() => handleEdit(row)}
-              style={{ cursor: 'pointer' }}
-            >
+          <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
+            <div onClick={() => handleEdit(row)} style={{ cursor: "pointer" }}>
               <EditSvg />
             </div>
             <div
-              onClick={() => handleDelete(row._id)}
-              style={{ cursor: 'pointer' }}
+              onClick={() => handleDelete(row._id, row.title)}
+              style={{ cursor: "pointer" }}
             >
               <DeleteSvg />
             </div>
           </div>
         ),
-        width: '150px',
+        width: "150px",
       },
     ],
     [router]
@@ -227,48 +266,29 @@ const AstroblogPage: React.FC = () => {
 
   return (
     <>
-     
-        {/* <DatatableHeading
-          title="Astroblog"
-          url="/astro-blog/blog/add-blog"
-          data={csvData}
-        /> */}
-
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            gap: '20px',
-            alignItems: 'center',
-            marginBottom: '20px',
-            backgroundColor: '#fff',
-          }}
-        >
-          {/* <input
-            type="search"
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            placeholder="Search your data..."
-            style={{
-              padding: '5px 10px',
-              borderRadius: '5px',
-              border: '1px solid #ccc',
-              boxShadow: '0px 0px 5px rgba(0, 0, 0, 0.1)',
-              width: '100%',
-              maxWidth: '250px',
-              fontSize: '15px',
-              outline: 'none',
-            }}
-          /> */}
-        </div>
-
-        {/* <MainDatatable  title={'Review'}  columns={columns} data={filteredData} isLoading={loading}   url={'/astro-blog/blog/add-blog'}/> */}
-            <MainDatatable  title={'Review'}  columns={columns as any} data={filteredData} isLoading={loading}   url={'/astro-blog/blog/add-blog'}/>
+      <MainDatatable
+        title="Astroblog"
+        columns={columns as any}
+        data={filteredData}
+        isLoading={loading}
+        url={"/astro-blog/blog/add-blog"}
+      />
 
       {/* Description Modal */}
-      <Dialog open={textModal.open} onClose={closeTextModal} maxWidth="md" fullWidth>
+      <Dialog
+        open={textModal.open}
+        onClose={closeTextModal}
+        maxWidth="md"
+        fullWidth
+      >
         <DialogTitle>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
             <span>{textModal.title}</span>
             <IconButton onClick={closeTextModal} size="small">
               <CloseIcon />
@@ -278,7 +298,7 @@ const AstroblogPage: React.FC = () => {
         <DialogContent>
           <div
             dangerouslySetInnerHTML={{ __html: textModal.text }}
-            style={{ padding: '10px', maxHeight: '500px', overflowY: 'auto' }}
+            style={{ padding: "10px", maxHeight: "500px", overflowY: "auto" }}
           />
         </DialogContent>
       </Dialog>

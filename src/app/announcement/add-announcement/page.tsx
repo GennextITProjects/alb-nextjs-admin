@@ -1,66 +1,107 @@
 'use client';
-import React, { useState, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 import AnnouncementPageEditor from "@/components/announcementPageEditor";
 
-function AddAnnouncementReview() {
+interface InputFieldError {
+    description?: string;
+}
+
+interface NotificationState {
+    show: boolean;
+    type: 'success' | 'error' | '';
+    message: string;
+}
+
+interface EditAnnouncementData {
+    id: string;
+    description: string;
+    editMode: boolean;
+}
+
+const AddAnnouncement = () => {
     const router = useRouter();
-    const searchParams = useSearchParams();
     
-    // Get data from URL parameters
-    const editMode = searchParams.get('edit') === 'true';
-    const announcementId = searchParams.get('id');
-    const announcementDescriptionFromUrl = searchParams.get('description');
-
     const [loading, setLoading] = useState(false);
-    const [fetching, setFetching] = useState(editMode && !announcementDescriptionFromUrl);
-    const [initialContent, setInitialContent] = useState<string>(
-        announcementDescriptionFromUrl ? decodeURIComponent(announcementDescriptionFromUrl) : ''
-    );
+    const [fetching, setFetching] = useState(false);
+    const [notification, setNotification] = useState<NotificationState>({
+        show: false,
+        type: '',
+        message: ''
+    });
 
-    // Fetch announcement data if in edit mode and description is not in URL
+    const [initialContent, setInitialContent] = useState('');
+    const [editMode, setEditMode] = useState(false);
+    const [announcementId, setAnnouncementId] = useState<string>('');
+
+    // Show notification
+    const showNotification = (type: 'success' | 'error', message: string) => {
+        setNotification({ show: true, type, message });
+        setTimeout(() => {
+            setNotification({ show: false, type: '', message: '' });
+        }, 3000);
+    };
+
+    // Load announcement data from localStorage on component mount
     useEffect(() => {
-        const fetchAnnouncementData = async () => {
-            if (editMode && announcementId && !announcementDescriptionFromUrl) {
+        const loadAnnouncementData = async () => {
+            const storedData = localStorage.getItem('editAnnouncementData');
+            
+            if (storedData) {
                 try {
-                    setFetching(true);
-                    const response = await fetch(
-                        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/get-announcement/${announcementId}`
-                    );
+                    const editData: EditAnnouncementData = JSON.parse(storedData);
                     
-                    if (!response.ok) {
-                        throw new Error('Failed to fetch announcement');
-                    }
-                    
-                    const data = await response.json();
-                    
-                    if (data.success && data.data) {
-                        setInitialContent(data.data.description || '');
-                    } else {
-                        await Swal.fire({
-                            icon: 'error',
-                            title: 'Error!',
-                            text: data.message || 'Failed to fetch announcement data',
-                            confirmButtonColor: '#d33',
-                        });
+                    if (editData.editMode && editData.id) {
+                        setEditMode(true);
+                        setAnnouncementId(editData.id);
+                        
+                        if (editData.description) {
+                            // Use the description from localStorage
+                            setInitialContent(editData.description);
+                        } else {
+                            // Fetch announcement data if description is not in localStorage
+                            setFetching(true);
+                            const response = await fetch(
+                                `${process.env.NEXT_PUBLIC_API_URL}/api/admin/get-announcement/${editData.id}`
+                            );
+                            
+                            if (!response.ok) {
+                                throw new Error('Failed to fetch announcement');
+                            }
+                            
+                            const data = await response.json();
+                            
+                            if (data.success && data.data) {
+                                setInitialContent(data.data.description || '');
+                            } else {
+                                await Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error!',
+                                    text: data.message || 'Failed to fetch announcement data',
+                                    confirmButtonColor: '#d33',
+                                });
+                            }
+                        }
                     }
                 } catch (error) {
-                    console.error('Error fetching announcement:', error);
+                    console.error('Error loading announcement data:', error);
                     await Swal.fire({
                         icon: 'error',
-                        title: 'Network Error!',
-                        text: 'Failed to load announcement data. Please check your connection.',
+                        title: 'Error!',
+                        text: 'Failed to load announcement data',
                         confirmButtonColor: '#d33',
                     });
                 } finally {
                     setFetching(false);
+                    // Clear the stored data after loading
+                    localStorage.removeItem('editAnnouncementData');
                 }
             }
         };
 
-        fetchAnnouncementData();
-    }, [editMode, announcementId, announcementDescriptionFromUrl]);
+        loadAnnouncementData();
+    }, []);
 
     const handleSuccess = () => {
         Swal.fire({
@@ -93,7 +134,7 @@ function AddAnnouncementReview() {
             <div className="max-w-6xl mx-auto">
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
                     {/* Header */}
-                    <div className=" px-6 py-4">
+                    <div className="px-6 py-4">
                         <div className="flex justify-between items-center">
                             <h2 className="text-xl font-bold">
                                 {editMode ? 'Edit Announcement' : 'Add New Announcement'}
@@ -122,24 +163,6 @@ function AddAnnouncementReview() {
                 </div>
             </div>
         </div>
-    );
-}
-
-// ✅ Wrap with Suspense for loading fallback
-const AddAnnouncement = () => {
-    return (
-        <Suspense
-            fallback={
-                <div className="flex justify-center items-center min-h-screen">
-                    <div className="flex flex-col items-center gap-3">
-                        <div className="w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
-                        <div className="text-lg text-gray-600">Loading...</div>
-                    </div>
-                </div>
-            }
-        >
-            <AddAnnouncementReview />
-        </Suspense>
     );
 };
 

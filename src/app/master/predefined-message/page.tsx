@@ -4,10 +4,11 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import moment from 'moment';
 import { TableColumn } from 'react-data-table-component';
-import MainDatatable from '@/components/datatable/MainDatatable';
+import MainDatatable from '@/components/common/MainDatatable';
 import DatatableHeading from '@/components/datatable/DatatableHeading';
 import { base_url } from '@/lib/api-routes';
 import { EditSvg, DeleteSvg } from '@/components/svgs/page';
+import Swal from 'sweetalert2';
 
 // ---------------------------------------------------------------------
 // Types
@@ -91,6 +92,7 @@ const PredefinedMessage: React.FC = () => {
   };
 
   //* Handle Submit (Add or Edit)
+//* Handle Submit (Add or Edit)
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   if (!handleValidation()) return;
@@ -120,12 +122,24 @@ const handleSubmit = async (e: React.FormEvent) => {
       throw new Error(err.message || `Failed to ${mode.toLowerCase()} message`);
     }
 
+    await Swal.fire({
+      icon: 'success',
+      title: 'Success!',
+      text: `Message ${mode === 'Add' ? 'created' : 'updated'} successfully!`,
+      confirmButtonColor: '#3085d6',
+    });
+
     // Reset form
     setInputFieldDetail({ message: '', type: '', mode: 'Add', id: '' });
     await fetchMessages();
   } catch (error: any) {
     console.error('Error:', error);
-    alert(error.message);
+    await Swal.fire({
+      icon: 'error',
+      title: 'Error!',
+      text: error.message || `Failed to ${mode === 'Add' ? 'create' : 'update'} message`,
+      confirmButtonColor: '#d33',
+    });
   }
 };
 
@@ -157,14 +171,26 @@ const handleSubmit = async (e: React.FormEvent) => {
   };
 
   //* Delete Message
+//* Delete Message
 const handleDelete = async (id: string) => {
-  if (!confirm('Are you sure you want to delete this message?')) return;
+  const result = await Swal.fire({
+    title: 'Are you sure?',
+    text: "You won't be able to revert this!",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, delete it!',
+    cancelButtonText: 'Cancel'
+  });
+
+  if (!result.isConfirmed) return;
 
   try {
     const res = await fetch(`${base_url}api/admin/delete_predefined_message`, {
-      method: 'POST', // ← Changed from DELETE to POST
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }), // ← Send id in body
+      body: JSON.stringify({ id }),
     });
 
     if (!res.ok) {
@@ -172,17 +198,36 @@ const handleDelete = async (id: string) => {
       throw new Error(err.message || 'Failed to delete');
     }
 
+    await Swal.fire({
+      title: 'Deleted!',
+      text: 'Message has been deleted successfully.',
+      icon: 'success',
+      confirmButtonColor: '#3085d6',
+    });
+
     await fetchMessages();
   } catch (error: any) {
     console.error('Delete error:', error);
-    alert(error.message || 'Failed to delete');
+    await Swal.fire({
+      title: 'Error!',
+      text: error.message || 'Failed to delete message',
+      icon: 'error',
+      confirmButtonColor: '#d33',
+    });
   }
 };
 
   //* Open Full Message in Modal (Placeholder)
-  const openMessageModal = (title: string, text: string) => {
-    alert(`${title}:\n\n${text}`); // Replace with your modal system
-  };
+  //* Open Full Message in Modal with SweetAlert2
+const openMessageModal = (title: string, text: string) => {
+  Swal.fire({
+    title: title,
+    text: text,
+    icon: 'info',
+    confirmButtonColor: '#3085d6',
+    width: '600px'
+  });
+};
 
   //* Search filtering
   useEffect(() => {
@@ -207,22 +252,22 @@ const handleDelete = async (id: string) => {
   }, [filteredData]);
 
   //* Datatable Columns
-  const columns: TableColumn<PredefinedMessage>[] = useMemo(
+  const columns= useMemo(
     () => [
       {
         name: 'S.No.',
-        selector: (_row, index) => (index !== undefined ? index + 1 : 0),
+        selector: (_row:any, index?:number) => (index !== undefined ? index + 1 : 0),
         width: '80px',
       },
       {
         name: 'Type',
-        selector: (row) => row?.type || '-',
+        selector: (row:any) => row?.type || '-',
         sortable: true,
          width: '400px',
       },
       {
         name: 'Message',
-        cell: (row) => (
+        cell: (row:any) => (
           <div
             onClick={() => openMessageModal('Message', row.message)}
             style={{
@@ -239,7 +284,7 @@ const handleDelete = async (id: string) => {
       },
       {
         name: 'Action',
-        cell: (row) => (
+        cell: (row:any) => (
           <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
             <div onClick={() => handleEdit(row)} style={{ cursor: 'pointer' }}>
               <EditSvg />
@@ -369,52 +414,16 @@ const handleDelete = async (id: string) => {
 </form>
       </div>
 
-      {/* Table Section */}
-      <div
-        style={{
-          padding: '20px',
-          backgroundColor: '#fff',
-          marginBottom: '20px',
-          boxShadow: '0px 0px 5px lightgrey',
-          borderRadius: '10px',
-        }}
-      >
-        <DatatableHeading title="Predefined Messages" data={csvData} />
-
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            gap: '20px',
-            alignItems: 'center',
-            marginBottom: '20px',
-            backgroundColor: '#fff',
-          }}
-        >
-          <input
-            type="search"
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            placeholder="Search your data..."
-            style={{
-              padding: '5px 10px',
-              borderRadius: '5px',
-              border: '1px solid #ccc',
-              boxShadow: '0px 0px 5px rgba(0, 0, 0, 0.1)',
-              width: '100%',
-              maxWidth: '250px',
-              fontSize: '15px',
-              outline: 'none',
-            }}
-          />
-        </div>
+    
 
         <MainDatatable
           columns={columns}
           data={filteredData}
+          title="Predefined Messages"
+          url="/master/predefined-messages"
           isLoading={loading}
         />
-      </div>
+      
     </>
   );
 };

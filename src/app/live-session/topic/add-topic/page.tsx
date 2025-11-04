@@ -7,11 +7,20 @@ interface Category {
   _id: string;
   categoryName: string;
 }
-
 interface Topic {
   _id: string;
-  categoryId: Category;
+  categoryId: string | Category | null;
   topicName: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  topics?: T[];
+  data?: T[];
 }
 
 interface InputFieldDetail {
@@ -24,24 +33,25 @@ interface InputFieldError {
   title: string;
 }
 
-function AddTopicContent(){
+function AddTopicContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   const editMode = searchParams.get('edit') === 'true';
   const topicId = searchParams.get('id');
 
   const [liveSessionCategoryData, setLiveSessionCategoryData] = useState<Category[]>([]);
-  const [inputFieldDetail, setInputFieldDetail] = useState<InputFieldDetail>({ 
-    categoryId: '', 
-    title: '' 
+  const [liveSessionTopicData, setLiveSessionTopicData] = useState<Topic[]>([]);
+  const [inputFieldDetail, setInputFieldDetail] = useState<InputFieldDetail>({
+    categoryId: '',
+    title: ''
   });
-  const [inputFieldError, setInputFieldError] = useState<InputFieldError>({ 
-    categoryId: '', 
-    title: '' 
+  const [inputFieldError, setInputFieldError] = useState<InputFieldError>({
+    categoryId: '',
+    title: ''
   });
   const [loading, setLoading] = useState(false);
-  const [fetching, setFetching] = useState(editMode && !!topicId);
+  const [fetching, setFetching] = useState(false);
 
   // Regex pattern for validation
   const Regex_Accept_Everything = /^[\s\S]*$/;
@@ -59,28 +69,56 @@ function AddTopicContent(){
     }
   };
 
-  const getTopicData = async (id: string) => {
-  try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/get_live_session_topic/${id}`);
-    const data = await response.json();
-    if (data.success && data.data) {
-      setInputFieldDetail({
-        categoryId: data.data.categoryId?._id || '',
-        title: data.data.topicName || ''
-      });
-    } else {
-      console.error('Failed to fetch topic data:', data.message);
+  // Get all topics and filter by ID for edit mode
+  const getLiveSessionTopic = async () => {
+    try {
+      setFetching(true);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/get_live_session_topic`);
+      const data: ApiResponse<Topic> = await response.json();
+
+      console.log('All Topics API Response:', data); // Debug log
+
+      if (data.success) {
+        const topics = data.topics || data.data || [];
+        setLiveSessionTopicData(topics);
+
+        // If in edit mode, find the specific topic by ID
+        if (editMode && topicId) {
+          const specificTopic = topics.find((topic: Topic) => topic._id === topicId);
+
+          if (specificTopic) {
+            console.log('Found topic for editing:', specificTopic); // Debug log
+            const categoryIdValue =
+              typeof specificTopic.categoryId === 'string'
+                ? specificTopic.categoryId
+                : specificTopic.categoryId?._id || '';
+            setInputFieldDetail({
+              categoryId: categoryIdValue,
+              title: specificTopic.topicName || ''
+            });
+          } else {
+            throw new Error('Topic not found');
+          }
+        }
+      } else {
+        throw new Error(data.message || 'Failed to fetch topics');
+      }
+    } catch (error) {
+      console.error('Error fetching topics:', error);
+      if (editMode) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error!',
+          text: 'Failed to load topic data. Please try again.',
+          confirmButtonColor: '#d33',
+        }).then(() => {
+          router.push("/live-session/topic");
+        });
+      }
+    } finally {
+      setFetching(false);
     }
-  } catch (error) {
-    console.error('Error fetching topic:', error);
-    Swal.fire({
-      icon: 'error',
-      title: 'Error!',
-      text: 'Failed to load topic data',
-      confirmButtonColor: '#d33',
-    });
-  }
-};
+  };
 
   const createLiveSessionTopic = async (topicData: { categoryId: string; topicName: string }) => {
     try {
@@ -98,8 +136,8 @@ function AddTopicContent(){
 
   const updateLiveSessionTopic = async (topicData: { topicId: string; categoryId: string; topicName: string }) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/live-session/update_topic`, {
-        method: 'PUT',
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/update_live_session_topic`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(topicData),
       });
@@ -114,11 +152,9 @@ function AddTopicContent(){
   useEffect(() => {
     const fetchData = async () => {
       await getLiveSessionCategory();
-      
+
       if (editMode && topicId) {
-        setFetching(true);
-        await getTopicData(topicId);
-        setFetching(false);
+        await getLiveSessionTopic();
       }
     };
 
@@ -126,7 +162,7 @@ function AddTopicContent(){
   }, [editMode, topicId]);
 
   //* Handle Input Field : Error
-  const handleInputFieldError = (input: keyof InputFieldError, value: string) => 
+  const handleInputFieldError = (input: keyof InputFieldError, value: string) =>
     setInputFieldError((prev) => ({ ...prev, [input]: value }));
 
   //* Handle Input Field : Data
@@ -189,7 +225,7 @@ function AddTopicContent(){
             topicName: title
           });
         }
-        
+
         if (result.success) {
           Swal.fire({
             icon: 'success',
@@ -238,8 +274,9 @@ function AddTopicContent(){
         <div className="flex justify-between items-center mb-6">
           <div className="text-xl font-semibold text-gray-800">
             {editMode ? 'Edit' : 'Add'} Session Topic
+            {editMode && topicId && <span className="text-sm text-gray-500 ml-2">(ID: {topicId})</span>}
           </div>
-          <button 
+          <button
             onClick={() => router.push("/live-session/topic")}
             className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg cursor-pointer text-sm font-medium transition duration-200"
           >
@@ -257,9 +294,8 @@ function AddTopicContent(){
             <select
               value={inputFieldDetail.categoryId}
               onChange={(e) => handleInputChange('categoryId', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                inputFieldError.categoryId ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${inputFieldError.categoryId ? 'border-red-500' : 'border-gray-300'
+                }`}
             >
               <option value="">---Select Category Name---</option>
               {liveSessionCategoryData.map((value, index) => (
@@ -282,9 +318,8 @@ function AddTopicContent(){
               type="text"
               value={inputFieldDetail.title}
               onChange={(e) => handleInputChange('title', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                inputFieldError.title ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${inputFieldError.title ? 'border-red-500' : 'border-gray-300'
+                }`}
               placeholder="Enter topic title"
             />
             {inputFieldError.title && (
@@ -294,7 +329,7 @@ function AddTopicContent(){
 
           {/* Submit Button */}
           <div className="flex justify-start">
-            <button 
+            <button
               onClick={handleSubmit}
               disabled={loading}
               className="bg-red-500 hover:bg-red-600 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg cursor-pointer font-medium transition duration-200 flex items-center gap-2"
@@ -314,6 +349,7 @@ function AddTopicContent(){
     </div>
   );
 };
+
 const AddTopic = () => {
   return (
     <Suspense fallback={<div className="flex justify-center items-center min-h-screen"><div className="text-xl text-gray-600">Loading...</div></div>}>
@@ -321,4 +357,5 @@ const AddTopic = () => {
     </Suspense>
   );
 };
+
 export default AddTopic;

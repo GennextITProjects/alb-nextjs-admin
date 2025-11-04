@@ -10,9 +10,9 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Snackbar,
 } from '@mui/material';
 import { YYYYMMDD } from '@/utils/common-function';
+import Swal from 'sweetalert2';
 
 interface CustomerDetail {
   customerName: string;
@@ -45,7 +45,7 @@ const AddCustomerContent = () => {
     file: '',
     bytes: null,
   });
-  const [snack, setSnack] = useState({ open: false, msg: '' });
+  const [loading, setLoading] = useState(false);
 
   /* ---------- Fill form from URL params ---------- */
   useEffect(() => {
@@ -105,10 +105,6 @@ const AddCustomerContent = () => {
     setDetail((prev) => ({ ...prev, [name]: value }));
   };
 
-  const openSnack = (msg: string) => {
-    setSnack({ open: true, msg });
-  };
-
   /* ---------- Validation ---------- */
   const validate = () => {
     let ok = true;
@@ -116,16 +112,37 @@ const AddCustomerContent = () => {
     const phonePat = /^[0-9]{10}$/;
     const { customerName, phoneNumber, gender, dateOfBirth, timeOfBirth } = detail;
 
-    if (!customerName) { setError('customerName', 'Enter name'); ok = false; openSnack('Enter name'); return ok; }
-    if (customerName.length > 30) { setError('customerName', 'Name ≤30 chars'); ok = false; openSnack('Name ≤30 chars'); return ok; }
-    if (!namePat.test(customerName)) { setError('customerName', 'Invalid name'); ok = false; openSnack('Invalid name'); return ok; }
+    if (!customerName) { 
+      setError('customerName', 'Enter name'); 
+      ok = false; 
+    } else if (customerName.length > 30) { 
+      setError('customerName', 'Name ≤30 chars'); 
+      ok = false; 
+    } else if (!namePat.test(customerName)) { 
+      setError('customerName', 'Invalid name'); 
+      ok = false; 
+    }
 
-    if (!phoneNumber) { setError('phoneNumber', 'Enter phone'); ok = false; openSnack('Enter phone'); return ok; }
-    if (!phonePat.test(phoneNumber)) { setError('phoneNumber', 'Invalid phone'); ok = false; openSnack('Invalid phone'); return ok; }
+    if (!phoneNumber) { 
+      setError('phoneNumber', 'Enter phone'); 
+      ok = false; 
+    } else if (!phonePat.test(phoneNumber)) { 
+      setError('phoneNumber', 'Invalid phone'); 
+      ok = false; 
+    }
 
-    if (!gender) { setError('gender', 'Select gender'); ok = false; openSnack('Select gender'); return ok; }
-    if (!dateOfBirth) { setError('dateOfBirth', 'Select DOB'); ok = false; openSnack('Select DOB'); return ok; }
-    if (!timeOfBirth) { setError('timeOfBirth', 'Select TOB'); ok = false; openSnack('Select TOB'); return ok; }
+    if (!gender) { 
+      setError('gender', 'Select gender'); 
+      ok = false; 
+    }
+    if (!dateOfBirth) { 
+      setError('dateOfBirth', 'Select DOB'); 
+      ok = false; 
+    }
+    if (!timeOfBirth) { 
+      setError('timeOfBirth', 'Select TOB'); 
+      ok = false; 
+    }
 
     return ok;
   };
@@ -133,6 +150,8 @@ const AddCustomerContent = () => {
   /* ---------- Submit ---------- */
   const handleSubmit = async () => {
     if (!validate()) return;
+
+    setLoading(true);
 
     const fd = new FormData();
     if (isEditMode && customerId) fd.append('customerId', customerId);
@@ -148,28 +167,43 @@ const AddCustomerContent = () => {
       ? `${process.env.NEXT_PUBLIC_API_URL}/api/admin/update-customer-data`
       : `${process.env.NEXT_PUBLIC_API_URL}/api/customers/customer-signup`;
 
-    const res = await fetch(url, { method: 'POST', body: fd });
-    const json = await res.json();
+    try {
+      const res = await fetch(url, { method: 'POST', body: fd });
+      const json = await res.json();
 
-    if (res.ok && json.success) {
-      openSnack(isEditMode ? 'Updated!' : 'Created!');
-      setTimeout(() => router.push('/customer'), 2000);
-    } else {
-      openSnack(json.message || 'Error');
+      if (res.ok && json.success) {
+        await Swal.fire({
+          icon: 'success',
+          title: 'Success!',
+          text: isEditMode ? 'Customer updated successfully!' : 'Customer created successfully!',
+          confirmButtonColor: '#3085d6',
+        });
+        
+        setTimeout(() => router.push('/customer'), 1000);
+      } else {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error!',
+          text: json.message || 'Something went wrong',
+          confirmButtonColor: '#d33',
+        });
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error!',
+        text: 'Failed to process request',
+        confirmButtonColor: '#d33',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   /* ---------- UI ---------- */
   return (
     <>
-      <Snackbar
-        open={snack.open}
-        autoHideDuration={2000}
-        onClose={() => setSnack({ ...snack, open: false })}
-        message={snack.msg}
-        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-      />
-
       <div className="p-5 bg-white mb-5 shadow-sm rounded-lg">
         <div className="flex justify-between items-center mb-8">
           <div className="text-2xl font-medium text-gray-900">
@@ -227,6 +261,7 @@ const AddCustomerContent = () => {
               error={!!errors.customerName}
               helperText={errors.customerName}
               onFocus={() => setError('customerName', undefined)}
+              disabled={loading}
             />
           </Grid>
 
@@ -240,18 +275,19 @@ const AddCustomerContent = () => {
               error={!!errors.phoneNumber}
               helperText={errors.phoneNumber}
               onFocus={() => setError('phoneNumber', undefined)}
+              disabled={loading}
             />
           </Grid>
 
           <Grid item lg={6} xs={12}>
-            <FormControl fullWidth>
+            <FormControl fullWidth error={!!errors.gender}>
               <InputLabel>Gender <span className="text-red-500">*</span></InputLabel>
               <Select
                 name="gender"
                 value={detail.gender}
                 onChange={handleSelect}
-                error={!!errors.gender}
                 onFocus={() => setError('gender', undefined)}
+                disabled={loading}
               >
                 <MenuItem disabled value="">Select</MenuItem>
                 <MenuItem value="Male">Male</MenuItem>
@@ -274,6 +310,7 @@ const AddCustomerContent = () => {
               error={!!errors.dateOfBirth}
               helperText={errors.dateOfBirth}
               onFocus={() => setError('dateOfBirth', undefined)}
+              disabled={loading}
             />
           </Grid>
 
@@ -289,6 +326,7 @@ const AddCustomerContent = () => {
               error={!!errors.timeOfBirth}
               helperText={errors.timeOfBirth}
               onFocus={() => setError('timeOfBirth', undefined)}
+              disabled={loading}
             />
           </Grid>
 
@@ -296,10 +334,18 @@ const AddCustomerContent = () => {
             <div className="flex justify-end">
               <div
                 onClick={handleSubmit}
-                className="font-medium text-white px-5 py-3 rounded cursor-pointer text-sm"
-                style={{ backgroundColor: 'rgb(239, 68, 68)' }}
+                style={{
+                  fontWeight: '500',
+                  backgroundColor: loading ? '#ccc' : 'rgb(239, 68, 68)',
+                  color: '#fff',
+                  padding: '10px 20px',
+                  borderRadius: '5px',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  fontSize: '15px',
+                  opacity: loading ? 0.6 : 1,
+                }}
               >
-                {isEditMode ? 'Update' : 'Submit'}
+                {loading ? 'Submitting...' : (isEditMode ? 'Update' : 'Submit')}
               </div>
             </div>
           </Grid>

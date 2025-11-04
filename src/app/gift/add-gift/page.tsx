@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Swal from "sweetalert2";
@@ -22,33 +22,71 @@ interface ImageState {
   bytes: File | null;
 }
 
-function AddGiftContent(){
+interface Gift {
+  _id: string;
+  gift: string;
+  giftIcon: string;
+  amount: string;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+interface ApiResponse {
+  success: boolean;
+  gift: Gift[];
+  message?: string;
+}
+
+function AddGiftContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   const editMode = searchParams.get('edit') === 'true';
   const giftId = searchParams.get('id');
 
-  const [giftDetail, setGiftDetail] = useState<GiftDetail>({ 
-    title: '', 
-    amount: '', 
-    shortBio: '' 
+  const [giftDetail, setGiftDetail] = useState<GiftDetail>({
+    title: '',
+    amount: '',
+    shortBio: ''
   });
-  const [inputFieldError, setInputFieldError] = useState<InputFieldError>({ 
-    title: '', 
-    amount: '', 
-    shortBio: '', 
-    image: '' 
+  const [inputFieldError, setInputFieldError] = useState<InputFieldError>({
+    title: '',
+    amount: '',
+    shortBio: '',
+    image: ''
   });
-  const [image, setImage] = useState<ImageState>({ 
-    file: '', 
-    bytes: null 
+  const [image, setImage] = useState<ImageState>({
+    file: '',
+    bytes: null
   });
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(editMode && !!giftId);
+  const [allGifts, setAllGifts] = useState<Gift[]>([]);
 
   // Regex pattern for validation
   const Regex_Accept_Alpha = /^[a-zA-Z\s]*$/;
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // API to get all gifts
+  const getAllGifts = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/get-all-gift`);
+      const data: ApiResponse = await response.json();
+      
+      if (data.success) {
+        setAllGifts(data.gift || []);
+        return data.gift || [];
+      } else {
+        console.error('Failed to fetch gifts:', data.message);
+        return [];
+      }
+    } catch (error) {
+      console.error('Error fetching gifts:', error);
+      return [];
+    }
+  };
 
   // Fetch gift data if in edit mode
   useEffect(() => {
@@ -56,29 +94,45 @@ function AddGiftContent(){
       if (editMode && giftId) {
         try {
           setFetching(true);
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/gift/get_gift/${giftId}`);
-          const data = await response.json();
+          console.log('Fetching all gifts for edit mode, looking for ID:', giftId);
           
-          if (data.success && data.data) {
+          // Get all gifts
+          const gifts = await getAllGifts();
+          
+          // Find the specific gift by ID
+          const specificGift = gifts.find(gift => gift._id === giftId);
+          
+          console.log('Found gift:', specificGift); // Debug log
+          
+          if (specificGift) {
+            // Set the form data with the gift information
             setGiftDetail({
-              title: data.data.gift || '',
-              amount: data.data.amount?.toString() || '',
-              shortBio: data.data.description || ''
+              title: specificGift.gift || '',
+              amount: specificGift.amount?.toString() || '',
+              shortBio: specificGift.description || ''
             });
-            if (data.data.giftIcon) {
+
+            // Set the image if available
+            if (specificGift.giftIcon) {
               setImage({
-                file: `${process.env.NEXT_PUBLIC_IMAGE_URL}${data.data.giftIcon}`,
+                file: `${process.env.NEXT_PUBLIC_API_URL}/${specificGift.giftIcon}`,
                 bytes: null
               });
             }
+            
+            console.log('Form data set successfully'); // Debug log
+          } else {
+            throw new Error('Gift not found with the provided ID');
           }
         } catch (error) {
-          console.error('Error fetching gift:', error);
+          console.error('Error fetching gift data:', error);
           Swal.fire({
             icon: 'error',
             title: 'Error!',
-            text: 'Failed to load gift data',
+            text: 'Failed to load gift data. Please check if the gift exists.',
             confirmButtonColor: '#d33',
+          }).then(() => {
+            router.push("/gift");
           });
         } finally {
           setFetching(false);
@@ -87,7 +141,7 @@ function AddGiftContent(){
     };
 
     fetchGiftData();
-  }, [editMode, giftId]);
+  }, [editMode, giftId, router]);
 
   //* Handle Input Field : Error
   const handleInputFieldError = (input: keyof InputFieldError, value: string) => {
@@ -104,6 +158,10 @@ function AddGiftContent(){
     if (inputFieldError[field]) {
       handleInputFieldError(field, '');
     }
+  };
+
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
   };
 
   //! Handle Image : Normally
@@ -169,7 +227,7 @@ function AddGiftContent(){
   // API call functions
   const createGift = async (formData: FormData) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/gift/create_gift`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/add-gift`, {
         method: 'POST',
         body: formData,
       });
@@ -182,8 +240,8 @@ function AddGiftContent(){
 
   const updateGift = async (formData: FormData) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/gift/update_gift`, {
-        method: 'PUT',
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/update-gift`, {
+        method: 'POST',
         body: formData,
       });
       return await response.json();
@@ -202,17 +260,26 @@ function AddGiftContent(){
 
       try {
         const formData = new FormData();
-        
+
         if (editMode && giftId) {
           formData.append("giftId", giftId);
         }
         formData.append("gift", title);
         formData.append("amount", amount);
         formData.append("description", shortBio);
-        
+
         if (image.bytes) {
           formData.append("image", image.bytes);
         }
+
+        console.log('Submitting form data:', {
+          editMode,
+          giftId,
+          title,
+          amount,
+          shortBio,
+          hasImage: !!image.bytes
+        });
 
         let result;
         if (editMode && giftId) {
@@ -220,7 +287,9 @@ function AddGiftContent(){
         } else {
           result = await createGift(formData);
         }
-        
+
+        console.log('Submission result:', result);
+
         if (result.success) {
           Swal.fire({
             icon: 'success',
@@ -272,8 +341,11 @@ function AddGiftContent(){
         <div className="flex justify-between items-center mb-6">
           <div className="text-xl font-semibold text-gray-800">
             {editMode ? 'Edit' : 'Add'} Gift
+            {editMode && giftId && (
+              <span className="text-sm text-gray-500 ml-2">(ID: {giftId})</span>
+            )}
           </div>
-          <button 
+          <button
             onClick={() => router.push("/gift")}
             className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg cursor-pointer text-sm font-medium transition duration-200"
           >
@@ -286,20 +358,21 @@ function AddGiftContent(){
           {/* Image Upload */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
-              Gift Icon <span className="text-red-500">*</span>
+              Gift Icon {!editMode && <span className="text-red-500">*</span>}
+              {editMode && <span className="text-gray-500 text-xs ml-1">(Upload new to change)</span>}
             </label>
-            <div 
-              onDragOver={(e) => e.preventDefault()} 
+            <div
+              onDragOver={(e) => e.preventDefault()}
               onDrop={handleDrop}
+              onClick={handleImageClick}
               className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors cursor-pointer"
             >
               {image.file ? (
                 <div className="flex flex-col items-center">
                   <div className="relative w-48 h-48 mb-4">
-                    <Image 
-                      src={image.file} 
-                      alt="Gift icon" 
-                      fill
+                    <img
+                      src={image.file}
+                      alt="Gift icon"
                       className="object-contain rounded-lg"
                     />
                   </div>
@@ -314,12 +387,12 @@ function AddGiftContent(){
                   <p className="text-xs text-gray-500 mt-1">Or Drop Your Image Here</p>
                 </div>
               )}
-              <input 
-                id="upload-image" 
-                onChange={handleImage} 
-                hidden 
-                accept="image/*" 
-                type="file" 
+              <input
+                ref={fileInputRef}
+                onChange={handleImage}
+                hidden
+                accept="image/*"
+                type="file"
               />
             </div>
             {inputFieldError.image && (
@@ -391,7 +464,7 @@ function AddGiftContent(){
 
           {/* Submit Button */}
           <div className="flex justify-start">
-            <button 
+            <button
               onClick={handleSubmit}
               disabled={loading}
               className="bg-red-500 hover:bg-red-600 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg cursor-pointer font-medium transition duration-200 flex items-center gap-2"
@@ -411,6 +484,7 @@ function AddGiftContent(){
     </div>
   );
 };
+
 const AddGift = () => {
   return (
     <Suspense fallback={<div className="flex justify-center items-center min-h-screen"><div className="text-xl text-gray-600">Loading...</div></div>}>
@@ -418,4 +492,5 @@ const AddGift = () => {
     </Suspense>
   );
 };
+
 export default AddGift;

@@ -61,12 +61,12 @@ const Gift = () => {
 
     if (result.isConfirmed) {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/gift/delete_gift`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/delete-gift`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ gift_id: giftId }),
+          body: JSON.stringify({ giftId: giftId }),
         });
         
         const data = await response.json();
@@ -101,7 +101,7 @@ const Gift = () => {
     { 
       name: 'S.No.', 
       selector: (row: Gift, index?: number) => (index || 0) + 1,
-      style: { backgroundColor: "#000", paddingLeft: "20px" }
+      style: {paddingLeft: "20px" }
     },
     { 
       name: 'Gift', 
@@ -116,10 +116,10 @@ const Gift = () => {
       cell: (row: Gift) => (
         <div className="flex justify-center">
           <div className="relative w-12 h-12">
-            <Image 
-              src={row?.giftIcon ? `${process.env.NEXT_PUBLIC_IMAGE_URL}${row.giftIcon}` : '/images/placeholder.png'}
+            <img
+              src={row?.giftIcon ? `${process.env.NEXT_PUBLIC_IMAGE_URL}/${row.giftIcon}` : '/images/placeholder.png'}
               alt="Gift icon"
-              fill
+              
               className="rounded-lg object-cover"
             />
           </div>

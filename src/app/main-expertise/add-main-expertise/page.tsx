@@ -20,6 +20,21 @@ interface ImageState {
   bytes: File | null;
 }
 
+interface MainExpertise {
+  _id: string;
+  mainExpertise: string;
+  description: string;
+  image: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+interface MainExpertiseResponse {
+  success: boolean;
+  mainExpertise: MainExpertise[];
+}
+
 function AddMainExpertiseContent(){
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -49,20 +64,51 @@ function AddMainExpertiseContent(){
       if (editMode && expertiseId) {
         try {
           setFetching(true);
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/expertise/get_main_expertise/${expertiseId}`);
-          const data = await response.json();
-          
-          if (data.success && data.data) {
-            setInputFieldDetail({
-              title: data.data.mainExpertise || '',
-              description: data.data.description || ''
-            });
-            if (data.data.image) {
-              setImage({
-                file: `${process.env.NEXT_PUBLIC_IMAGE_URL}${data.data.image}`,
-                bytes: null
-              });
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/get-all-main-expertise`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (response.ok) {
+            const data: MainExpertiseResponse = await response.json();
+            
+            if (data.success && data.mainExpertise) {
+              // Find the specific expertise by ID
+              const expertiseToEdit = data.mainExpertise.find(
+                (expertise: MainExpertise) => expertise._id === expertiseId
+              );
+              
+              if (expertiseToEdit) {
+                setInputFieldDetail({
+                  title: expertiseToEdit.mainExpertise || '',
+                  description: expertiseToEdit.description || ''
+                });
+                if (expertiseToEdit.image) {
+                  setImage({
+                    file: `${process.env.NEXT_PUBLIC_API_URL}/${expertiseToEdit.image}`,
+                    bytes: null
+                  });
+                }
+              } else {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Error!',
+                  text: 'Expertise not found',
+                  confirmButtonColor: '#d33',
+                });
+                router.push("/main-expertise");
+              }
             }
+          } else {
+            console.error('Failed to fetch main expertise');
+            Swal.fire({
+              icon: 'error',
+              title: 'Error!',
+              text: 'Failed to load expertise data',
+              confirmButtonColor: '#d33',
+            });
           }
         } catch (error) {
           console.error('Error fetching expertise:', error);
@@ -79,7 +125,7 @@ function AddMainExpertiseContent(){
     };
 
     fetchExpertiseData();
-  }, [editMode, expertiseId]);
+  }, [editMode, expertiseId, router]);
 
   //* Handle Input Field : Data
   const handleInputChange = (field: keyof InputFieldDetail, value: string) => {
@@ -149,7 +195,7 @@ function AddMainExpertiseContent(){
   // API call functions
   const createMainExpertise = async (formData: FormData) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/expertise/create_main_expertise`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/add-main-expertise`, {
         method: 'POST',
         body: formData,
       });
@@ -162,8 +208,8 @@ function AddMainExpertiseContent(){
 
   const updateMainExpertise = async (formData: FormData) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/expertise/update_main_expertise`, {
-        method: 'PUT',
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/update-main-expertise`, {
+        method: 'POST',
         body: formData,
       });
       return await response.json();
@@ -230,6 +276,14 @@ function AddMainExpertiseContent(){
     }
   };
 
+  // Add click handler for image upload area
+  const handleImageAreaClick = () => {
+    const fileInput = document.getElementById('upload-image') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.click();
+    }
+  };
+
   if (fetching) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -267,15 +321,15 @@ function AddMainExpertiseContent(){
             <div 
               onDragOver={(e) => e.preventDefault()} 
               onDrop={handleDrop}
+              onClick={handleImageAreaClick}
               className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors cursor-pointer"
             >
               {image.file ? (
                 <div className="flex flex-col items-center">
                   <div className="relative w-64 h-64 mb-4">
-                    <Image 
+                    <img 
                       src={image.file} 
                       alt="Expertise" 
-                      fill
                       className="object-contain rounded-lg"
                     />
                   </div>
@@ -365,6 +419,7 @@ function AddMainExpertiseContent(){
     </div>
   );
 };
+
 const AddReview = () => {
   return (
     <Suspense fallback={<div className="flex justify-center items-center min-h-screen"><div className="text-xl text-gray-600">Loading...</div></div>}>
@@ -372,4 +427,5 @@ const AddReview = () => {
     </Suspense>
   );
 };
+
 export default AddReview;

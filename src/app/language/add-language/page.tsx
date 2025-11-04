@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Swal from "sweetalert2";
 
 interface LanguageDetail {
     title: string;
@@ -8,12 +9,6 @@ interface LanguageDetail {
 
 interface InputFieldError {
     title: string;
-}
-
-interface Notification {
-    show: boolean;
-    type: 'success' | 'error' | '';
-    message: string;
 }
 
 function AddLanguageReview() {
@@ -32,19 +27,6 @@ function AddLanguageReview() {
     });
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(editMode && !languageNameFromUrl);
-    const [notification, setNotification] = useState<Notification>({
-        show: false,
-        type: '',
-        message: ''
-    });
-
-    // Show notification
-    const showNotification = (type: 'success' | 'error', message: string) => {
-        setNotification({ show: true, type, message });
-        setTimeout(() => {
-            setNotification({ show: false, type: '', message: '' });
-        }, 3000);
-    };
 
     // Fetch language data if in edit mode and name not in URL
     useEffect(() => {
@@ -65,11 +47,21 @@ function AddLanguageReview() {
                     if (data.success && data.data) {
                         setLanguageDetail({ title: data.data.languageName });
                     } else {
-                        showNotification('error', data.message || 'Failed to fetch language data');
+                        await Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: data.message || 'Failed to fetch language data',
+                            confirmButtonColor: '#d33',
+                        });
                     }
                 } catch (error) {
                     console.error('Error fetching language:', error);
-                    showNotification('error', 'Error fetching language data');
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: 'Error fetching language data',
+                        confirmButtonColor: '#d33',
+                    });
                 } finally {
                     setFetching(false);
                 }
@@ -166,12 +158,20 @@ function AddLanguageReview() {
                 });
 
                 if (result.success) {
-                    showNotification('success', 'Language updated successfully!');
-                    setTimeout(() => {
-                        router.push("/language");
-                    }, 1500);
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: 'Language updated successfully!',
+                        confirmButtonColor: '#3085d6',
+                    });
+                    router.push("/language");
                 } else {
-                    showNotification('error', result.message || 'Failed to update language');
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: result.message || 'Failed to update language',
+                        confirmButtonColor: '#d33',
+                    });
                 }
             } else {
                 // Create new language
@@ -180,24 +180,33 @@ function AddLanguageReview() {
                 });
 
                 if (result.success) {
-                    showNotification('success', 'Language created successfully!');
-                    setTimeout(() => {
-                        router.push("/language");
-                    }, 1500);
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: 'Language created successfully!',
+                        confirmButtonColor: '#3085d6',
+                    });
+                    router.push("/language");
                 } else {
-                    showNotification('error', result.message || 'Failed to create language');
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: result.message || 'Failed to create language',
+                        confirmButtonColor: '#d33',
+                    });
                 }
             }
         } catch (error) {
             console.error('Error submitting language:', error);
-            showNotification('error', 'An error occurred. Please try again.');
+            await Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: 'An error occurred. Please try again.',
+                confirmButtonColor: '#d33',
+            });
         } finally {
             setLoading(false);
         }
-    };
-
-    const handleCancel = () => {
-        router.push("/language");
     };
 
     const handleDisplay = () => {
@@ -206,28 +215,6 @@ function AddLanguageReview() {
 
     return (
         <div className="min-h-screen bg-gray-50 p-6">
-            {/* Notification */}
-            {notification.show && (
-                <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 ${
-                    notification.type === 'success'
-                        ? 'bg-green-500 text-white'
-                        : 'bg-red-500 text-white'
-                }`}>
-                    <div className="flex items-center gap-2">
-                        {notification.type === 'success' ? (
-                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                        ) : (
-                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                            </svg>
-                        )}
-                        <span>{notification.message}</span>
-                    </div>
-                </div>
-            )}
-
             <div className="w-full mx-auto">
                 <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
                     {/* Header */}
@@ -240,7 +227,7 @@ function AddLanguageReview() {
                                 onClick={handleDisplay}
                                 className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200 backdrop-blur-sm"
                             >
-                                Display Languages
+                                Display
                             </button>
                         </div>
                     </div>
@@ -287,23 +274,22 @@ function AddLanguageReview() {
                                     </p>
                                 </div>
 
-                         <div className="flex gap-3 w-20 rounded-md">
-  <button
-    type="submit"
-    disabled={loading || fetching}
-    className="flex-1 bg-red-500 hover:bg-red-600 disabled:bg-red-400 text-white font-medium py-3 rounded-md transition-colors"
-  >
-    {loading ? (
-      <>
-        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-        {editMode ? 'Updating...' : 'Creating...'}
-      </>
-    ) : (
-      editMode ? 'Submit' : 'Create Language'
-    )}
-  </button>
-</div>
-
+                                <div className="flex gap-3 w-20 rounded-md">
+                                    <button
+                                        type="submit"
+                                        disabled={loading || fetching}
+                                        className="flex-1 bg-red-500 hover:bg-red-600 disabled:bg-red-400 text-white font-medium py-3 rounded-md transition-colors"
+                                    >
+                                        {loading ? (
+                                            <div className="flex items-center justify-center gap-2">
+                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                {editMode ? 'Updating...' : 'Creating...'}
+                                            </div>
+                                        ) : (
+                                            editMode ? 'Update' : 'Create'
+                                        )}
+                                    </button>
+                                </div>
                             </form>
                         )}
                     </div>

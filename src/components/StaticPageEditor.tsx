@@ -109,31 +109,8 @@ const StaticPageEditor: React.FC<StaticPageEditorProps> = ({
   const handleNumberList = () => executeCommand('insertOrderedList');
   
   const handleQuote = () => {
-    // Get selection
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) return;
-    
-    // Get the selected text
-    const range = selection.getRangeAt(0);
-    const selectedText = range.toString();
-    
-    if (selectedText) {
-      // Create blockquote element
-      const blockquote = document.createElement('blockquote');
-      blockquote.style.borderLeft = '4px solid #ccc';
-      blockquote.style.marginLeft = '0';
-      blockquote.style.paddingLeft = '16px';
-      blockquote.style.color = '#666';
-      blockquote.style.fontStyle = 'italic';
-      blockquote.textContent = selectedText;
-      
-      // Replace selection with blockquote
-      range.deleteContents();
-      range.insertNode(blockquote);
-      
-      editorRef.current?.focus();
-      handleContentChange();
-    }
+    executeCommand('formatBlock', 'blockquote');
+    handleContentChange();
   };
   
   const handleCode = () => {
@@ -141,26 +118,13 @@ const StaticPageEditor: React.FC<StaticPageEditorProps> = ({
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) return;
     
-    // Get the selected text
     const range = selection.getRangeAt(0);
     const selectedText = range.toString();
     
     if (selectedText) {
-      // Create code block element
-      const codeBlock = document.createElement('pre');
-      const code = document.createElement('code');
-      codeBlock.style.backgroundColor = '#f5f5f5';
-      codeBlock.style.padding = '12px';
-      codeBlock.style.borderRadius = '4px';
-      codeBlock.style.border = '1px solid #ddd';
-      codeBlock.style.overflow = 'auto';
-      codeBlock.style.fontFamily = 'monospace';
-      code.textContent = selectedText;
-      codeBlock.appendChild(code);
-      
-      // Replace selection with code block
-      range.deleteContents();
-      range.insertNode(codeBlock);
+      // Use insertHTML to maintain undo stack
+      const codeHTML = `<pre class="code-block"><code>${selectedText}</code></pre><p><br></p>`;
+      document.execCommand('insertHTML', false, codeHTML);
       
       editorRef.current?.focus();
       handleContentChange();
@@ -172,7 +136,15 @@ const StaticPageEditor: React.FC<StaticPageEditorProps> = ({
   
   const handleLink = () => {
     const url = prompt('Enter URL:');
-    if (url) executeCommand('createLink', url);
+    if (url) {
+      // Add https:// if no protocol is specified
+      let formattedUrl = url.trim();
+      if (!formattedUrl.match(/^https?:\/\//i)) {
+        formattedUrl = 'https://' + formattedUrl;
+      }
+      executeCommand('createLink', formattedUrl);
+      handleContentChange();
+    }
   };
 
   const handleUnlink = () => executeCommand('unlink');
@@ -187,31 +159,20 @@ const StaticPageEditor: React.FC<StaticPageEditorProps> = ({
     const format = event.target.value;
     setCurrentFormat(format);
     
-    switch(format) {
-      case 'Heading 1':
-        executeCommand('formatBlock', '<h1>');
-        break;
-      case 'Heading 2':
-        executeCommand('formatBlock', '<h2>');
-        break;
-      case 'Heading 3':
-        executeCommand('formatBlock', '<h3>');
-        break;
-      case 'Heading 4':
-        executeCommand('formatBlock', '<h4>');
-        break;
-      case 'Heading 5':
-        executeCommand('formatBlock', '<h5>');
-        break;
-      case 'Heading 6':
-        executeCommand('formatBlock', '<h6>');
-        break;
-      case 'Normal':
-        executeCommand('formatBlock', '<p>');
-        break;
-      default:
-        executeCommand('formatBlock', '<p>');
-    }
+    // Map format names to HTML tag names (without angle brackets)
+    const formatMap: { [key: string]: string } = {
+      'Heading 1': 'h1',
+      'Heading 2': 'h2',
+      'Heading 3': 'h3',
+      'Heading 4': 'h4',
+      'Heading 5': 'h5',
+      'Heading 6': 'h6',
+      'Normal': 'p',
+    };
+    
+    const tagName = formatMap[format] || 'p';
+    executeCommand('formatBlock', tagName);
+    handleContentChange();
   };
 
   // Handle Validation
@@ -487,7 +448,7 @@ const handleSubmit = async (e: React.MouseEvent<HTMLDivElement>) => {
                 size="small"
                 variant="outlined"
                 sx={{
-                  minWidth: '120px',
+                  minWidth: '140px',
                   height: '36px',
                   backgroundColor: '#fff',
                   '& .MuiOutlinedInput-notchedOutline': {
@@ -495,13 +456,13 @@ const handleSubmit = async (e: React.MouseEvent<HTMLDivElement>) => {
                   }
                 }}
               >
-                <MenuItem value="Normal">Normal</MenuItem>
-                <MenuItem value="Heading 1">Heading 1</MenuItem>
-                <MenuItem value="Heading 2">Heading 2</MenuItem>
-                <MenuItem value="Heading 3">Heading 3</MenuItem>
-                <MenuItem value="Heading 4">Heading 4</MenuItem>
-                <MenuItem value="Heading 5">Heading 5</MenuItem>
-                <MenuItem value="Heading 6">Heading 6</MenuItem>
+                <MenuItem value="Normal" style={{ fontSize: '14px' }}>Normal</MenuItem>
+                <MenuItem value="Heading 1" style={{ fontSize: '28px', fontWeight: 'bold' }}>Heading 1</MenuItem>
+                <MenuItem value="Heading 2" style={{ fontSize: '24px', fontWeight: 'bold' }}>Heading 2</MenuItem>
+                <MenuItem value="Heading 3" style={{ fontSize: '20px', fontWeight: 'bold' }}>Heading 3</MenuItem>
+                <MenuItem value="Heading 4" style={{ fontSize: '16px', fontWeight: 'bold' }}>Heading 4</MenuItem>
+                <MenuItem value="Heading 5" style={{ fontSize: '14px', fontWeight: 'bold' }}>Heading 5</MenuItem>
+                <MenuItem value="Heading 6" style={{ fontSize: '12px', fontWeight: 'bold' }}>Heading 6</MenuItem>
               </Select>
 
               <Divider orientation="vertical" flexItem sx={{ mx: 0.5, backgroundColor: '#d1d5db' }} />
@@ -522,6 +483,27 @@ const handleSubmit = async (e: React.MouseEvent<HTMLDivElement>) => {
               onInput={handleContentChange}
               onMouseUp={updateActiveFormats}
               onKeyUp={updateActiveFormats}
+              onClick={(e) => {
+                const target = e.target as HTMLElement;
+                
+                // Prevent editing inside code blocks by selecting the entire block
+                if (target.closest('pre.code-block')) {
+                  e.preventDefault();
+                  const pre = target.closest('pre.code-block') as HTMLElement;
+                  const selection = window.getSelection();
+                  const range = document.createRange();
+                  range.selectNode(pre);
+                  selection?.removeAllRanges();
+                  selection?.addRange(range);
+                  return;
+                }
+                
+                // Make links clickable with Ctrl/Cmd + Click
+                if (target.tagName === 'A' && (e.ctrlKey || e.metaKey)) {
+                  e.preventDefault();
+                  window.open((target as HTMLAnchorElement).href, '_blank');
+                }
+              }}
               onFocus={() => handleInputFieldError('description', null)}
               style={{
                 minHeight: '400px',
@@ -535,6 +517,7 @@ const handleSubmit = async (e: React.MouseEvent<HTMLDivElement>) => {
                 fontSize: '14px',
                 fontFamily: 'Arial, sans-serif',
               }}
+              className="rich-text-editor"
             />
             {inputFieldError?.description && (
               <div
@@ -548,6 +531,16 @@ const handleSubmit = async (e: React.MouseEvent<HTMLDivElement>) => {
                 {inputFieldError?.description}
               </div>
             )}
+            <div
+              style={{
+                color: '#6b7280',
+                fontSize: '12px',
+                padding: '5px 15px 0 12px',
+                fontStyle: 'italic',
+              }}
+            >
+              Tip: Hold Ctrl (or Cmd on Mac) and click on links to open them. Click on code blocks to select and delete them.
+            </div>
           </Grid>
 
           <Grid item lg={12} md={12} sm={12} xs={12}>
@@ -571,6 +564,113 @@ const handleSubmit = async (e: React.MouseEvent<HTMLDivElement>) => {
           </Grid>
         </Grid>
       )}
+      
+      {/* Add CSS for proper list and link styling */}
+      <style>{`
+        .rich-text-editor ul {
+          list-style-type: disc;
+          padding-left: 40px;
+          margin: 1em 0;
+        }
+        
+        .rich-text-editor ol {
+          list-style-type: decimal;
+          padding-left: 40px;
+          margin: 1em 0;
+        }
+        
+        .rich-text-editor li {
+          margin: 0.5em 0;
+        }
+        
+        .rich-text-editor a {
+          color: #2563eb;
+          text-decoration: underline;
+          cursor: pointer;
+          pointer-events: auto;
+        }
+        
+        .rich-text-editor a:hover {
+          color: #1d4ed8;
+          text-decoration: underline;
+        }
+        
+        .rich-text-editor blockquote {
+          border-left: 4px solid #ccc;
+          margin-left: 0;
+          padding-left: 16px;
+          color: #666;
+          font-style: italic;
+          margin: 1em 0;
+        }
+        
+        .rich-text-editor pre {
+          background-color: #f5f5f5;
+          padding: 12px;
+          border-radius: 4px;
+          border: 1px solid #ddd;
+          overflow: auto;
+          font-family: monospace;
+          margin: 1em 0;
+          cursor: default;
+          position: relative;
+        }
+        
+        .rich-text-editor pre.code-block {
+          user-select: all;
+        }
+        
+        .rich-text-editor pre.code-block::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          pointer-events: none;
+        }
+        
+        .rich-text-editor code {
+          font-family: 'Courier New', monospace;
+          font-size: 13px;
+        }
+        
+        .rich-text-editor h1 {
+          font-size: 2em;
+          font-weight: bold;
+          margin: 0.67em 0;
+        }
+        
+        .rich-text-editor h2 {
+          font-size: 1.5em;
+          font-weight: bold;
+          margin: 0.75em 0;
+        }
+        
+        .rich-text-editor h3 {
+          font-size: 1.17em;
+          font-weight: bold;
+          margin: 0.83em 0;
+        }
+        
+        .rich-text-editor h4 {
+          font-size: 1em;
+          font-weight: bold;
+          margin: 1em 0;
+        }
+        
+        .rich-text-editor h5 {
+          font-size: 0.83em;
+          font-weight: bold;
+          margin: 1.5em 0;
+        }
+        
+        .rich-text-editor h6 {
+          font-size: 0.67em;
+          font-weight: bold;
+          margin: 2em 0;
+        }
+      `}</style>
     </div>
   );
 };

@@ -24,7 +24,7 @@ import { DeepSearchSpace, IndianRupee } from '@/utils/common-function/index';
 import DatatableHeading from '@/components/common/dataTable';
 import MainDatatable from '@/components/common/MainDatatable';
 import { EditSvg, ViewSvg, WalletSvg } from '@/components/svgs/page';
-import { AlertTriangle } from 'lucide-react';
+import Swal from "sweetalert2";
 
 // Define types for better TypeScript support
 interface Customer {
@@ -71,8 +71,6 @@ export default function Customer() {
   const filteredData = DeepSearchSpace(customerData, searchText);
 
   const [walletModal, setWalletModal] = useState(false);
-  const [confirmationModal, setConfirmationModal] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [userId, setUserId] = useState('');
   const [inputFieldDetail, setInputFieldDetail] = useState({ amount: '', type: '' });
   const [inputFieldError, setInputFieldError] = useState({ amount: '', type: '' });
@@ -115,17 +113,6 @@ export default function Customer() {
     setInputFieldError({ amount: '', type: '' });
   };
 
-  // Confirmation modal handlers
-  const handleConfirmationModalOpen = (customer: Customer) => {
-    setSelectedCustomer(customer);
-    setConfirmationModal(true);
-  };
-
-  const handleConfirmationModalClose = () => {
-    setConfirmationModal(false);
-    setSelectedCustomer(null);
-  };
-
   // Handle Input Field : Error
   const handleInputFieldError = (input: string, value: string) => {
     setInputFieldError((prev) => ({ ...prev, [input]: value }));
@@ -165,7 +152,15 @@ export default function Customer() {
   // Handle Submit : Wallet
   const handleSubmit = () => {
     if (handleValidation()) {
-      console.log({ ...inputFieldDetail, userId });
+      // Show loading alert
+      Swal.fire({
+        title: 'Updating Wallet...',
+        text: 'Please wait',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
 
       const payload = {
         transactions: [
@@ -177,8 +172,6 @@ export default function Customer() {
         type: inputFieldDetail.type
       };
 
-      console.log('Sending wallet payload:', payload);
-
       fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/add_deduct_customer_wallet`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -186,27 +179,30 @@ export default function Customer() {
       })
       .then(async (res) => {
         const responseText = await res.text();
-        console.log('Wallet API Response:', responseText);
-
         let data;
         try {
           data = JSON.parse(responseText);
         } catch (parseError) {
-          console.error('Failed to parse JSON:', parseError);
           throw new Error('Invalid JSON response from server');
         }
 
         if (!res.ok) {
           throw new Error(data.message || `HTTP error! status: ${res.status}`);
         }
-
         return data;
       })
       .then(data => {
         if (data.success) {
-          alert('Wallet updated successfully!');
-          handleWalletModalClose();
+          Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: 'Wallet updated successfully!',
+            timer: 2000,
+            showConfirmButton: false
+          });
           
+          handleWalletModalClose();
+          // Refetch customers data
           fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/customers/get-all-customers`)
             .then(res => res.json())
             .then(data => {
@@ -218,85 +214,92 @@ export default function Customer() {
               console.error('Error refetching customers:', error);
             });
         } else {
-          alert(data.message || 'Failed to update wallet');
+          Swal.fire({
+            icon: 'error',
+            title: 'Failed',
+            text: data.message || 'Failed to update wallet'
+          });
         }
       })
       .catch(error => {
-        console.error('Error updating wallet:', error);
-        alert(`Error: ${error.message}`);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: `Error: ${error.message}`
+        });
       });
     }
   };
 
-  // Status toggle handler with confirmation
-  const handleStatusToggle = (customer: Customer) => {
-    if (!customer.banned_status) {
-      handleConfirmationModalOpen(customer);
-    } else {
-      updateCustomerStatus(customer._id, customer.customerName, false);
-    }
-  };
+  // Status toggle handler with SweetAlert
+  const handleStatusToggle = async (customer: Customer) => {
+    const newStatus = !customer.banned_status;
+    const action = newStatus ? 'ban' : 'unban';
+    
+    const result = await Swal.fire({
+      title: `Are you sure?`,
+      text: `You want to ${action} customer "${customer.customerName}"?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: newStatus ? '#d33' : '#3085d6',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: `Yes, ${action} customer!`,
+      cancelButtonText: 'Cancel'
+    });
 
-  // Actual status update function
-  const updateCustomerStatus = (customerId: string, customerName: string, status: boolean) => {
-    const payload = {
-      customerId: customerId,
-      customerName: customerName,
-      status: status
-    };
+    if (!result.isConfirmed) return;
 
-    console.log('Sending status payload:', payload);
+    try {
+      // Show loading
+      Swal.fire({
+        title: `${action === 'ban' ? 'Banning' : 'Unbanning'}...`,
+        text: 'Please wait',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/change-banned-status`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-    .then(async (res) => {
-      console.log('Response status:', res.status);
-      
-      const responseText = await res.text();
-      console.log('Response text:', responseText);
+      const payload = {
+        customerId: customer._id,
+        customerName: customer.customerName,
+        status: newStatus
+      };
 
-      let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error('Failed to parse JSON:', parseError);
-        throw new Error(`Server returned HTML instead of JSON. Status: ${res.status}`);
-      }
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/change-banned-status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
 
-      if (!res.ok) {
-        throw new Error(data.message || `HTTP error! status: ${res.status}`);
-      }
+      const data = await response.json();
 
-      return data;
-    })
-    .then(data => {
-      if (data.success) {
+      if (response.ok && data.success) {
         setCustomerData(prev => 
-          prev.map(customer => 
-            customer._id === customerId 
-              ? { ...customer, banned_status: data.data.banned_status }
-              : customer
+          prev.map(cust => 
+            cust._id === customer._id 
+              ? { ...cust, banned_status: data.data.banned_status }
+              : cust
           )
         );
-        console.log('Status updated successfully:', data.data.banned_status);
-        handleConfirmationModalClose();
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'Success!',
+          text: `Customer ${action === 'ban' ? 'banned' : 'unbanned'} successfully`,
+          timer: 2000,
+          showConfirmButton: false
+        });
       } else {
-        alert(data.message || 'Failed to update status');
+        throw new Error(data.message || 'Failed to update status');
       }
-    })
-    .catch(error => {
+    } catch (error) {
       console.error('Error toggling status:', error);
-      alert(`Error: ${error.message}`);
-    });
-  };
-
-  // Handle confirm ban
-  const handleConfirmBan = () => {
-    if (selectedCustomer) {
-      updateCustomerStatus(selectedCustomer._id, selectedCustomer.customerName, true);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: `Error: ${error instanceof Error ? error.message : 'Failed to update status'}`
+      });
     }
   };
 
@@ -398,16 +401,13 @@ export default function Customer() {
 
   return (
     <>
-      
-
-        <MainDatatable
-          columns={columns}
-          data={filteredData}
-          title="Customer"
-          isLoading={loading}
-          url="/customer/add-customer" 
-        />
-      
+      <MainDatatable
+        columns={columns}
+        data={filteredData}
+        title="Customer"
+        isLoading={loading}
+        url="/customer/add-customer" 
+      />
 
       {/* Wallet Modal */}
       <Dialog 
@@ -492,63 +492,6 @@ export default function Customer() {
             </Grid>
           </Grid>
         </DialogContent>
-      </Dialog>
-
-      {/* Confirmation Modal for Banning Customer */}
-      <Dialog 
-        open={confirmationModal} 
-        onClose={handleConfirmationModalClose}
-        PaperProps={{ 
-          sx: { 
-            maxWidth: { xs: '90vw', sm: '400px' }, 
-            minWidth: { xs: '90vw', sm: '400px' },
-            borderRadius: '12px',
-            padding: '20px'
-          } 
-        }}
-      >
-        <DialogContent className="p-4 text-center">
-          <Box className="flex justify-center mb-4">
-            <AlertTriangle size={48} className="text-yellow-500" />
-          </Box>
-          
-          <Typography variant="h6" className="font-semibold mb-2">
-            Are you sure?
-          </Typography>
-          
-          <Typography variant="body1" className="text-gray-600 mb-4">
-            You want to ban this customer{" "}
-            <strong>{selectedCustomer?.customerName}</strong>!!!
-          </Typography>
-        </DialogContent>
-
-        <DialogActions className="flex justify-center gap-4 p-4">
-          <Button 
-            onClick={handleConfirmationModalClose}
-            variant="outlined"
-            sx={{
-              px: 2,
-              py: 1,
-            }}
-          >
-            No
-          </Button>
-          <Button 
-            onClick={handleConfirmBan}
-            variant="contained"
-            sx={{
-              backgroundColor: '#dc2626',
-              '&:hover': {
-                backgroundColor: '#b91c1c',
-              },
-              px: 2,
-              py: 1,
-              color: 'white'
-            }}
-          >
-            Yes
-          </Button>
-        </DialogActions>
       </Dialog>
     </>
   );

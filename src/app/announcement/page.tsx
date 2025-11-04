@@ -60,82 +60,88 @@ const Announcement = () => {
     };
 
     // Delete announcement using POST method with SweetAlert confirmation
-const deleteAnnouncement = async (announcementId: string) => {
-    const result = await Swal.fire({
-        title: 'Are you sure?',
-        text: "You want to delete this announcement!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#d1d5db',
-        confirmButtonText: 'Yes, delete it!',
-        cancelButtonText: 'Cancel',
-        reverseButtons: true,
-        background: '#fff'
-    });
+    const deleteAnnouncement = async (announcementId: string) => {
+        const result = await Swal.fire({
+            title: 'Are you sure?',
+            text: "You want to delete this announcement!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#d1d5db',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true,
+            background: '#fff'
+        });
 
-    if (result.isConfirmed) {
-        try {
-            // Show loading
-            Swal.fire({
-                title: 'Deleting...',
-                text: 'Please wait',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/delete-announcement`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ announcementId }),
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                await getAllAnnouncements();
-                await Swal.fire({
-                    icon: 'success',
-                    title: 'Deleted!',
-                    text: 'Announcement has been deleted successfully.',
-                    showConfirmButton: false,
-                    timer: 1500
+        if (result.isConfirmed) {
+            try {
+                // Show loading
+                Swal.fire({
+                    title: 'Deleting...',
+                    text: 'Please wait',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
                 });
-            } else {
+
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/delete-announcement`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ announcementId }),
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    await getAllAnnouncements();
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Deleted!',
+                        text: 'Announcement has been deleted successfully.',
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                } else {
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: data.message || 'Failed to delete announcement',
+                        confirmButtonColor: '#d33',
+                    });
+                }
+            } catch (error) {
+                console.error('Error deleting announcement:', error);
                 await Swal.fire({
                     icon: 'error',
                     title: 'Error!',
-                    text: data.message || 'Failed to delete announcement',
+                    text: 'Failed to delete announcement',
                     confirmButtonColor: '#d33',
                 });
             }
-        } catch (error) {
-            console.error('Error deleting announcement:', error);
-            await Swal.fire({
-                icon: 'error',
-                title: 'Error!',
-                text: 'Failed to delete announcement',
-                confirmButtonColor: '#d33',
-            });
         }
-    }
-};
-    // Function to edit announcement - pass data via URL params
+    };
+
+    // Function to edit announcement - pass data via state/localStorage
     const handleEditAnnouncement = (announcement: Announcement) => {
-        // Create URLSearchParams to pass data
-        const params = new URLSearchParams();
-        params.set('edit', 'true');
-        params.set('id', announcement._id);
-        if (announcement.description) {
-            // Encode the description for URL safety
-            params.set('description', encodeURIComponent(announcement.description));
-        }
+        // Store announcement data in localStorage or sessionStorage
+        localStorage.setItem('editAnnouncementData', JSON.stringify({
+            id: announcement._id,
+            description: announcement.description,
+            editMode: true
+        }));
         
-        router.push(`/announcement/add-announcement?${params.toString()}`);
+        router.push("/announcement/add-announcement");
+    };
+
+    // Function to add new announcement
+    const handleAddAnnouncement = () => {
+        // Clear any existing edit data
+        localStorage.removeItem('editAnnouncementData');
+        router.push("/announcement/add-announcement");
     };
 
     //* DataTable Columns
@@ -161,15 +167,6 @@ const deleteAnnouncement = async (announcementId: string) => {
                             }} 
                             className="cursor-pointer hover:text-blue-600 transition-colors flex-1" 
                         />
-                        {/* <Eye 
-                            size={16} 
-                            className="text-gray-500 hover:text-blue-600 cursor-pointer transition-colors"
-                            onClick={() => openTextModal({ 
-                                title: 'Full Description', 
-                                text: row?.description, 
-                                type: 'editor' 
-                            })}
-                        /> */}
                     </div>
                 ) : 'N/A' 
         },

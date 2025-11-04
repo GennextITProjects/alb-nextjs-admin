@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import moment from 'moment';
-import MainDatatable from '@/components/datatable/MainDatatable';
+import MainDatatable from '@/components/common/MainDatatable';
 import DatatableHeading from '@/components/datatable/DatatableHeading';
 import { TableColumn } from 'react-data-table-component';
 import { base_url } from '@/lib/api-routes';
@@ -105,115 +105,81 @@ const LeaveRequestPage: React.FC = () => {
   }, [filteredData]);
 
   // ✅ Datatable Columns
-  const columns: TableColumn<LeaveRequest>[] = useMemo(
-    () => [
-      {
-        name: 'S.No.',
-        cell: (_row: LeaveRequest, index: number) => index + 1,
-        width: '80px',
-      },
-      {
-        name: 'Astrologer',
-        selector: (row: LeaveRequest) =>
-          row?.astrologerId?.astrologerName
-            ? row.astrologerId.astrologerName.toUpperCase()
-            : '-',
-        width: '200px',
-      },
-      {
-        name: 'Start Date',
-        selector: (row: LeaveRequest) => moment(row.startDate).format('DD-MMM-YYYY'),
-      },
-      {
-        name: 'Start Time',
-        selector: (row: LeaveRequest) => row.startTime,
-      },
-      {
-        name: 'End Date',
-        selector: (row: LeaveRequest) => moment(row.endDate).format('DD-MMM-YYYY'),
-      },
-      {
-        name: 'End Time',
-        selector: (row: LeaveRequest) => row.endTime,
-      },
-      {
-        name: 'Status',
-        cell: (row: LeaveRequest) => (
-          <div style={{ textTransform: 'capitalize' }}>{row.status}</div>
-        ),
-      },
-      {
-        name: 'Action',
-        cell: (row: LeaveRequest) => (
-          <select
-            value={row.status}
-            onChange={(e) =>
-              handleStatusChange(row._id, e.target.value as LeaveRequest['status'])
-            }
-            style={{
-              padding: '4px 6px',
-              borderRadius: '5px',
-              border: '1px solid #ccc',
-              background: '#fff',
-            }}
-          >
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-          </select>
-        ),
-      },
-    ],
-    []
-  );
+const columns = useMemo(
+  () => [
+    {
+      name: 'S.No.',
+      cell: (_row: LeaveRequest, index?: number) => (index !== undefined ? index + 1 : 0),
+      width: '80px',
+    },
+    {
+      name: 'Astrologer',
+      selector: (row: LeaveRequest) =>
+        row?.astrologerId?.astrologerName
+          ? row.astrologerId.astrologerName.toUpperCase()
+          : '-',
+      width: '200px',
+    },
+    {
+      name: 'Start Date',
+      selector: (row: LeaveRequest) => moment(row.startDate).format('DD-MMM-YYYY'),
+    },
+    {
+      name: 'Start Time',
+      selector: (row: LeaveRequest) => row.startTime,
+    },
+    {
+      name: 'End Date',
+      selector: (row: LeaveRequest) => moment(row.endDate).format('DD-MMM-YYYY'),
+    },
+    {
+      name: 'End Time',
+      selector: (row: LeaveRequest) => row.endTime,
+    },
+    {
+      name: 'Status',
+      cell: (row: LeaveRequest) => (
+        <div style={{ textTransform: 'capitalize' }}>{row.status}</div>
+      ),
+    },
+    {
+      name: 'Action',
+      cell: (row: LeaveRequest) => (
+        <select
+          value={row.status}
+          onChange={(e) =>
+            handleStatusChange(row._id, e.target.value as LeaveRequest['status'])
+          }
+          style={{
+            padding: '4px 6px',
+            borderRadius: '5px',
+            border: '1px solid #ccc',
+            background: '#fff',
+          }}
+        >
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+        </select>
+      ),
+    },
+  ],
+  []
+);
 
   // ✅ Render
   return (
-    <div
-      style={{
-        padding: '20px',
-        backgroundColor: '#fff',
-        marginBottom: '20px',
-        boxShadow: '0px 0px 5px lightgrey',
-        borderRadius: '10px',
-      }}
-    >
-      <DatatableHeading title="Leave Request" data={csvData} />
-
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: '20px',
-          alignItems: 'center',
-          marginBottom: '20px',
-          backgroundColor: '#fff',
-        }}
-      >
-        <input
-          type="search"
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          placeholder="Search your data..."
-          style={{
-            padding: '5px 10px',
-            borderRadius: '5px',
-            border: '1px solid #ccc',
-            boxShadow: '0px 0px 5px rgba(0, 0, 0, 0.1)',
-            width: '100%',
-            maxWidth: '250px',
-            fontSize: '15px',
-            outline: 'none',
-          }}
-        />
-      </div>
+    <>
 
       <MainDatatable
         columns={columns}
         data={filteredData}
+        title='Leave Request'
+        url="/astrologer/leave-request"
         isLoading={loading}
+        addButtonActive={false}
       />
-    </div>
+    </>
   );
 };
 

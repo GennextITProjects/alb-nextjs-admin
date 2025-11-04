@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Swal from "sweetalert2";
 import MainDatatable from "@/components/common/MainDatatable";
 import { EditSvg, SwitchOffSvg, SwitchOnSvg } from "@/components/svgs/page";
 
@@ -59,47 +60,79 @@ const Banner = () => {
     }
   };
 
-  // Change banner status
-  const changeBannerStatus = async (bannerId: string) => {
+  // Change banner status with SweetAlert
+  const changeBannerStatus = async (banner: Banner) => {
+    const newStatus = banner.status === "active" ? "inactive" : "active";
+    
+    const result = await Swal.fire({
+      title: 'Change Banner Status?',
+      text: `Are you sure you want to ${newStatus === "active" ? "activate" : "deactivate"} the banner "${banner.title}"?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: `Yes, set to ${newStatus}`,
+      cancelButtonText: 'Cancel'
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
+      // Show loading
+      Swal.fire({
+        title: 'Updating...',
+        text: 'Please wait',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
       const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/admin/update_banner_status`;
-      console.log("Calling API:", apiUrl); // Debug log
-      console.log("Banner ID:", bannerId); // Debug log
+      console.log("Calling API:", apiUrl);
+      console.log("Banner ID:", banner._id);
 
       const response = await fetch(apiUrl, {
-        method: "PATCH",
+        method: "POST",
         headers: { 
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ bannerId }),
+        body: JSON.stringify({ bannerId: banner._id }),
       });
 
-      console.log("Response status:", response.status); // Debug log
-      console.log("Response headers:", response.headers.get('content-type')); // Debug log
+      console.log("Response status:", response.status);
 
       // Check if response is JSON
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
         const text = await response.text();
         console.error("Non-JSON response:", text.substring(0, 200));
-        alert(`Server error: Expected JSON but got ${contentType}. Status: ${response.status}`);
-        return;
+        throw new Error(`Server error: Expected JSON but got ${contentType}. Status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log("Status update response:", data); // Debug log
+      console.log("Status update response:", data);
 
       if (response.ok && data.success) {
-        console.log(data.message); // Log success message
-        // Refresh banners after status change
         await fetchBanners();
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'Status Updated!',
+          text: `Banner has been ${newStatus === "active" ? "activated" : "deactivated"} successfully`,
+          timer: 2000,
+          showConfirmButton: false
+        });
       } else {
-        console.error("Failed to update status:", data);
-        alert(`Failed to update status: ${data.message || 'Unknown error'}`);
+        throw new Error(data.message || 'Failed to update status');
       }
     } catch (error) {
       console.error("Error changing banner status:", error);
-      alert("Error updating banner status. Check console for details.");
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error instanceof Error ? error.message : 'Error updating banner status'
+      });
     }
   };
 
@@ -115,17 +148,17 @@ const Banner = () => {
     {
       name: "S.No.",
       selector: (row: Banner, index?: number) => (index ?? 0) + 1,
-      width: "80px",
+      
     },
     {
       name: "Title",
       selector: (row: Banner) => row?.title || "N/A",
-      width: "180px",
+      
     },
     {
       name: "Redirect Page",
       selector: (row: Banner) => row?.redirectTo || "N/A",
-      width: "170px",
+      
     },
     {
       name: "Redirect Url",
@@ -134,7 +167,7 @@ const Banner = () => {
         const url = row.redirectionUrl;
         return url.length > 50 ? `${url.slice(0, 50)}...` : url;
       },
-      width: "280px",
+      
     },
     {
       name: "Banner",
@@ -162,7 +195,7 @@ const Banner = () => {
       name: "Status",
       cell: (row: Banner) => (
         <div
-          onClick={() => changeBannerStatus(row._id)}
+          onClick={() => changeBannerStatus(row)}
           className="cursor-pointer"
         >
           {row?.status === "active" ? <SwitchOnSvg /> : <SwitchOffSvg />}

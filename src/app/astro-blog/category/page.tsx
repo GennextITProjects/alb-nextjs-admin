@@ -4,7 +4,8 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import moment from 'moment';
 import { TableColumn } from 'react-data-table-component';
-import MainDatatable from '@/components/datatable/MainDatatable';
+import Swal from 'sweetalert2';
+import MainDatatable from '@/components/common/MainDatatable';
 import DatatableHeading from '@/components/datatable/DatatableHeading';
 import { base_url } from '@/lib/api-routes';
 import { EditSvg, DeleteSvg } from '@/components/svgs/page';
@@ -60,21 +61,56 @@ const CategoryPage: React.FC = () => {
     }
   };
 
-  // Delete Category
-  const handleDelete = async (categoryId: string) => {
-    if (!confirm('Are you sure you want to delete this category?')) return;
+  // Delete Category with SweetAlert
+  const handleDelete = async (categoryId: string, categoryName: string) => {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: `You want to delete category "${categoryName}"?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel'
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
+      // Show loading
+      Swal.fire({
+        title: 'Deleting...',
+        text: 'Please wait',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
       const res = await fetch(`${base_url}api/admin/delete_blog_category`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ categoryId }),
       });
+      
       if (!res.ok) throw new Error('Failed to delete category');
 
       await fetchCategories();
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Deleted!',
+        text: 'Category has been deleted successfully',
+        timer: 2000,
+        showConfirmButton: false
+      });
     } catch (error) {
       console.error('Error deleting category:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to delete category'
+      });
     }
   };
 
@@ -103,24 +139,24 @@ const CategoryPage: React.FC = () => {
   }, [filteredData]);
 
   // Datatable Columns
-  const columns: TableColumn<BlogCategory>[] = useMemo(
+  const columns = useMemo(
     () => [
       {
         name: 'S.No.',
-        selector: (_row, index) => (index !== undefined ? index + 1 : 0),
+        selector: (_row:any, index?:number) => (index !== undefined ? index + 1 : 0),
         width: '80px',
       },
       {
         name: 'Title',
-        selector: (row) => row?.blog_category || '-',
+        selector: (row:any) => row?.blog_category || '-',
       },
       {
         name: 'Created Date',
-        selector: (row) => moment(row?.createdAt).format('DD MMM YYYY @ hh:mm a'),
+        selector: (row:any) => moment(row?.createdAt).format('DD MMM YYYY @ hh:mm a'),
       },
       {
         name: 'Action',
-        cell: (row) => (
+        cell: (row:any) => (
           <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
             <div
               onClick={() => handleEdit(row)}
@@ -129,7 +165,7 @@ const CategoryPage: React.FC = () => {
               <EditSvg />
             </div>
             <div
-              onClick={() => handleDelete(row._id)}
+              onClick={() => handleDelete(row._id, row.blog_category)}
               style={{ cursor: 'pointer' }}
             >
               <DeleteSvg />
@@ -143,55 +179,13 @@ const CategoryPage: React.FC = () => {
   );
 
   return (
-    <div
-      style={{
-        padding: '20px',
-        backgroundColor: '#fff',
-        marginBottom: '20px',
-        boxShadow: '0px 0px 5px lightgrey',
-        borderRadius: '10px',
-      }}
-    >
-      <DatatableHeading
-        title="Blog Category"
-        url="/astro-blog/category/add-category"
-        data={csvData}
-      />
-
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: '20px',
-          alignItems: 'center',
-          marginBottom: '20px',
-          backgroundColor: '#fff',
-        }}
-      >
-        <input
-          type="search"
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          placeholder="Search your data..."
-          style={{
-            padding: '5px 10px',
-            borderRadius: '5px',
-            border: '1px solid #ccc',
-            boxShadow: '0px 0px 5px rgba(0, 0, 0, 0.1)',
-            width: '100%',
-            maxWidth: '250px',
-            fontSize: '15px',
-            outline: 'none',
-          }}
-        />
-      </div>
-
-      <MainDatatable
-        columns={columns}
-        data={filteredData}
-        isLoading={loading}
-      />
-    </div>
+    <MainDatatable
+      columns={columns}
+      data={filteredData}
+      title='Blog category'
+      url="/astro-blog/category/add-category"
+      isLoading={loading}
+    />
   );
 };
 

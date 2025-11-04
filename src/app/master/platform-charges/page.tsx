@@ -4,10 +4,11 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import moment from 'moment';
 import { TableColumn } from 'react-data-table-component';
-import MainDatatable from '@/components/datatable/MainDatatable';
+import MainDatatable from '@/components/common/MainDatatable';
 import DatatableHeading from '@/components/datatable/DatatableHeading';
 import { base_url } from '@/lib/api-routes';
 import { DeleteSvg } from '@/components/svgs/page';
+import Swal from 'sweetalert2';
 
 // ---------------------------------------------------------------------
 // Types
@@ -73,28 +74,44 @@ const PlatformCharges: React.FC = () => {
   };
 
   //* Handle Submit
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  //* Handle Submit
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    if (!handleValidation()) return;
+  if (!handleValidation()) return;
 
-    const { platform_charges } = inputFieldDetail;
+  const { platform_charges } = inputFieldDetail;
 
-    try {
-      const res = await fetch(`${base_url}api/admin/create-platform-charges`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ platformChargeAmount: platform_charges }),
-      });
+  try {
+    const res = await fetch(`${base_url}api/admin/create-platform-charges`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ platformChargeAmount: platform_charges }),
+    });
 
-      if (!res.ok) throw new Error('Failed to create platform charge');
+    if (!res.ok) throw new Error('Failed to create platform charge');
 
-      setInputFieldDetail({ platform_charges: '' });
-      await fetchPlatformCharges(); // Refresh list
-    } catch (error) {
-      console.error('Error creating platform charge:', error);
-    }
-  };
+    await Swal.fire({
+      icon: 'success',
+      title: 'Success!',
+      text: 'Platform charge created successfully!',
+      confirmButtonColor: '#3085d6',
+    });
+
+    setInputFieldDetail({ platform_charges: '' });
+    await fetchPlatformCharges(); // Refresh list
+  } catch (error) {
+    console.error('Error creating platform charge:', error);
+    await Swal.fire({
+      icon: 'error',
+      title: 'Error!',
+      text: 'Failed to create platform charge. Please try again.',
+      confirmButtonColor: '#d33',
+    });
+  }
+};
+
+
 
   //* Fetch Platform Charges
   const fetchPlatformCharges = async () => {
@@ -113,20 +130,46 @@ const PlatformCharges: React.FC = () => {
   };
 
   //* Delete Platform Charge
-  const handleDelete = async (chargeId: string) => {
-    if (!confirm('Are you sure you want to delete this platform charge?')) return;
+ //* Delete Platform Charge
+const handleDelete = async (chargeId: string) => {
+  const result = await Swal.fire({
+    title: 'Are you sure?',
+    text: "You won't be able to revert this!",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, delete it!',
+    cancelButtonText: 'Cancel'
+  });
 
-    try {
-      const res = await fetch(`${base_url}api/admin/del-platform-charges/${chargeId}`, {
-        method: 'DELETE',
-      });
-      if (!res.ok) throw new Error('Failed to delete platform charge');
+  if (!result.isConfirmed) return;
 
-      await fetchPlatformCharges();
-    } catch (error) {
-      console.error('Error deleting platform charge:', error);
-    }
-  };
+  try {
+    const res = await fetch(`${base_url}api/admin/del-platform-charges/${chargeId}`, {
+      method: 'DELETE',
+    });
+    
+    if (!res.ok) throw new Error('Failed to delete platform charge');
+
+    await Swal.fire({
+      title: 'Deleted!',
+      text: 'Platform charge has been deleted successfully.',
+      icon: 'success',
+      confirmButtonColor: '#3085d6',
+    });
+
+    await fetchPlatformCharges();
+  } catch (error) {
+    console.error('Error deleting platform charge:', error);
+    await Swal.fire({
+      title: 'Error!',
+      text: 'Failed to delete platform charge. Please try again.',
+      icon: 'error',
+      confirmButtonColor: '#d33',
+    });
+  }
+};
 
   //* Search filtering
   useEffect(() => {
@@ -149,41 +192,41 @@ const PlatformCharges: React.FC = () => {
     }));
   }, [filteredData]);
 
-  //* Datatable Columns
-  const columns: TableColumn<PlatformCharge>[] = useMemo(
-    () => [
-      {
-        name: 'S.No.',
-        selector: (_row, index) => (index !== undefined ? index + 1 : 0),
-        width: '80px',
-      },
-      {
-        name: 'Platform Charge Amount',
-        selector: (row) => row?.platformChargeAmount ?? '-',
-      },
-      {
-        name: 'Action',
-        cell: (row) => (
-          <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-            <div
-              onClick={() => handleDelete(row._id)}
-              style={{ cursor: 'pointer' }}
-            >
-              <DeleteSvg />
-            </div>
+//* Datatable Columns
+const columns = useMemo(
+  () => [
+    {
+      name: 'S.No.',
+      selector: (_row: any, index?: number) => (index !== undefined ? index + 1 : 0),
+      width: '80px',
+    },
+    {
+      name: 'Platform Charge Amount',
+      selector: (row: PlatformCharge) => row?.platformChargeAmount ?? '-',
+    },
+    {
+      name: 'Action',
+      cell: (row: PlatformCharge) => (
+        <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+          <div
+            onClick={() => handleDelete(row._id)}
+            style={{ cursor: 'pointer' }}
+          >
+            <DeleteSvg />
           </div>
-        ),
-        width: '120px',
-      },
-      {
-        name: 'Created At',
-        selector: (row) =>
-          row?.createdAt ? moment(row.createdAt).format('DD MMM YYYY @ hh:mm a') : '-',
-        sortable: true,
-      },
-    ],
-    []
-  );
+        </div>
+      ),
+      width: '120px',
+    },
+    {
+      name: 'Created At',
+      selector: (row: PlatformCharge) =>
+        row?.createdAt ? moment(row.createdAt).format('DD MMM YYYY @ hh:mm a') : '-',
+      sortable: true,
+    },
+  ],
+  []
+);
 
   //* Render
   return (
@@ -265,52 +308,19 @@ const PlatformCharges: React.FC = () => {
         </form>
       </div>
 
-      {/* Table Section */}
-      <div
-        style={{
-          padding: '20px',
-          backgroundColor: '#fff',
-          marginBottom: '20px',
-          boxShadow: '0px 0px 5px lightgrey',
-          borderRadius: '10px',
-        }}
-      >
-        <DatatableHeading title="Platform Charges" data={csvData} />
+    
 
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            gap: '20px',
-            alignItems: 'center',
-            marginBottom: '20px',
-            backgroundColor: '#fff',
-          }}
-        >
-          <input
-            type="search"
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            placeholder="Search your data..."
-            style={{
-              padding: '5px 10px',
-              borderRadius: '5px',
-              border: '1px solid #ccc',
-              boxShadow: '0px 0px 5px rgba(0, 0, 0, 0.1)',
-              width: '100%',
-              maxWidth: '250px',
-              fontSize: '15px',
-              outline: 'none',
-            }}
-          />
-        </div>
+     
 
-        <MainDatatable
-          columns={columns}
-          data={filteredData}
-          isLoading={loading}
-        />
-      </div>
+      
+         <MainDatatable
+                  columns={columns}
+                  data={filteredData}
+                  title="Platform Charges"
+                  isLoading={loading}
+                  url="/master/platform-charges" 
+                />
+      
     </>
   );
 };

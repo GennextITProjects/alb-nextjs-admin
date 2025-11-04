@@ -19,6 +19,7 @@ import { UploadImageSvg } from '@/components/svgs/page';
 import Swal from 'sweetalert2';
 
 
+
 // ---------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------
@@ -150,20 +151,28 @@ const AddEditBlogContent = () => {
   };
 
   // Handle Image Upload
-  const handleImage = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      if (file.size < 1 * 1024 * 1024) {
-        setImage({
-          file: URL.createObjectURL(file),
-          bytes: file,
-        });
-      } else {
-        alert('Please upload images having size less than 1 MB');
-      }
+ // Handle Image Upload
+const handleImage = (e: React.ChangeEvent<HTMLInputElement>): void => {
+  if (e.target.files && e.target.files.length > 0) {
+    const file = e.target.files[0];
+    if (file.size < 1 * 1024 * 1024) {
+      setImage({
+        file: URL.createObjectURL(file),
+        bytes: file,
+      });
+    } else {
+      Swal.fire({
+        icon: 'warning',
+        title: 'File too large',
+        text: 'Please upload images having size less than 1 MB',
+        confirmButtonColor: '#3085d6',
+      });
     }
-    handleInputFieldError('image', null);
-  };
+  }
+  handleInputFieldError('image', null);
+};
+
+
 
   // Handle Drag and Drop
   const handleDrop = (e: React.DragEvent<HTMLLabelElement>): void => {
@@ -233,6 +242,7 @@ const AddEditBlogContent = () => {
 
   // Handle Submit
  // Handle Submit
+// Handle Submit
 const handleSubmit = async (e: React.MouseEvent<HTMLDivElement>): Promise<void> => {
   e.preventDefault();
 
@@ -260,7 +270,7 @@ const handleSubmit = async (e: React.MouseEvent<HTMLDivElement>): Promise<void> 
     const url = editBlog
       ? `${base_url}api/admin/update_astro_blog`
       : `${base_url}api/admin/add-astro-blog`;
-    const method = editBlog ? 'PUT' : 'POST';
+    const method = 'POST';
 
     const res = await fetch(url, {
       method,

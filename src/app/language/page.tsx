@@ -51,54 +51,45 @@ const Language = () => {
     ];
 
     // Fetch languages from API
-    const fetchLanguages = async () => {
-        setLoading(true);
-        setError("");
-        try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/get_language`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
+const fetchLanguages = async () => {
+  setLoading(true);
+  setError("");
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/get_language`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-            if (!response.ok) {
-                throw new Error('Failed to fetch languages');
-            }
+    if (!response.ok) {
+      throw new Error('Failed to fetch languages');
+    }
 
-            const data = await response.json();
-            console.log("API Response:", data);
-            
-            if (data.success) {
-                setLanguageData(data.languageData || []);
-                // Show success message on first load
-                if (languageData.length === 0) {
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'Success!',
-                        text: 'Languages loaded successfully',
-                        showConfirmButton: false,
-                        timer: 1500
-                    });
-                }
-            } else {
-                throw new Error(data.message || 'Failed to fetch languages');
-            }
-        } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'An error occurred while fetching languages';
-            setError(errorMessage);
-            console.error('Error fetching languages:', err);
-            
-            await Swal.fire({
-                icon: 'error',
-                title: 'Error!',
-                text: errorMessage,
-                confirmButtonColor: '#d33',
-            });
-        } finally {
-            setLoading(false);
-        }
-    };
+    const data = await response.json();
+    console.log("API Response:", data);
+    
+    if (data.success) {
+      setLanguageData(data.languageData || []);
+      // Removed the success Swal.fire for loading
+    } else {
+      throw new Error(data.message || 'Failed to fetch languages');
+    }
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : 'An error occurred while fetching languages';
+    setError(errorMessage);
+    console.error('Error fetching languages:', err);
+    
+    await Swal.fire({
+      icon: 'error',
+      title: 'Error!',
+      text: errorMessage,
+      confirmButtonColor: '#d33',
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
     // Updated edit function to pass data via URL params
     const handleEdit = (language: LanguageData) => {
