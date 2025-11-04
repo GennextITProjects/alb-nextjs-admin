@@ -29,10 +29,14 @@ const Category = () => {
     try {
       setLoading(true);
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/puja/get_puja_category`);
-      const data= await response.json();
+      const data = await response.json();
       
       if (data.success) {
-        setPujaCategoryData(data.results);
+        // Sort in descending order by createdAt (newest first)
+        const sortedData = [...data.results].sort((a, b) => {
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
+        setPujaCategoryData(sortedData);
       } else {
         console.error('Failed to fetch categories:', data.message);
       }
@@ -44,48 +48,76 @@ const Category = () => {
   };
 
   const deletePujaCategory = async (categoryId: string) => {
- const result = await Swal.fire({
-    title: 'Are you sure?',
-    text: "You want to delete!!!",
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#d1d5db',
-    confirmButtonText: 'Delete',
-    cancelButtonText: 'Cancel',
-    reverseButtons: true
-  });
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "You want to delete!!!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#d1d5db',
+      confirmButtonText: 'Delete',
+      cancelButtonText: 'Cancel',
+      reverseButtons: true
+    });
 
-  if (result.isConfirmed) {
-    try {
-       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/puja/delete_puja_category`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ categoryId }),
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        // Refresh the category list after deletion
-        getPujaCategory();
-      } else {
-        console.error('Failed to delete category:', data.message);
+    if (result.isConfirmed) {
+      try {
+        // Show loading
+        Swal.fire({
+          title: 'Deleting...',
+          text: 'Please wait',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/puja/delete_puja_category`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ categoryId }),
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          // Show success message
+          Swal.fire({
+            icon: 'success',
+            title: 'Deleted!',
+            text: 'Category has been deleted successfully.',
+            timer: 2000,
+            showConfirmButton: false
+          });
+          // Refresh the category list after deletion
+          getPujaCategory();
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Failed',
+            text: data.message || 'Failed to delete category'
+          });
+          console.error('Failed to delete category:', data.message);
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'An error occurred while deleting the category'
+        });
+        console.error('Error deleting category:', error);
       }
-    } catch (error) {
-      console.error('Error deleting category:', error);
     }
-  }};
+  };
 
   // Category DataTable Columns
   const categoryColumns = [
     { 
       name: 'S.No.', 
-          selector: (row: PujaCategory, index?: number) => (index || 0) + 1, // Make index optional
-
+      selector: (row: PujaCategory, index?: number) => (index || 0) + 1,
+      width: '80px'
     },
     { 
       name: 'Title', 
@@ -95,26 +127,27 @@ const Category = () => {
       name: 'Created Date', 
       selector: (row: PujaCategory) => moment(row?.createdAt)?.format('DD-MMM-YYYY @ hh:mm a') 
     },
-   {
-  name: 'Action',
-  cell: (row: PujaCategory) => (
-    <div className="flex gap-5 items-center">
-      <div 
-        onClick={() => router.push(`/astro-puja/category/add-category?edit=true&id=${row._id}&name=${encodeURIComponent(row.categoryName)}`)} 
-        className="cursor-pointer hover:opacity-70 transition-opacity"
-      >
-        <EditSvg />
-      </div>
-      <div 
-        onClick={() => deletePujaCategory(row._id)} 
-        className="cursor-pointer hover:opacity-70 transition-opacity"
-      >
-        <DeleteSvg />
-      </div>
-    </div>
-  ),
-  width: "180px"
-},
+    {
+      name: 'Action',
+      cell: (row: PujaCategory) => (
+        <div className="flex gap-5 items-center">
+          <div 
+            onClick={() => router.push(`/astro-puja/category/add-category?edit=true&id=${row._id}&name=${encodeURIComponent(row.categoryName)}`)} 
+            className="cursor-pointer hover:opacity-70 transition-opacity"
+          >
+            <EditSvg />
+          </div>
+          <div 
+            onClick={() => deletePujaCategory(row._id)} 
+            className="cursor-pointer hover:opacity-70 transition-opacity"
+          >
+            <DeleteSvg />
+          </div>
+        </div>
+      ),
+      width: "180px",
+      center: true
+    },
   ];
 
   useEffect(() => {
