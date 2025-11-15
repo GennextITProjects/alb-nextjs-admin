@@ -6,7 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { CrossSvg, HamburgerSvg, PersonSvg, ProfileSvg } from '@/components/svgs/page';
 import { Button } from '../ui/button';
-import CustomerLoginSheetMain from '../page/MainLogin';
+// import CustomerLoginSheetMain from '../page/MainLogin';
 
 interface User {
   id: string;
@@ -521,10 +521,10 @@ const Header = () => {
         />
       )}
       
-      <CustomerLoginSheetMain
+      {/* <CustomerLoginSheetMain
         isOpen={isLoginOpen} 
         onClose={() => setIsLoginOpen(false)} 
-      />
+      /> */}
       
       {/* Profile Dropdown Overlay (Desktop) */}
       {showProfileDropdown && (

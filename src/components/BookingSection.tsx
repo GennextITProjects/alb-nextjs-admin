@@ -12,7 +12,7 @@ import { toaster } from '@/utils/services/toast-service';
 import DatePicker from './DatePicker';
 import ConsultationForm from '@/components/form/consultationForm';
 import { AstrologerData, User as UserType } from '../types';
-import CustomerLoginSheet from './page/Login2';
+// import CustomerLoginSheet from './page/Login2';
 
 interface ConsultationPrice {
   price: number;
@@ -963,11 +963,11 @@ const BookingSection: React.FC<BookingSectionProps> = ({
         )}
       </div>
 
-      <CustomerLoginSheet
+      {/* <CustomerLoginSheet
         isOpen={isLoginOpen}
         onClose={handleLoginClose}
         onLoginSuccess={handleLoginSuccess}
-      />
+      /> */}
     </div>
   );
 };
