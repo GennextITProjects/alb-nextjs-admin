@@ -42,6 +42,7 @@ interface AstrologerFormData {
   gender: string;
   dateOfBirth: string;
   experience: string;
+  consultation: string;
   address: string;
   country: string;
   state: string;
@@ -106,6 +107,7 @@ export default function AstrologerForm({ mode, initialData, onSnack }: Props) {
     gender: initialData?.gender || '',
     dateOfBirth: initialData?.dateOfBirth ? moment(initialData.dateOfBirth).format('YYYY-MM-DD') : '',
     experience: initialData?.experience || '',
+    consultation:initialData?.consultation || '',
     address: initialData?.address || '',
     country: initialData?.country || 'India',
     state: initialData?.state || '',
@@ -604,6 +606,21 @@ export default function AstrologerForm({ mode, initialData, onSnack }: Props) {
             className={`mt-1 block w-full rounded-md border ${errors.experience ? 'border-red-500' : 'border-gray-300'} px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500`}
           />
           {errors.experience && <p className="text-red-600 text-sm mt-1">{errors.experience}</p>}
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Total Consultation <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            name="consultation"
+            value={form.consultation}
+            onChange={handleChange}
+            min="0"
+            className={`mt-1 block w-full rounded-md border ${errors.consultation ? 'border-red-500' : 'border-gray-300'} px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+          />
+          {errors.consultation && <p className="text-red-600 text-sm mt-1">{errors.consultation}</p>}
         </div>
 
         <div>
