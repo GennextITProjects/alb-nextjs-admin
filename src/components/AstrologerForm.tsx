@@ -6,7 +6,6 @@ import { Color } from '@/assets/colors';
 import { calculateAge, get_date_value } from '@/utils/common-function';
 import {
   api_url,
-  base_url,
   get_skill,
   get_main_expertise,
   get_remedies,
@@ -208,11 +207,11 @@ export default function AstrologerForm({ mode, initialData, onSnack }: Props) {
           languagesRes,
           slotsRes,
         ] = await Promise.all([
-          fetch(`${base_url}${get_skill}`),
-          fetch(`${base_url}${get_main_expertise}`),
-          fetch(`${base_url}${get_remedies}`),
-          fetch(`${api_url}${get_language}`),
-          fetch(`${base_url}${get_slot_duration}`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/${get_skill}`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/${get_main_expertise}`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/${get_remedies}`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/${get_language}`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/${get_slot_duration}`),
         ]);
 
         if (!skillsRes.ok || !expertiseRes.ok || !remediesRes.ok || !languagesRes.ok || !slotsRes.ok) {
@@ -234,7 +233,7 @@ export default function AstrologerForm({ mode, initialData, onSnack }: Props) {
         setSlotDurations(slotsData?.slots || []);
 
         if (isEdit && initialData?._id) {
-          const cpRes = await fetch(`${base_url}api/admin/get-consultation-price`, {
+          const cpRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/get-consultation-price`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ astrologerId: initialData._id }),
@@ -367,7 +366,7 @@ export default function AstrologerForm({ mode, initialData, onSnack }: Props) {
 
     try {
       const endpoint = isEdit ? update_astrologer_by_id : create_astrologer;
-      const res = await fetch(`${base_url}${endpoint}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/${endpoint}`, {
         method: 'POST',
         body: formData,
       });
@@ -1087,7 +1086,7 @@ const ConsultationPriceSection: React.FC<ConsultationPriceSectionProps> = ({
 
     setAdding(true);
     try {
-      const res = await fetch(`${base_url}api/admin/consultation-price`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/consultation-price`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ astrologerId, durationId: duration, price: Number(price) }),
@@ -1117,7 +1116,7 @@ const ConsultationPriceSection: React.FC<ConsultationPriceSectionProps> = ({
   const handleDelete = async (durationId: string) => {
     setDeleting(durationId);
     try {
-      const res = await fetch(`${base_url}api/admin/delete-consultation-price`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/delete-consultation-price`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ astrologerId, durationId }),

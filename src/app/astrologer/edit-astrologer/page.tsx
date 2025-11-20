@@ -2,7 +2,6 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Box, CircularProgress, Snackbar, Typography } from '@mui/material';
-import { base_url } from '@/lib/api-routes';
 import AstrologerForm from '@/components/AstrologerForm';
 
 // Inner component that uses useSearchParams
@@ -24,7 +23,7 @@ function EditAstrologerContent() {
 
     const fetchAstrologer = async () => {
       try {
-        const res = await fetch(`${base_url}api/admin/astrologer_details_by_id`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/astrologer_details_by_id`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
