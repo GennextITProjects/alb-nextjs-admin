@@ -1,4 +1,3 @@
-// app/consultation-slots/page.tsx
 'use client';
 
 import moment from 'moment';
@@ -9,9 +8,7 @@ import MainDatatable from '@/components/common/MainDatatable';
 import { ViewSvg } from '@/components/svgs/page';
 import Swal from 'sweetalert2';
 
-// ---------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------
+
 const reportPrefixes = [
   { value: '#LJR-', label: 'Life Journey Report' },
   { value: '#LCR-', label: 'Life Changing Report' },
@@ -26,19 +23,42 @@ const dateRangeOptions = [
   { value: 'custom', label: 'Custom Range' },
 ];
 
-// ---------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------
+
+interface Order {
+  orderID: string;
+  name: string;
+  email: string;
+  whatsapp: string;
+  dateOfBirth: string
+  placeOfBirth: string
+  timeOfBirth: string
+  partnerName: string
+  partnerDateOfBirth: string
+  partnerPlaceOfBirth: string
+  partnerTimeOfBirth: string
+  consultationTime: string;
+  consultationDate: string;
+  status: string;
+  planName: string;
+}
 interface ConsultationSlot {
   orderID: string;
   name: string;
   email: string;
   whatsapp: string;
-  time: string;
-  date: string;
+  dateOfBirth: string
+  placeOfBirth: string
+  timeOfBirth: string
+  partnerName: string
+  partnerDateOfBirth: string
+  partnerPlaceOfBirth: string
+  partnerTimeOfBirth: string
+  consultationTime: string;
+  consultationDate: string;
   status: string;
   planName: string;
-  bookedAt: string;
 }
 
 interface SlotsByDate {
@@ -94,13 +114,17 @@ export default function ConsultationSlots() {
 
   // State
   const [slotsData, setSlotsData] = useState<ConsultationSlot[]>([]);
+  console.log("consult ka data", slotsData)
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState('');
   const filteredData = DeepSearchSpace(slotsData, searchText);
+    const [activeRow, setActiveRow] = useState<Order | null>(null);
+    const [viewOpen, setViewOpen] = useState<boolean>(false);
+  
 
   // Filter State
   const [startDate, setStartDate] = useState(moment().format('YYYY-MM-DD'));
-  const [endDate, setEndDate] = useState(moment().format('YYYY-MM-DD'));
+  const [endDate, setEndDate] = useState(moment().add(7, 'days').format('YYYY-MM-DD'));
   const [prefix, setPrefix] = useState('#LJR-');
   const [dateRangeType, setDateRangeType] = useState('today');
 
@@ -142,55 +166,68 @@ export default function ConsultationSlots() {
     }
   };
 
-  // Handle Date Range Type Change
-  const handleDateRangeChange = (rangeType: string) => {
-    setDateRangeType(rangeType);
-    
-    const today = moment().format('YYYY-MM-DD');
-    
-    switch (rangeType) {
-      case 'today':
-        setStartDate(today);
-        setEndDate(today);
-        break;
-      case 'last7days':
-        setStartDate(moment().subtract(6, 'days').format('YYYY-MM-DD'));
-        setEndDate(today);
-        break;
-      case 'last30days':
-        setStartDate(moment().subtract(29, 'days').format('YYYY-MM-DD'));
-        setEndDate(today);
-        break;
-      case 'custom':
-        // Keep current dates as is for custom
-        break;
-      default:
-        break;
-    }
+    const onView = (row: Order) => {
+    setActiveRow(row);
+    setViewOpen(true);
   };
+
+  // Handle Date Range Type Change
+  // const handleDateRangeChange = (rangeType: string) => {
+  //   setDateRangeType(rangeType);
+    
+  //   const today = moment().format('YYYY-MM-DD');
+    
+  //   switch (rangeType) {
+  //     case 'today':
+  //       setStartDate(today);
+  //       setEndDate(today);
+  //       break;
+  //     case 'last7days':
+  //       setStartDate(moment().subtract(6, 'days').format('YYYY-MM-DD'));
+  //       setEndDate(today);
+  //       break;
+  //     case 'last30days':
+  //       setStartDate(moment().subtract(29, 'days').format('YYYY-MM-DD'));
+  //       setEndDate(today);
+  //       break;
+  //     case 'custom':
+  //       // Keep current dates as is for custom
+  //       break;
+  //     default:
+  //       break;
+  //   }
+  // };
 
   // Handle Manual Date Change
   const handleStartDateChange = (newDate: string) => {
     setStartDate(newDate);
-    setDateRangeType('custom'); // Switch to custom when manually changed
+    // setDateRangeType('custom'); // Switch to custom when manually changed
   };
 
-  const handleEndDateChange = (newDate: string) => {
-    setEndDate(newDate);
-    setDateRangeType('custom'); // Switch to custom when manually changed
-  };
+const handleEndDateChange = (newDate: string) => {
+  // Add 7 days using moment
+  const nextDate = moment(newDate).add(7, 'days').format('YYYY-MM-DD');
+  setEndDate(nextDate);
+  // setDateRangeType('custom');
+};
 
   // Table Columns
+ // Table Columns
   const columns = [
     {
-      name: "#",
+      name: "",
       selector: (row: ConsultationSlot) => slotsData.indexOf(row) + 1,
-      width: "70px"
+      width: "40px"
     },
     {
       name: "Order ID",
       selector: (row: ConsultationSlot) => row?.orderID || 'N/A',
       width: "110px"
+    },
+    {
+      name: "Plan Name",
+      selector: (row: ConsultationSlot) => row?.planName || 'N/A',
+      width: "250px"
     },
     {
       name: "Customer Name",
@@ -205,30 +242,69 @@ export default function ConsultationSlots() {
     {
       name: "WhatsApp",
       selector: (row: ConsultationSlot) => row?.whatsapp || 'N/A',
-      width: "140px"
-    },
-    {
-      name: "Date",
-      selector: (row: ConsultationSlot) => 
-        row?.date ? moment(row.date).format('DD/MM/YYYY') : 'N/A',
       width: "120px"
     },
     {
-      name: "Time Slot",
-      selector: (row: ConsultationSlot) => row?.time || 'N/A',
+      name: "DOB",
+      selector: (row: ConsultationSlot) => 
+        row?.dateOfBirth ? moment(row.dateOfBirth).format('DD/MM/YYYY') : 'N/A',
+      width: "110px"
+    },
+    {
+      name: "TOB",
+      selector: (row: ConsultationSlot) => row?.timeOfBirth || 'N/A',
+      width: "80px"
+    },
+    {
+      name: "POB",
+      selector: (row: ConsultationSlot) => row?.placeOfBirth || 'N/A',
+      width: "110px"
+    },
+    {
+      name: "Partner's Name",
+      selector: (row: ConsultationSlot) => row?.partnerName || 'N/A',
       width: "150px"
     },
     {
-      name: "Plan Name",
-      selector: (row: ConsultationSlot) => row?.planName || 'N/A',
-      width: "250px"
+      name: "Partner's DOB",
+      selector: (row: ConsultationSlot) => 
+        row?.partnerDateOfBirth ? moment(row.partnerDateOfBirth).format('DD/MM/YYYY') : 'N/A',
+      width: "130px"
     },
+    {
+      name: "Partner's TOB",
+      selector: (row: ConsultationSlot) => row?.partnerTimeOfBirth || 'N/A',
+      width: "130px"
+    },
+    {
+      name: "Partner's POB",
+      selector: (row: ConsultationSlot) => row?.partnerPlaceOfBirth || 'N/A',
+      width: "130px"
+    },
+
+    {
+      name: "Time Slot",
+      selector: (row: ConsultationSlot) => row?.consultationTime || 'N/A',
+      width: "150px"
+    },
+ 
     {
       name: "Booked At",
       selector: (row: ConsultationSlot) => 
-        row?.bookedAt ? moment(row.bookedAt).format('DD/MM/YYYY hh:mm A') : 'N/A',
+        row?.consultationDate ? moment(row.consultationDate).format('DD/MM/YYYY hh:mm A') : 'N/A',
       width: "180px"
     },
+   
+        {
+          name: "Action",
+          cell: (row: Order) => (
+            <div className="flex gap-3 items-center">
+              <div className="cursor-pointer" onClick={() => onView(row)}><ViewSvg /></div>
+              {/* <div className="cursor-pointer" onClick={() => onEdit(row)}><EditSvg /></div> */}
+            </div>
+          ),
+          width: "100px"
+        }
   ];
 
   // -----------------------------------------------------------------
@@ -241,7 +317,7 @@ export default function ConsultationSlots() {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Filters</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Date Range Type */}
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Date Range <span className="text-red-500">*</span>
             </label>
@@ -256,7 +332,7 @@ export default function ConsultationSlots() {
                 </option>
               ))}
             </select>
-          </div>
+          </div> */}
 
           {/* Start Date */}
           <div>
@@ -313,6 +389,29 @@ export default function ConsultationSlots() {
         isLoading={loading}
         url=""
       />
+            {viewOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-auto p-6">
+            <h2 className="text-xl font-semibold mb-4">Order Details</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {activeRow && Object.entries(activeRow).map(([k, v]) => (
+                <div key={k}>
+                  <div className="text-xs text-gray-600">{k}</div>
+                  <div className="font-medium text-gray-900">{String(v ?? "")}</div>
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => setViewOpen(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
