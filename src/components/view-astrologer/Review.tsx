@@ -1,8 +1,6 @@
 // app/astrologer/view-astrologer/components/review.tsx
 import React, { useEffect, useState } from "react";
 import MainDatatable from "@/components/common/MainDatatable";
-import { TableColumn } from "react-data-table-component";
-import { base_url, get_review_by_astrologer_id } from "@/lib/api-routes";
 import ViewModal from "./ViewModal";
 
 // Updated interface to match actual API response
@@ -87,7 +85,7 @@ const Review: React.FC<ReviewProps> = ({ astrologerId }) => {
         setIsLoading(true);
         console.log('Fetching reviews for astrologer:', astrologerId);
         
-        const response = await fetch(`${base_url}${get_review_by_astrologer_id}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/get-astrologer-review`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

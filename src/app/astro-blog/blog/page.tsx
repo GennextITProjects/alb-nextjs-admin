@@ -14,8 +14,6 @@ import CloseIcon from "@mui/icons-material/Close";
 import { TableColumn } from "react-data-table-component";
 import Swal from "sweetalert2";
 import MainDatatable from "@/components/common/MainDatatable";
-import DatatableHeading from "@/components/datatable/DatatableHeading";
-import { base_url } from "@/lib/api-routes";
 import { DeleteSvg, EditSvg } from "@/components/svgs/page";
 
 // ---------------------------------------------------------------------
@@ -83,7 +81,7 @@ const AstroblogPage: React.FC = () => {
   const fetchBlogs = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${base_url}api/admin/get_astro_blogs`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/get_astro_blogs`);
       if (!res.ok) throw new Error("Failed to fetch blogs");
       const data = await res.json();
       setBlogs(data.blogs || []);
@@ -121,7 +119,7 @@ const AstroblogPage: React.FC = () => {
         }
       });
 
-      const res = await fetch(`${base_url}api/admin/delete_astro_blogs`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/delete_astro_blogs`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ blogId }),
