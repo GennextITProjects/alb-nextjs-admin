@@ -35,32 +35,32 @@ export const RouteName = [
   //   name: "Customer",
   //   icon: <CustomerRouteSvg />,
   // },
-  {
-    name: "Astrologer",
-    icon: <AstrologerRouteSvg />,
-    subRoutes: [
-      {
-        path: "/astrologer",
-        name: "List Of Astrologers",
-        icon: <OtherRouteSvg />,
-      },
-      // {
-      //   path: "/astrologer-enquiry",
-      //   name: "Astrologer Enquiry",
-      //   icon: <OtherRouteSvg />,
-      // },
-      // {
-      //   path: "/astrologer-issues",
-      //   name: "Astrologer Issues",
-      //   icon: <OtherRouteSvg />,
-      // },
-      // {
-      //   path: "/leave-request",
-      //   name: "Leave request",
-      //   icon: <OtherRouteSvg />,
-      // },
-    ],
-  },
+  // {
+  //   name: "Astrologer",
+  //   icon: <AstrologerRouteSvg />,
+  //   subRoutes: [
+  //     {
+  //       path: "/astrologer",
+  //       name: "List Of Astrologers",
+  //       icon: <OtherRouteSvg />,
+  //     },
+  //     // {
+  //     //   path: "/astrologer-enquiry",
+  //     //   name: "Astrologer Enquiry",
+  //     //   icon: <OtherRouteSvg />,
+  //     // },
+  //     // {
+  //     //   path: "/astrologer-issues",
+  //     //   name: "Astrologer Issues",
+  //     //   icon: <OtherRouteSvg />,
+  //     // },
+  //     // {
+  //     //   path: "/leave-request",
+  //     //   name: "Leave request",
+  //     //   icon: <OtherRouteSvg />,
+  //     // },
+  //   ],
+  // },
   // {
   //   name: "Astro Puja",
   //   icon: <PoojaRouteSvg />,
