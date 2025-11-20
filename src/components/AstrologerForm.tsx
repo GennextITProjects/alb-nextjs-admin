@@ -757,16 +757,41 @@ if (!isEdit) {
           {errors.consultation && <p className="text-red-600 text-sm mt-1">{errors.consultation}</p>}
         </div>
 
-        <div>
+<div>
   <label className="block text-sm font-medium text-gray-700">
     Select Language <span className="text-red-500">*</span>
   </label>
   <select
     name="language"
     multiple
+    size={8} // Shows 8 items at once without scrolling
     value={selectedLanguages}
-    onChange={handleMultiSelectChange}
-    className={`mt-1 block w-full rounded-md border ${errors.language ? 'border-red-500' : 'border-gray-300'} px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 h-32`}
+    onChange={() => {}} // Disabled - we handle clicks manually
+    onMouseDown={(e) => {
+      const target = e.target as HTMLOptionElement;
+      if (target.tagName !== 'OPTION') return;
+      
+      e.preventDefault(); // Prevent default Ctrl behavior
+      const value = target.value;
+      const scrollPos = (e.currentTarget as HTMLSelectElement).scrollTop;
+      
+      // Toggle selection without Ctrl
+      if (selectedLanguages.includes(value)) {
+        setSelectedLanguages(selectedLanguages.filter(l => l !== value));
+      } else {
+        setSelectedLanguages([...selectedLanguages, value]);
+      }
+      
+      // Preserve scroll position
+      setTimeout(() => {
+        (e.currentTarget as HTMLSelectElement).scrollTop = scrollPos;
+      }, 0);
+      
+      setErrors((prev) => ({ ...prev, language: '' }));
+    }}
+    className={`mt-1 block w-full rounded-md border ${
+      errors.language ? 'border-red-500' : 'border-gray-300'
+    } px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 h-32`}
   >
     {languages
       .sort((a, b) => {
@@ -776,13 +801,13 @@ if (!isEdit) {
         if (!aSelected && bSelected) return 1;
         return a.languageName.localeCompare(b.languageName);
       })
-      .map(l => (
-        <option 
-          key={l._id} 
+      .map((l) => (
+        <option
+          key={l._id}
           value={l.languageName}
           className={selectedLanguages.includes(l.languageName) ? 'bg-blue-100 font-semibold' : ''}
         >
-          {l.languageName} {selectedLanguages.includes(l.languageName) ? '✓' : ''}
+          {selectedLanguages.includes(l.languageName) ? '✓ ' : '  '}{l.languageName}
         </option>
       ))
     }
