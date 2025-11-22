@@ -77,7 +77,6 @@ export default function ReportAstrologerForm() {
     
     if (!validate()) return;
 
-    // Check if enabling report dealing on verified astrologer
     if (form.isDealInReport && isVerified) {
       const result = await Swal.fire({
         title: 'Warning!',
@@ -113,7 +112,7 @@ export default function ReportAstrologerForm() {
 
       if (result.success) {
         await Swal.fire('Success!', result.message || 'Settings updated successfully', 'success');
-        router.push('/astrologer'); // Redirect to astrologer list
+        router.push('/astrologer');
       } else {
         Swal.fire('Error', result.message || 'Failed to update', 'error');
       }
@@ -125,156 +124,203 @@ export default function ReportAstrologerForm() {
     }
   };
 
+  const reportTypeDetails = {
+    '#LJR-': { name: 'Life Journey Report', description: 'Comprehensive life path analysis' },
+    '#LCR-': { name: 'Life Changing Report', description: 'Major life transitions and changes' },
+    '#LR-': { name: 'Love Report', description: 'Relationship and compatibility insights' },
+    '#KM-': { name: 'Kundli Matching', description: 'Marriage compatibility analysis' }
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#EF4444] mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <div className="relative">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 mx-auto"></div>
+            <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-[#EF4444] mx-auto absolute inset-0"></div>
+          </div>
+          <p className="mt-6 text-gray-700 font-medium">Loading astrologer details...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="container mx-auto max-w-3xl">
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800">
-                Report Astrologer Settings
-              </h1>
-              <p className="text-gray-600 mt-1">
-                Configure report writing capabilities for {astrologerName}
-              </p>
-            </div>
-            <button
-              onClick={() => router.back()}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800"
-            >
-              ← Back
-            </button>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50">
+      
+      {/* Main Content */}
+      <div className="container mx-auto px-6 py-8 max-w-7xl">
+        <div className="grid grid-cols-1  gap-8">
+          
 
-          {isVerified && (
-            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
-              <p className="text-sm text-blue-800">
-                ℹ️ <strong>Note:</strong> This astrologer is currently verified for consultations. 
-                Enabling report dealing will remove their verification status, as an astrologer 
-                can either handle consultations OR reports, not both.
-              </p>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit}>
-            {/* Enable Report Dealing */}
-            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-              <label className="flex items-start space-x-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={form.isDealInReport}
-                  onChange={(e) => {
-                    setForm(prev => ({ ...prev, isDealInReport: e.target.checked }));
-                    if (!e.target.checked) {
-                      setSelectedReportTypes([]);
-                    }
-                  }}
-                  className="w-5 h-5 mt-0.5 rounded border-gray-300 text-[#EF4444] focus:ring-[#EF4444]"
-                />
-                <div>
-                  <span className="text-base font-semibold text-gray-800 block">
-                    Enable Report Writing
-                  </span>
-                  <span className="text-sm text-gray-600">
-                    Allow this astrologer to write and deliver reports
-                  </span>
+          {/* Right Column - Form */}
+          <div className="lg:col-span-2">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              
+              {/* Main Settings Card */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="bg-gradient-to-r from-red-500 to-red-600 px-8 py-6">
+                  <h2 className="text-xl font-bold text-white flex items-center">
+                    <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Report Writing Configuration
+                  </h2>
+                  <p className="text-red-100 mt-2">Enable and configure report writing capabilities</p>
                 </div>
-              </label>
-            </div>
 
-            {/* Report Types Selection */}
-            {form.isDealInReport && (
-              <div className="mb-6 p-4  bg-white">
-                <label className="block text-base font-semibold text-gray-800 mb-3">
-                  Assignable Report Types <span className="text-red-500">*</span>
-                </label>
-                <p className="text-sm text-gray-600 mb-4">
-                  Select which report types this astrologer can handle
-                </p>
-                
-                <div className="grid grid-cols-2 gap-3">
-                  {['#LJR-', '#LCR-', '#LR-', '#KM-'].map(reportType => (
-                    <label 
-                      key={reportType} 
-                      className={`flex items-center space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                        selectedReportTypes.includes(reportType)
-                          ? 'border-[#EF4444] bg-red-50'
-                          : 'border-gray-300 hover:border-[#EF4444]/50 bg-white'
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedReportTypes.includes(reportType)}
-                        onChange={() => {
-                          setSelectedReportTypes(prev =>
-                            prev.includes(reportType)
-                              ? prev.filter(r => r !== reportType)
-                              : [...prev, reportType]
-                          );
-                        }}
-                        className="w-5 h-5 rounded border-gray-300 text-[#EF4444] focus:ring-[#EF4444]"
-                      />
-                      <div>
-                        <span className="font-semibold text-gray-800 block">{reportType}</span>
-                        <span className="text-xs text-gray-500">
-                          {reportType === '#LJR-' && 'Life Journey Report'}
-                          {reportType === '#LCR-' && 'Life Changing Report'}
-                          {reportType === '#LR-' && 'Love Report'}
-                          {reportType === '#KM-' && 'Kundli Matching'}
-                        </span>
+                <div className="p-8">
+                  {/* Enable Toggle */}
+                  <div className="mb-8 p-6 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border-2 border-gray-200 hover:border-red-300 transition-all">
+                    <label className="flex items-start space-x-4 cursor-pointer group">
+                      <div className="relative flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={form.isDealInReport}
+                          onChange={(e) => {
+                            setForm(prev => ({ ...prev, isDealInReport: e.target.checked }));
+                            if (!e.target.checked) {
+                              setSelectedReportTypes([]);
+                            }
+                          }}
+                          className="w-6 h-6 rounded-md border-2 border-gray-300 text-[#EF4444] focus:ring-4 focus:ring-red-200 transition-all cursor-pointer"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-xl font-bold text-gray-900 group-hover:text-red-600 transition-colors">
+                            Enable Report Writing
+                          </span>
+                        </div>
+                        <p className="text-gray-600 mt-2 leading-relaxed">
+                          Allow this astrologer to write and deliver professional reports to clients. 
+                          Once enabled, you can assign specific report types based on their expertise.
+                        </p>
                       </div>
                     </label>
-                  ))}
+                  </div>
+
+                  {/* Report Types Selection */}
+                  {form.isDealInReport && (
+                    <div className="animate-fadeIn">
+                      <div className="mb-6">
+                        <label className="flex items-center space-x-3 mb-2">
+                          <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          <span className="text-xl font-bold text-gray-900">
+                            Assignable Report Types
+                          </span>
+                          <span className="text-red-500 text-xl">*</span>
+                        </label>
+                        <p className="text-gray-600 ml-9">
+                          Select which report types this astrologer is qualified to handle
+                        </p>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        {(Object.keys(reportTypeDetails) as Array<keyof typeof reportTypeDetails>).map(reportType => {
+                          const details = reportTypeDetails[reportType];
+                          const isSelected = selectedReportTypes.includes(reportType);
+                          
+                          return (
+                            <label 
+                              key={reportType} 
+                              className={`relative flex items-start space-x-4 p-6 rounded-xl border-2 cursor-pointer transition-all transform hover:scale-105 ${
+                                isSelected
+                                  ? 'border-red-500 bg-gradient-to-br from-red-50 to-orange-50 shadow-md'
+                                  : 'border-gray-300 bg-white hover:border-red-300 hover:shadow-sm'
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => {
+                                  setSelectedReportTypes(prev =>
+                                    prev.includes(reportType)
+                                      ? prev.filter(r => r !== reportType)
+                                      : [...prev, reportType]
+                                  );
+                                }}
+                                className="w-5 h-5 mt-1 rounded border-2 border-gray-300 text-[#EF4444] focus:ring-4 focus:ring-red-200"
+                              />
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-2 mb-1">
+                                  <span className={`font-bold text-lg ${isSelected ? 'text-red-600' : 'text-gray-900'}`}>
+                                    {reportType}
+                                  </span>
+                                  {isSelected && (
+                                    <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                    </svg>
+                                  )}
+                                </div>
+                                <span className="text-sm font-semibold text-gray-700 block mb-1">
+                                  {details.name}
+                                </span>
+                                <span className="text-xs text-gray-600 leading-relaxed">
+                                  {details.description}
+                                </span>
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+
+                      {errors.reportTypes && (
+                        <div className="flex items-center space-x-2 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg">
+                          <svg className="w-5 h-5 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                          </svg>
+                          <p className="text-red-700 font-medium">{errors.reportTypes}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-
-                {errors.reportTypes && (
-                  <p className="text-red-600 text-sm mt-2">{errors.reportTypes}</p>
-                )}
               </div>
-            )}
 
-            {/* Submit Button */}
-            <div className="flex items-center justify-end space-x-4 pt-6 border-t">
-              <button
-                type="button"
-                onClick={() => router.back()}
-                className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                disabled={submitting}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="px-6 py-3 bg-[#EF4444] text-white rounded-md hover:bg-[#DC2626] disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-              >
-                {submitting ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Saving...
-                  </>
-                ) : (
-                  'Save Settings'
-                )}
-              </button>
-            </div>
-          </form>
+              {/* Action Buttons */}
+              <div className="flex items-center justify-between bg-white rounded-xl shadow-sm border border-gray-200 px-8 py-6">
+                <button
+                  type="button"
+                  onClick={() => router.back()}
+                  className="px-8 py-3 border-2 border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all flex items-center space-x-2"
+                  disabled={submitting}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <span>Cancel</span>
+                </button>
+                
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-10 py-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-bold text-lg hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-3 shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+                >
+                  {submitting ? (
+                    <>
+                      <svg className="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>Saving Changes...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>Save Settings</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-
       </div>
     </div>
   );
