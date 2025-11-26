@@ -98,7 +98,7 @@ const DeepSearchSpace = (data: Consultation[], searchText: string): Consultation
     const searchableFields = [
       item?.astrologerId?.astrologerName,
       item?.fullName,
-      item?.customerId?.email,
+      item?.paymentDetails?.email,
       item?.mobileNumber,
       item?.dateOfBirth,
       item?.timeOfBirth,
@@ -234,7 +234,7 @@ export default function Consultation() {
     { 
       name: 'Email', 
       selector: (row: Consultation) => {
-        const email = row?.customerId?.email?.trim();
+        const email = row?.paymentDetails?.email?.trim();
         return email && email.length > 0 ? email : 'N/A';
       },
       width: '200px'
@@ -316,7 +316,7 @@ export default function Consultation() {
     return consultationData.map((item) => ({
       'Astrologer': item?.astrologerId?.astrologerName || 'N/A',
       'Customer': item?.fullName || 'N/A',
-      'Email': item?.customerId?.email?.trim() || 'N/A',
+      'Email': item?.paymentDetails?.email?.trim() || 'N/A',
       'Mobile': item?.mobileNumber || 'N/A',
       'Gender': item?.gender || '',
       'Date of Birth': item?.dateOfBirth ? `\t${item.dateOfBirth}` : 'N/A',
