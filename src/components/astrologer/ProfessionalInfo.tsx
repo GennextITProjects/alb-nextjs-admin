@@ -263,7 +263,7 @@ export default function ProfessionalInfo({ astrologerId, initialData, onUpdate }
       </div>
 
       {/* Compact Top Section - 4 Columns */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
         {/* Experience - Smaller (2 cols) */}
         <div className="md:col-span-2">
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -315,9 +315,9 @@ export default function ProfessionalInfo({ astrologerId, initialData, onUpdate }
               <span className={`text-sm truncate ${form.languages.length === 0 ? 'text-gray-400' : 'text-gray-900'}`}>
                 {form.languages.length === 0 
                   ? 'Select languages...' 
-                  : `${form.languages.length} selected`}
+                  : getSelectedLanguageNames()}
               </span>
-              <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform flex-shrink-0 ml-2 ${isDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {isDropdownOpen && (
@@ -357,14 +357,11 @@ export default function ProfessionalInfo({ astrologerId, initialData, onUpdate }
           {errors.languages && (
             <p className="text-red-600 text-sm mt-1">{errors.languages}</p>
           )}
-          {form.languages.length > 0 && (
-            <p className="text-xs text-gray-600 mt-1">{getSelectedLanguageNames()}</p>
-          )}
         </div>
 
         {/* Working on Other Apps Checkbox (3 cols) */}
-        <div className="md:col-span-3">
-          <label className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors border border-gray-200 h-[42px]">
+        <div className="md:col-span-3 flex items-end pb-[1px]">
+          <label className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors border border-gray-200 h-[42px] w-full">
             <input
               type="checkbox"
               name="workingOnOtherApps"
