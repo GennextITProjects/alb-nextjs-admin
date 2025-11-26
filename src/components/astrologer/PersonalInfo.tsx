@@ -29,8 +29,8 @@ export default function PersonalInfo({ astrologerId, initialData, onUpdate }: Pe
     state: initialData?.state || '',
     city: initialData?.city || '',
     zipCode: initialData?.zipCode || '',
-    password: '',
-    confirm_password: '',
+    password: initialData?.password || '', // ✅ Pre-filled with existing password
+    confirm_password: initialData?.password || '', // ✅ Pre-filled with existing password
   });
 
   const [originalForm] = useState(form);
@@ -84,14 +84,12 @@ export default function PersonalInfo({ astrologerId, initialData, onUpdate }: Pe
     if (!form.dateOfBirth) newErrors.dateOfBirth = 'DOB required';
     if (calculateAge(form.dateOfBirth) < 18) newErrors.dateOfBirth = 'Must be 18+';
 
-    // Password validation (only if password is being updated)
-    if (form.password || form.confirm_password) {
-      if (form.password.length < 6) {
-        newErrors.password = 'Password must be at least 6 characters';
-      }
-      if (form.password !== form.confirm_password) {
-        newErrors.confirm_password = 'Passwords do not match';
-      }
+    // Password validation
+    if (form.password && form.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+    if (form.password !== form.confirm_password) {
+      newErrors.confirm_password = 'Passwords do not match';
     }
 
     setErrors(newErrors);
@@ -101,11 +99,6 @@ export default function PersonalInfo({ astrologerId, initialData, onUpdate }: Pe
   const getChangedFields = () => {
     const changed: Record<string, any> = {};
     Object.keys(form).forEach(key => {
-      // Skip password fields if empty
-      if ((key === 'password' || key === 'confirm_password') && !form[key as keyof typeof form]) {
-        return;
-      }
-      
       if (form[key as keyof typeof form] !== originalForm[key as keyof typeof originalForm]) {
         changed[key] = form[key as keyof typeof form];
       }
@@ -141,8 +134,8 @@ export default function PersonalInfo({ astrologerId, initialData, onUpdate }: Pe
         state: form.state,
         city: form.city,
         zipCode: form.zipCode,
-        password: form.password || initialData?.password,
-        confirm_password: form.confirm_password || initialData?.confirm_password || form.password || initialData?.password,
+        password: form.password,
+        confirm_password: form.confirm_password,
         
         experience: initialData?.experience || '',
         about: initialData?.about || '',
@@ -209,7 +202,6 @@ export default function PersonalInfo({ astrologerId, initialData, onUpdate }: Pe
 
       if (data.success) {
         toast.success('Personal info updated successfully');
-        setForm(prev => ({ ...prev, password: '', confirm_password: '' }));
         onUpdate();
       } else {
         toast.error(data.message || 'Failed to update');
@@ -226,7 +218,6 @@ export default function PersonalInfo({ astrologerId, initialData, onUpdate }: Pe
     <div className="space-y-6">
       <div>
         <h3 className="text-2xl font-bold text-gray-900 mb-2">Personal Information</h3>
-        {/* <p className="text-gray-600 text-sm">Update personal details and contact information</p> */}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -320,7 +311,7 @@ export default function PersonalInfo({ astrologerId, initialData, onUpdate }: Pe
                 value="Male"
                 checked={form.gender === 'Male'}
                 onChange={(e) => handleGenderChange(e.target.value)}
-                className="w-4 h-4 text-red-600 "
+                className="w-4 h-4 text-red-600"
               />
               <span className="text-sm text-gray-700">Male</span>
             </label>
@@ -342,7 +333,7 @@ export default function PersonalInfo({ astrologerId, initialData, onUpdate }: Pe
                 value="Other"
                 checked={form.gender === 'Other'}
                 onChange={(e) => handleGenderChange(e.target.value)}
-                className="w-4 h-4 text-red-600 "
+                className="w-4 h-4 text-red-600"
               />
               <span className="text-sm text-gray-700">Other</span>
             </label>
@@ -446,13 +437,13 @@ export default function PersonalInfo({ astrologerId, initialData, onUpdate }: Pe
         {/* Password Section */}
         <div className="md:col-span-2 mt-4">
           <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">
-            Update Password (Optional)
+            Password
           </h3>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            New Password
+            Password
           </label>
           <div className="relative">
             <input
@@ -460,7 +451,6 @@ export default function PersonalInfo({ astrologerId, initialData, onUpdate }: Pe
               name="password"
               value={form.password}
               onChange={handleChange}
-              placeholder="Leave empty to keep current password"
               className={`w-full px-4 py-2 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${
                 errors.password ? 'border-red-500' : 'border-gray-300'
               }`}
@@ -480,7 +470,7 @@ export default function PersonalInfo({ astrologerId, initialData, onUpdate }: Pe
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Confirm New Password
+            Confirm Password
           </label>
           <div className="relative">
             <input
@@ -488,7 +478,6 @@ export default function PersonalInfo({ astrologerId, initialData, onUpdate }: Pe
               name="confirm_password"
               value={form.confirm_password}
               onChange={handleChange}
-              placeholder="Re-enter new password"
               className={`w-full px-4 py-2 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${
                 errors.confirm_password ? 'border-red-500' : 'border-gray-300'
               }`}
