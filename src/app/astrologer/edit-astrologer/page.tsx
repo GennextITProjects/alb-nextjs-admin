@@ -3,6 +3,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Box, CircularProgress, Snackbar, Typography } from '@mui/material';
 import AstrologerForm from '@/components/AstrologerForm';
+import EditAstrologer from '@/components/NewAstrologerEdit';
 
 // Inner component that uses useSearchParams
 function EditAstrologerContent() {
@@ -76,11 +77,13 @@ function EditAstrologerContent() {
       />
 
       <Box sx={{ p: 3, bgcolor: '#fff', borderRadius: 2, boxShadow: 1 }}>
-        <Typography variant="h5" gutterBottom>
+        {/* <Typography variant="h5" gutterBottom>
           Edit Astrologer
-        </Typography>
+        </Typography> */}
 
-        <AstrologerForm mode="Edit" initialData={initialData} onSnack={setSnack} />
+        {/* <AstrologerForm mode="Edit" initialData={initialData} onSnack={setSnack} /> */}
+        <EditAstrologer />
+
       </Box>
     </>
   );

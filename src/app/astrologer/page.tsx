@@ -357,7 +357,7 @@ export default function AstrologerPage() {
       {
         name: "Action",
         cell: (row) => (
-          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
             <div
               onClick={() => {
                 sessionStorage.setItem(
@@ -379,15 +379,7 @@ export default function AstrologerPage() {
             >
               <EditSvg />
             </div>
-            <div
-              onClick={(e) => {
-                e.stopPropagation();
-                router.push(`/astrologer/edit-report-astrologer?id=${row._id}`);
-              }}
-              style={{ cursor: "pointer" }}
-            >
-              <DocumentScanner />
-            </div>
+            
             <div style={{ cursor: "pointer" }} onClick={() => openWallet(row)}>
               <WalletSvg />
             </div>

@@ -14,6 +14,8 @@ const reportPrefixes = [
   { value: '#LCR-', label: 'Life Changing Report', code: 'LCR' },
   { value: '#KM-', label: 'Kundli Matching Report', code: 'KM' },
   { value: '#LR-', label: 'Love Report', code: 'LR' },
+  { value: '#VR-', label: 'Name Number Report' , code : 'VR' },
+  { value: '#BNR-', label: 'Baby Name Report', code : 'BNR' }
 ];
 
 interface Astrologer {
