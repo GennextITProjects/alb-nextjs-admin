@@ -283,7 +283,7 @@ const ConsultationLogsPage = () => {
         </div>
       ),
       sortable: true,
-      width: '220px',
+      width: '300px',
     },
     {
       name: 'Type',
@@ -293,7 +293,7 @@ const ConsultationLogsPage = () => {
           {getConsultationIcon(row.consultationType)}
         </div>
       ),
-      width: '80px',
+      width: '150px',
     },
     {
       name: 'Payment',
@@ -312,7 +312,7 @@ const ConsultationLogsPage = () => {
         )
       ),
       sortable: true,
-      width: '120px',
+      width: '200px',
     },
     {
       name: 'Status',
@@ -327,7 +327,7 @@ const ConsultationLogsPage = () => {
         );
       },
       sortable: true,
-      width: '140px',
+      width: '200px',
     },
     {
       name: 'Time Slot',
@@ -337,7 +337,7 @@ const ConsultationLogsPage = () => {
           {row.fromTime} - {row.toTime}
         </div>
       ),
-      width: '150px',
+      width: '180px',
     },
     {
       name: 'Created At',
@@ -349,7 +349,7 @@ const ConsultationLogsPage = () => {
         </div>
       ),
       sortable: true,
-      width: '140px',
+      width: '130px',
     },
   ], []);
 
@@ -539,7 +539,7 @@ const ConsultationLogsPage = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mx-auto mb-4" />
+          <Loader2 className="w-12 h-12 text-red-600 animate-spin mx-auto mb-4" />
           <p className="text-gray-600">Loading consultation logs...</p>
         </div>
       </div>
