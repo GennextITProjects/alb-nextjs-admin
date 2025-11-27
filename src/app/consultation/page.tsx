@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import moment from 'moment';
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import MainDatatable from '@/components/common/MainDatatable';
-import DownloadIcon from '@mui/icons-material/Download';
-import { CSVLink } from 'react-csv';
+import moment from "moment";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import MainDatatable from "@/components/common/MainDatatable";
+import DownloadIcon from "@mui/icons-material/Download";
+import { CSVLink } from "react-csv";
 
 interface PaymentDetails {
   paymentId?: string;
@@ -89,11 +89,14 @@ interface Filters {
 }
 
 // Deep search function for client-side filtering
-const DeepSearchSpace = (data: Consultation[], searchText: string): Consultation[] => {
+const DeepSearchSpace = (
+  data: Consultation[],
+  searchText: string
+): Consultation[] => {
   if (!searchText) return data;
-  
+
   const searchLower = searchText.toLowerCase();
-  return data.filter(item => {
+  return data.filter((item) => {
     // Search in all relevant fields
     const searchableFields = [
       item?.astrologerId?.astrologerName,
@@ -107,38 +110,47 @@ const DeepSearchSpace = (data: Consultation[], searchText: string): Consultation
       item?.consultationTopic,
       item?.paymentDetails?.paymentAmount?.toString(),
       item?.paymentDetails?.paymentMethod,
-      item?.status
+      item?.status,
     ];
-    
-    return searchableFields.some(val => 
-      val && String(val).toLowerCase().includes(searchLower)
+
+    return searchableFields.some(
+      (val) => val && String(val).toLowerCase().includes(searchLower)
     );
   });
 };
 
 // Client-side filter function for filter dropdowns/inputs
-const applyClientFilters = (data: Consultation[], filters: Filters): Consultation[] => {
-  return data.filter(item => {
+const applyClientFilters = (
+  data: Consultation[],
+  filters: Filters
+): Consultation[] => {
+  return data.filter((item) => {
     // Status filter
     if (filters.status && item.status !== filters.status) {
       return false;
     }
 
     // Customer name filter
-    if (filters.customerName && 
-        !item.fullName?.toLowerCase().includes(filters.customerName.toLowerCase())) {
+    if (
+      filters.customerName &&
+      !item.fullName?.toLowerCase().includes(filters.customerName.toLowerCase())
+    ) {
       return false;
     }
 
     // Astrologer name filter
-    if (filters.astrologerName && 
-        !item.astrologerId?.astrologerName?.toLowerCase().includes(filters.astrologerName.toLowerCase())) {
+    if (
+      filters.astrologerName &&
+      !item.astrologerId?.astrologerName
+        ?.toLowerCase()
+        .includes(filters.astrologerName.toLowerCase())
+    ) {
       return false;
     }
 
     // Start date filter
     if (filters.startDate && item.date) {
-      const itemDate = moment(item.date).format('YYYY-MM-DD');
+      const itemDate = moment(item.date).format("YYYY-MM-DD");
       if (itemDate < filters.startDate) {
         return false;
       }
@@ -146,7 +158,7 @@ const applyClientFilters = (data: Consultation[], filters: Filters): Consultatio
 
     // End date filter
     if (filters.endDate && item.date) {
-      const itemDate = moment(item.date).format('YYYY-MM-DD');
+      const itemDate = moment(item.date).format("YYYY-MM-DD");
       if (itemDate > filters.endDate) {
         return false;
       }
@@ -161,13 +173,13 @@ export default function Consultation() {
 
   const [consultationData, setConsultationData] = useState<Consultation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchText, setSearchText] = useState('');
+  const [searchText, setSearchText] = useState("");
   const [filters, setFilters] = useState<Filters>({
-    status: '',
-    customerName: '',
-    astrologerName: '',
-    startDate: moment().format('YYYY-MM-DD'),
-    endDate: moment().format('YYYY-MM-DD') 
+    status: "",
+    customerName: "",
+    astrologerName: "",
+    startDate: moment().format("YYYY-MM-DD"),
+    endDate: moment().format("YYYY-MM-DD"),
   });
 
   const fetchConsultations = async () => {
@@ -175,11 +187,15 @@ export default function Consultation() {
       setLoading(true);
 
       const query = new URLSearchParams({
-        page: '1',
-        limit: '1000',
+        page: "1",
+        limit: "1000",
       });
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/all_consultations_booking?${query.toString()}`);
+      const res = await fetch(
+        `${
+          process.env.NEXT_PUBLIC_API_URL
+        }/api/admin/all_consultations_booking?${query.toString()}`
+      );
       const data: ApiResponse = await res.json();
 
       if (data.success && Array.isArray(data.bookings)) {
@@ -188,7 +204,7 @@ export default function Consultation() {
         setConsultationData([]);
       }
     } catch (error) {
-      console.error('Failed to fetch consultation data:', error);
+      console.error("Failed to fetch consultation data:", error);
       setConsultationData([]);
     } finally {
       setLoading(false);
@@ -199,9 +215,20 @@ export default function Consultation() {
     fetchConsultations();
   }, []);
 
-  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleFilterChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
+    if (name === "startDate" && filters.endDate && value > filters.endDate) {
+      alert("Start date cannot be after end date");
+      return;
+    }
+
+    if (name === "endDate" && filters.startDate && value < filters.startDate) {
+      alert("End date cannot be before start date");
+      return;
+    }
+    setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -213,127 +240,143 @@ export default function Consultation() {
   const finalFilteredData = DeepSearchSpace(filteredByFilters, searchText);
 
   const columns = [
-    { 
-      name: 'S.No.', 
-      selector: (row: Consultation, index?: number) => (index ?? 0) + 1, 
-      width: '70px',
-      sortable: false 
+    {
+      name: "S.No.",
+      selector: (row: Consultation, index?: number) => (index ?? 0) + 1,
+      width: "70px",
+      sortable: false,
     },
-    { 
-      name: 'Astrologer', 
-      selector: (row: Consultation) => row?.astrologerId?.astrologerName || 'N/A', 
+    {
+      name: "Astrologer",
+      selector: (row: Consultation) =>
+        row?.astrologerId?.astrologerName || "N/A",
       sortable: true,
-      width: '150px'
+      width: "150px",
     },
-    { 
-      name: 'Customer', 
-      selector: (row: Consultation) => row?.fullName || 'N/A', 
+    {
+      name: "Customer",
+      selector: (row: Consultation) => row?.fullName || "N/A",
       sortable: true,
-      width: '150px'
+      width: "150px",
     },
-    { 
-      name: 'Email', 
+    {
+      name: "Email",
       selector: (row: Consultation) => {
         const email = row?.paymentDetails?.email?.trim();
-        return email && email.length > 0 ? email : 'N/A';
+        return email && email.length > 0 ? email : "N/A";
       },
-      width: '200px'
+      width: "200px",
     },
-    { 
-      name: 'Mobile', 
-      selector: (row: Consultation) => row?.mobileNumber || 'N/A',
-      width: '130px'
+    {
+      name: "Mobile",
+      selector: (row: Consultation) => row?.mobileNumber || "N/A",
+      width: "130px",
     },
     { 
       name: 'DOB/TOB', 
       selector: (row: Consultation) => `${row?.dateOfBirth ? moment(row.dateOfBirth).format('DD/MM/YYYY') : 'N/A'} / ${row?.timeOfBirth ? moment(row.timeOfBirth, 'HH:mm').format('hh:mm A') : 'N/A'}`,
       width: '180px'
     },
-    { 
-      name: 'POB', 
-      selector: (row: Consultation) => row?.placeOfBirth || 'N/A',
-      width: '150px'
+    {
+      name: "POB",
+      selector: (row: Consultation) => row?.placeOfBirth || "N/A",
+      width: "150px",
     },
     { 
       name: 'Date', 
       selector: (row: Consultation) => row?.date ? moment(row.date).format('DD/MM/YYYY') : 'N/A',
       sortable: true,
-      width: '120px'
-    },
-    { 
-      name: 'Slot', 
-      selector: (row: Consultation) => `${row?.slotId?.fromTime || 'N/A'} - ${row?.slotId?.toTime || 'N/A'}`,
-      width: '140px'
-    },
-    { 
-      name: 'Type', 
-      selector: (row: Consultation) => row?.consultationType || 'N/A',
-      width: '120px'
-    },
-    { 
-      name: 'Topic', 
-      selector: (row: Consultation) => row?.consultationTopic || 'N/A',
-      width: '150px'
-    },
-    { 
-      name: 'Amount', 
-      selector: (row: Consultation) => row?.paymentDetails?.paymentAmount ? `₹${row.paymentDetails.paymentAmount}` : 'N/A',
-      width: '100px'
-    },
-    { 
-      name: 'Mode', 
-      selector: (row: Consultation) => row?.paymentDetails?.paymentMethod || 'N/A',
-      width: '100px'
+      width: "120px",
     },
     {
-      name: 'Status',
+      name: "Slot",
+      selector: (row: Consultation) =>
+        `${row?.slotId?.fromTime || "N/A"} - ${row?.slotId?.toTime || "N/A"}`,
+      width: "140px",
+    },
+    {
+      name: "Type",
+      selector: (row: Consultation) => row?.consultationType || "N/A",
+      width: "120px",
+    },
+    {
+      name: "Topic",
+      selector: (row: Consultation) => row?.consultationTopic || "N/A",
+      width: "150px",
+    },
+    {
+      name: "Amount",
+      selector: (row: Consultation) =>
+        row?.paymentDetails?.paymentAmount
+          ? `₹${row.paymentDetails.paymentAmount}`
+          : "N/A",
+      width: "100px",
+    },
+    {
+      name: "Mode",
+      selector: (row: Consultation) =>
+        row?.paymentDetails?.paymentMethod || "N/A",
+      width: "100px",
+    },
+    {
+      name: "Status",
       cell: (row: Consultation) => (
-        <span className={`px-2 py-1 text-xs rounded-full font-medium ${
-          row?.status === 'completed' ? 'bg-green-100 text-green-700' :
-          row?.status === 'cancelled' ? 'bg-red-100 text-red-700' :
-          row?.status === 'booked' ? 'bg-blue-100 text-blue-700' :
-          'bg-gray-100 text-gray-700'
-        }`}>
-          {row?.status ? row.status.charAt(0).toUpperCase() + row.status.slice(1) : 'N/A'}
+        <span
+          className={`px-2 py-1 text-xs rounded-full font-medium ${
+            row?.status === "completed"
+              ? "bg-green-100 text-green-700"
+              : row?.status === "cancelled"
+              ? "bg-red-100 text-red-700"
+              : row?.status === "booked"
+              ? "bg-blue-100 text-blue-700"
+              : "bg-gray-100 text-gray-700"
+          }`}
+        >
+          {row?.status
+            ? row.status.charAt(0).toUpperCase() + row.status.slice(1)
+            : "N/A"}
         </span>
       ),
-      width: '120px'
+      width: "120px",
     },
   ];
 
   const handleClearFilters = () => {
     setFilters({
-      status: '',
-      customerName: '',
-      astrologerName: '',
-      startDate: moment().format('YYYY-MM-DD'),
-      endDate: moment().format('YYYY-MM-DD')
+      status: "",
+      customerName: "",
+      astrologerName: "",
+      startDate: moment().format("YYYY-MM-DD"),
+      endDate: moment().format("YYYY-MM-DD"),
     });
-    setSearchText('');
+    setSearchText("");
   };
 
-  const prepareCSVData = () => {
-    return consultationData.map((item) => ({
-      'Astrologer': item?.astrologerId?.astrologerName || 'N/A',
-      'Customer': item?.fullName || 'N/A',
-      'Email': item?.paymentDetails?.email?.trim() || 'N/A',
-      'Mobile': item?.mobileNumber || 'N/A',
-      'Gender': item?.gender || '',
-      'Date of Birth': item?.dateOfBirth ? `\t${item.dateOfBirth}` : 'N/A',
-      'Time of Birth': item?.timeOfBirth || 'N/A',
-      'Place of Birth': item?.placeOfBirth || 'N/A',
-      'Date': item?.date ? `\t${moment(item.date).format('YYYY-MM-DD')}` : 'N/A',
-      'Slot From': item?.slotId?.fromTime || 'N/A',
-      'Slot To': item?.slotId?.toTime || 'N/A',
-      'Consultation Type': item?.consultationType || 'N/A',
-      'Consultation Topic': item?.consultationTopic || 'N/A',
-      'Payment Amount': item?.paymentDetails?.paymentAmount || 'N/A',
-      'Payment Method': item?.paymentDetails?.paymentMethod || 'N/A',
-      'Status': item?.status || 'N/A',
-      'Meeting ID': item?.meetingId || 'N/A',
-      'Meeting Password': item?.meetingPassword || 'N/A',
-      'Created At': item?.createdAt ? `\t${moment(item.createdAt).format('YYYY-MM-DD HH:mm:ss')}` : '',
-      'Updated At': item?.updatedAt ? `\t${moment(item.updatedAt).format('YYYY-MM-DD HH:mm:ss')}` : '',
+  const prepareCSVData = (data: Consultation[]) => {
+    return data.map((item) => ({
+      "Astrologer Name": item?.astrologerId?.astrologerName || "N/A",
+      "Customer Name": item?.fullName || "N/A",
+      "Email": item?.paymentDetails?.email?.trim() || "N/A",
+      Mobile: item?.mobileNumber || "N/A",
+      Gender: item?.gender || "",
+      "Time of Birth": item?.timeOfBirth || "N/A",
+      "Place of Birth": item?.placeOfBirth || "N/A",
+      Date: item?.date ? `\t${moment(item.date).format("YYYY-MM-DD")}` : "N/A",
+      "Slot From": item?.slotId?.fromTime || "N/A",
+      "Slot To": item?.slotId?.toTime || "N/A",
+      "Consultation Type": item?.consultationType || "N/A",
+      "Consultation Topic": item?.consultationTopic || "N/A",
+      "Payment Amount": item?.paymentDetails?.paymentAmount || "N/A",
+      "Payment Method": item?.paymentDetails?.paymentMethod || "N/A",
+      Status: item?.status || "N/A",
+      // "Meeting ID": item?.meetingId || "N/A",
+      // "Meeting Password": item?.meetingPassword || "N/A",
+      "Created At": item?.createdAt
+        ? `\t${moment(item.createdAt).format("YYYY-MM-DD HH:mm:ss")}`
+        : "",
+      "Updated At": item?.updatedAt
+        ? `\t${moment(item.updatedAt).format("YYYY-MM-DD HH:mm:ss")}`
+        : "",
     }));
   };
 
@@ -344,12 +387,12 @@ export default function Consultation() {
           <div className="text-xl font-semibold text-gray-800">
             Consultation Bookings
           </div>
-          
+
           <div className="flex gap-3 items-center">
             {consultationData.length > 0 && (
-              <CSVLink 
-                filename="Consultation_Bookings.csv" 
-                data={prepareCSVData()} 
+              <CSVLink
+                filename="Consultation_Bookings.csv"
+                data={prepareCSVData(finalFilteredData)}
                 className="text-gray-800 text-base no-underline flex items-center gap-2 cursor-pointer hover:text-gray-600 transition-colors"
               >
                 <DownloadIcon className="text-gray-600" />
@@ -359,10 +402,10 @@ export default function Consultation() {
         </div>
 
         <div className="flex flex-wrap gap-3 mb-4">
-          <select 
-            name="status" 
-            value={filters.status} 
-            onChange={handleFilterChange} 
+          <select
+            name="status"
+            value={filters.status}
+            onChange={handleFilterChange}
             className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
           >
             <option value="">All Status</option>
@@ -372,41 +415,48 @@ export default function Consultation() {
             <option value="expired">Expired</option>
           </select>
 
-          <input 
-            type="text" 
-            placeholder="Customer Name" 
-            name="customerName" 
-            value={filters.customerName} 
-            onChange={handleFilterChange} 
+          <input
+            type="text"
+            placeholder="Customer Name"
+            name="customerName"
+            value={filters.customerName}
+            onChange={handleFilterChange}
             className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
           />
 
-          <input 
-            type="text" 
-            placeholder="Astrologer Name" 
-            name="astrologerName" 
-            value={filters.astrologerName} 
-            onChange={handleFilterChange} 
+          <input
+            type="text"
+            placeholder="Astrologer Name"
+            name="astrologerName"
+            value={filters.astrologerName}
+            onChange={handleFilterChange}
             className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
           />
 
-          <input 
-            type="date" 
-            name="startDate" 
-            value={filters.startDate} 
-            onChange={handleFilterChange} 
+          <input
+            type="date"
+            name="startDate"
+            value={filters.startDate}
+            onChange={handleFilterChange}
+            max={filters.endDate}
             className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
           />
 
-          <input 
-            type="date" 
-            name="endDate" 
-            value={filters.endDate} 
-            onChange={handleFilterChange} 
+          <input
+            type="date"
+            name="endDate"
+            value={filters.endDate}
+            onChange={handleFilterChange}
+            min={filters.startDate}
             className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
           />
 
-          {(filters.status || filters.customerName || filters.astrologerName || filters.startDate || filters.endDate || searchText) && (
+          {(filters.status ||
+            filters.customerName ||
+            filters.astrologerName ||
+            filters.startDate ||
+            filters.endDate ||
+            searchText) && (
             <button
               onClick={handleClearFilters}
               className="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md text-sm transition-colors"
@@ -417,11 +467,11 @@ export default function Consultation() {
         </div>
       </div>
 
-      <MainDatatable 
-        columns={columns} 
-        data={finalFilteredData} 
+      <MainDatatable
+        columns={columns}
+        data={finalFilteredData}
         isLoading={loading}
-        title="" 
+        title=""
         addButtonActive={false}
         showSearch={false}
       />
