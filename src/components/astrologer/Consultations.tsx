@@ -26,6 +26,11 @@ interface ConsultationsProps {
 export default function Consultations({ astrologerId, initialData, onUpdate }: ConsultationsProps) {
   const [totalConsultations, setTotalConsultations] = useState(initialData?.consultation || '0');
   const [consultationCommission, setConsultationCommission] = useState(initialData?.consultation_commission || '0');
+  const [originalPrice, setOriginalPrice] = useState(
+    initialData?.original_price !== undefined && initialData?.original_price !== null
+      ? String(initialData.original_price)
+      : ''
+  );
   const [existingPrices, setExistingPrices] = useState<ConsultationPrice[]>([]);
   const [newPrice, setNewPrice] = useState<{ durationId: string; price: string }>({
     durationId: '',
@@ -73,6 +78,16 @@ export default function Consultations({ astrologerId, initialData, onUpdate }: C
     const usedDurationIds = existingPrices.map(p => p.duration);
     return allSlotDurations.filter(s => !usedDurationIds.includes(s._id));
   };
+
+  function getMinPrice(prices: ConsultationPrice[]): number {
+  const valid = prices
+    .map(p => p.price);
+
+  if (valid.length === 0) return 0;
+
+  return Math.min(...valid);
+}
+
 
   const handleAddPrice = async () => {
     if (!newPrice.durationId) {
@@ -150,7 +165,7 @@ export default function Consultations({ astrologerId, initialData, onUpdate }: C
     setSubmitting(true);
 
     try {
-      const payload = {
+      const payload: any = {
         astrologerId,
         astrologerName: initialData?.astrologerName || '',
         displayName: initialData?.displayName || '',
@@ -214,6 +229,11 @@ export default function Consultations({ astrologerId, initialData, onUpdate }: C
         reportTypes: initialData?.reportTypes || [],
       };
 
+      // only send original_price if user entered something
+      if (originalPrice !== '') {
+        payload.original_price = Number(originalPrice);
+      }
+
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/admin/update-astrologer`,
         {
@@ -250,9 +270,9 @@ export default function Consultations({ astrologerId, initialData, onUpdate }: C
 
       {/* Compact Basic Info Section */}
       <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-medium text-gray-700 mb-1">
               Total Consultations
             </label>
             <input
@@ -265,7 +285,7 @@ export default function Consultations({ astrologerId, initialData, onUpdate }: C
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-medium text-gray-700 mb-1">
               Commission (%)
             </label>
             <input
@@ -274,6 +294,32 @@ export default function Consultations({ astrologerId, initialData, onUpdate }: C
               onChange={(e) => setConsultationCommission(e.target.value)}
               min="0"
               max="100"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Original Price (₹)
+            </label>
+            <input
+              type="number"
+              value={originalPrice}
+              onChange={(e) => setOriginalPrice(e.target.value)}
+              min="0"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Actual Shown Price (₹)
+            </label>
+            <input
+              type="number"
+              disabled
+              value={getMinPrice(initialData?.consultationPrices)}
+              min="0"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
             />
           </div>
