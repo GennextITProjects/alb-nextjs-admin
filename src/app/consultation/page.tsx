@@ -149,18 +149,19 @@ const applyClientFilters = (
       return false;
     }
 
-    // Start date filter
-    if (filters.startDate && item.date) {
+    // Date range filtering - FIXED: Only filter if dates are provided
+    if (filters.startDate || filters.endDate) {
+      if (!item.date) return false; // Skip items without date
+
       const itemDate = moment(item.date).format("YYYY-MM-DD");
-      if (itemDate < filters.startDate) {
+      
+      // Start date filter
+      if (filters.startDate && itemDate < filters.startDate) {
         return false;
       }
-    }
-
-    // End date filter
-    if (filters.endDate && item.date) {
-      const itemDate = moment(item.date).format("YYYY-MM-DD");
-      if (itemDate > filters.endDate) {
+      
+      // End date filter
+      if (filters.endDate && itemDate > filters.endDate) {
         return false;
       }
     }
@@ -179,23 +180,27 @@ export default function Consultation() {
     status: "",
     customerName: "",
     astrologerName: "",
-    startDate: moment().format("YYYY-MM-DD"),
-    endDate: moment().format("YYYY-MM-DD"),
+    startDate: "",
+    endDate: "",
   });
 
   const fetchConsultations = async () => {
     try {
       setLoading(true);
 
-      const query = new URLSearchParams({
-      page: "1",
-      limit: "1000",
-      ...(filters.status && { status: filters.status }),
-      ...(filters.customerName && { customerName: filters.customerName }),
-      ...(filters.astrologerName && { astrologerName: filters.astrologerName }),
-      ...(filters.startDate && { startDate: filters.startDate }),
-      ...(filters.endDate && { endDate: filters.endDate }),
-    });
+      const queryParams: Record<string, string> = {
+        page: "1",
+        limit: "1000",
+      };
+
+      // Only add filters if they have values
+      if (filters.status) queryParams.status = filters.status;
+      if (filters.customerName) queryParams.customerName = filters.customerName;
+      if (filters.astrologerName) queryParams.astrologerName = filters.astrologerName;
+      if (filters.startDate) queryParams.startDate = filters.startDate;
+      if (filters.endDate) queryParams.endDate = filters.endDate;
+
+      const query = new URLSearchParams(queryParams);
 
       const res = await fetch(
         `${
@@ -217,18 +222,20 @@ export default function Consultation() {
     }
   };
 
-useEffect(() => {
-  const timeoutId = setTimeout(() => {
-    fetchConsultations();
-  }, 300); 
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchConsultations();
+    }, 300); 
 
-  return () => clearTimeout(timeoutId);
-}, [filters.status, filters.customerName, filters.astrologerName, filters.startDate, filters.endDate]);
+    return () => clearTimeout(timeoutId);
+  }, [filters.status, filters.customerName, filters.astrologerName, filters.startDate, filters.endDate]);
 
   const handleFilterChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
+    
+    // Date validation
     if (name === "startDate" && filters.endDate && value > filters.endDate) {
       alert("Start date cannot be after end date");
       return;
@@ -238,6 +245,7 @@ useEffect(() => {
       alert("End date cannot be before start date");
       return;
     }
+    
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -245,9 +253,10 @@ useEffect(() => {
     setSearchText(e.target.value);
   };
 
-  // Apply filters first, then search
+  // Apply filters first, then search - FIXED: Correct data flow
   const filteredByFilters = applyClientFilters(consultationData, filters);
-const finalFilteredData = DeepSearchSpace(consultationData, searchText);
+  const finalFilteredData = DeepSearchSpace(filteredByFilters, searchText);
+
   const columns = [
     {
       name: "S.No.",
@@ -393,8 +402,8 @@ const finalFilteredData = DeepSearchSpace(consultationData, searchText);
       status: "",
       customerName: "",
       astrologerName: "",
-      startDate: moment().format("YYYY-MM-DD"),
-      endDate: moment().format("YYYY-MM-DD"),
+      startDate: "",
+      endDate: "",
     });
     setSearchText("");
   };
@@ -406,6 +415,7 @@ const finalFilteredData = DeepSearchSpace(consultationData, searchText);
       "Email": item?.paymentDetails?.email?.trim() || "N/A",
       Mobile: item?.mobileNumber || "N/A",
       Gender: item?.gender || "",
+      "Date of Birth": item?.dateOfBirth ? moment(item.dateOfBirth).format("DD/MM/YYYY") : "N/A",
       "Time of Birth": item?.timeOfBirth || "N/A",
       "Place of Birth": item?.placeOfBirth || "N/A",
       Date: item?.date ? `\t${moment(item.date).format("YYYY-MM-DD")}` : "N/A",
@@ -416,8 +426,6 @@ const finalFilteredData = DeepSearchSpace(consultationData, searchText);
       "Payment Amount": item?.paymentDetails?.paymentAmount || "N/A",
       "Payment Method": item?.paymentDetails?.paymentMethod || "N/A",
       Status: item?.status || "N/A",
-      // "Meeting ID": item?.meetingId || "N/A",
-      // "Meeting Password": item?.meetingPassword || "N/A",
       "Created At": item?.createdAt
         ? `\t${moment(item.createdAt).format("YYYY-MM-DD HH:mm:ss")}`
         : "",
@@ -443,6 +451,7 @@ const finalFilteredData = DeepSearchSpace(consultationData, searchText);
                 className="text-gray-800 text-base no-underline flex items-center gap-2 cursor-pointer hover:text-gray-600 transition-colors"
               >
                 <DownloadIcon className="text-gray-600" />
+                Export CSV
               </CSVLink>
             )}
           </div>
@@ -485,7 +494,7 @@ const finalFilteredData = DeepSearchSpace(consultationData, searchText);
             name="startDate"
             value={filters.startDate}
             onChange={handleFilterChange}
-            max={filters.endDate}
+            max={filters.endDate || undefined}
             className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
           />
 
@@ -494,7 +503,15 @@ const finalFilteredData = DeepSearchSpace(consultationData, searchText);
             name="endDate"
             value={filters.endDate}
             onChange={handleFilterChange}
-            min={filters.startDate}
+            min={filters.startDate || undefined}
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+          />
+
+          <input
+            type="text"
+            placeholder="Search across all fields..."
+            value={searchText}
+            onChange={handleSearch}
             className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
           />
 
