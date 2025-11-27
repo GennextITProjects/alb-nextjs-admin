@@ -180,8 +180,8 @@ export default function Consultation() {
     status: "",
     customerName: "",
     astrologerName: "",
-    startDate: "",
-    endDate: "",
+    startDate: moment().format("YYYY-MM-DD"),
+  endDate: moment().format("YYYY-MM-DD"),
   });
 
   const fetchConsultations = async () => {

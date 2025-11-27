@@ -27,6 +27,7 @@ interface ConsultationLog {
     _id: string;
   };
   fullName: string;
+  
   mobileNumber: string;
   dateOfBirth: string;
   timeOfBirth: string;
@@ -293,7 +294,7 @@ const ConsultationLogsPage = () => {
           {getConsultationIcon(row.consultationType)}
         </div>
       ),
-      width: '150px',
+      width: '175px',
     },
     {
       name: 'Payment',
@@ -312,7 +313,7 @@ const ConsultationLogsPage = () => {
         )
       ),
       sortable: true,
-      width: '200px',
+      width: '170px',
     },
     {
       name: 'Status',
@@ -327,7 +328,7 @@ const ConsultationLogsPage = () => {
         );
       },
       sortable: true,
-      width: '200px',
+      width: '250px',
     },
     {
       name: 'Time Slot',
@@ -373,7 +374,7 @@ const ConsultationLogsPage = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Email</span>
-                  <span className="text-sm font-medium text-gray-900 truncate ml-4">{data?.customerId?.email || 'N/A'}</span>
+                  <span className="text-sm font-medium text-gray-900 truncate ml-4">{data?.paymentDetails?.email || 'N/A'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Mobile</span>
@@ -556,6 +557,7 @@ const ConsultationLogsPage = () => {
           isLoading={loading}
           showSearch={true}
           expandableRows={true}
+          
           expandableRowsComponent={ExpandedComponent}
           statusFilters={statusFilters}
           onStatusFilterChange={setStatusFilter}

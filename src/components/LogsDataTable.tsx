@@ -67,6 +67,21 @@ const DataTableCustomStyles = {
       fontSize: '14px',
     },
   },
+  expanderButton: {
+    style: {
+      display: 'none',
+    },
+  },
+  table: {
+    style: {
+      width: '100%', // Ensure table takes full width
+    },
+  },
+  headRow: {
+    style: {
+      width: '100%', // Header row takes full width
+    },
+  },
 };
 
 const MainDatatable: React.FC<MainDatatableProps> = ({ 
@@ -111,45 +126,13 @@ const MainDatatable: React.FC<MainDatatableProps> = ({
     }
   };
 
-  const toggleRowExpanded = (rowId: string) => {
-    setExpandedRows(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(rowId)) {
-        newSet.delete(rowId);
-      } else {
-        newSet.clear(); // Only one row expanded at a time
-        newSet.add(rowId);
-      }
-      return newSet;
-    });
-  };
 
-  // Add expand button column if expandable rows enabled
   const enhancedColumns = useMemo(() => {
-    if (!expandableRows) return columns;
-    
-    return [
-      ...columns,
-      {
-        name: '',
-        cell: (row: any) => (
-          <button 
-            onClick={() => toggleRowExpanded(row._id || row.id)}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            {expandedRows.has(row._id || row.id) ? (
-              <ChevronUp className="w-5 h-5" />
-            ) : (
-              <ChevronDown className="w-5 h-5" />
-            )}
-          </button>
-        ),
-        width: '60px',
-      }
-    ];
-  }, [columns, expandableRows, expandedRows]);
+  // Remove the expand button column - just return original columns
+  return columns;
+}, [columns]);
 
-  // Custom expandable row component wrapper
+  
   const ExpandableComponent = ({ data: rowData }: { data: any }) => {
     if (!expandableRowsComponent) return null;
     const Component = expandableRowsComponent;
@@ -289,41 +272,35 @@ const MainDatatable: React.FC<MainDatatableProps> = ({
           </div>
 
           {/* DataTable with built-in pagination */}
-          <DataTable
-            columns={enhancedColumns}
-            data={showSearch ? filteredData : data}
-            pagination
-            paginationPerPage={10}
-            paginationRowsPerPageOptions={[10, 25, 50, 100, 200]}
-            paginationComponentOptions={{ 
-              rowsPerPageText: 'Rows Per Page:',
-              rangeSeparatorText: 'of',
-            }}
-            customStyles={DataTableCustomStyles}
-            fixedHeader
-            fixedHeaderScrollHeight="600px"
-            highlightOnHover
-            pointerOnHover
-            responsive
-            noDataComponent={
-              <div className="text-center py-10 text-gray-500">
-                No records found
-              </div>
-            }
-          />
+         <DataTable
+  columns={enhancedColumns}
+  data={showSearch ? filteredData : data}
+  pagination
+  paginationPerPage={10}
+  paginationRowsPerPageOptions={[10, 25, 50, 100, 200]}
+  paginationComponentOptions={{ 
+    rowsPerPageText: 'Rows Per Page:',
+    rangeSeparatorText: 'of',
+  }}
+  customStyles={DataTableCustomStyles}
+  fixedHeader
+  fixedHeaderScrollHeight="600px"
+  highlightOnHover
+  pointerOnHover
+  responsive
+  noDataComponent={
+    <div className="text-center py-10 text-gray-500">
+      No records found
+    </div>
+  }
+  expandableRows={expandableRows}
+  expandableRowsComponent={ExpandableComponent}
+  expandableRowsHideExpander={true}
+  expandOnRowClicked={true}
+  
+/>
 
-          {/* Expandable rows rendered separately */}
-          {expandableRows && expandableRowsComponent && (
-            <>
-              {(showSearch ? filteredData : data).map((row) => (
-                expandedRows.has(row._id || row.id) && (
-                  <div key={`expanded-${row._id || row.id}`}>
-                    <ExpandableComponent data={row} />
-                  </div>
-                )
-              ))}
-            </>
-          )}
+         
         </>
       )}
     </div>
