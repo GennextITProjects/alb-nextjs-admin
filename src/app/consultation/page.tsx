@@ -120,56 +120,6 @@ const DeepSearchSpace = (
   });
 };
 
-// Client-side filter function for filter dropdowns/inputs
-const applyClientFilters = (
-  data: Consultation[],
-  filters: Filters
-): Consultation[] => {
-  return data.filter((item) => {
-    // Status filter
-    if (filters.status && item.status !== filters.status) {
-      return false;
-    }
-
-    // Customer name filter
-    if (
-      filters.customerName &&
-      !item.fullName?.toLowerCase().includes(filters.customerName.toLowerCase())
-    ) {
-      return false;
-    }
-
-    // Astrologer name filter
-    if (
-      filters.astrologerName &&
-      !item.astrologerId?.astrologerName
-        ?.toLowerCase()
-        .includes(filters.astrologerName.toLowerCase())
-    ) {
-      return false;
-    }
-
-    // Date range filtering - FIXED: Only filter if dates are provided
-    if (filters.startDate || filters.endDate) {
-      if (!item.date) return false; // Skip items without date
-
-      const itemDate = moment(item.date).format("YYYY-MM-DD");
-      
-      // Start date filter
-      if (filters.startDate && itemDate < filters.startDate) {
-        return false;
-      }
-      
-      // End date filter
-      if (filters.endDate && itemDate > filters.endDate) {
-        return false;
-      }
-    }
-
-    return true;
-  });
-};
-
 export default function Consultation() {
   const router = useRouter();
 
@@ -181,7 +131,7 @@ export default function Consultation() {
     customerName: "",
     astrologerName: "",
     startDate: moment().format("YYYY-MM-DD"),
-  endDate: moment().format("YYYY-MM-DD"),
+    endDate: moment().format("YYYY-MM-DD"),
   });
 
   const fetchConsultations = async () => {
@@ -193,12 +143,18 @@ export default function Consultation() {
         limit: "1000",
       };
 
-      // Only add filters if they have values
+      // Add filters based on createdAt (booking creation date)
       if (filters.status) queryParams.status = filters.status;
       if (filters.customerName) queryParams.customerName = filters.customerName;
       if (filters.astrologerName) queryParams.astrologerName = filters.astrologerName;
-      if (filters.startDate) queryParams.startDate = filters.startDate;
-      if (filters.endDate) queryParams.endDate = filters.endDate;
+      
+      // Send startDate and endDate for createdAt filtering
+      if (filters.startDate) {
+        queryParams.startDate = moment(filters.startDate).startOf('day').toISOString();
+      }
+      if (filters.endDate) {
+        queryParams.endDate = moment(filters.endDate).endOf('day').toISOString();
+      }
 
       const query = new URLSearchParams(queryParams);
 
@@ -253,9 +209,8 @@ export default function Consultation() {
     setSearchText(e.target.value);
   };
 
-  // Apply filters first, then search - FIXED: Correct data flow
-  const filteredByFilters = applyClientFilters(consultationData, filters);
-  const finalFilteredData = DeepSearchSpace(filteredByFilters, searchText);
+  // Apply search on client-side
+  const finalFilteredData = DeepSearchSpace(consultationData, searchText);
 
   const columns = [
     {
@@ -309,7 +264,6 @@ export default function Consultation() {
       },
       width: '180px'
     },
-
     {
       name: "POB",
       cell: (row: Consultation) => {
@@ -322,12 +276,12 @@ export default function Consultation() {
       },
       width: "150px",
     },
-
     { 
-      name: 'Date', 
+      name: 'Consultation Date', 
       selector: (row: Consultation) => row?.date ? moment(row.date).format('DD/MM/YYYY') : 'N/A',
       sortable: true,
-      width: "120px",
+      width: "170px",
+      center: true,
     },
     {
       name: "Slot",
@@ -347,7 +301,6 @@ export default function Consultation() {
       },
       width: "120px",
     },
-
     {
       name: "Topic",
       cell: (row: Consultation) => {
@@ -373,6 +326,13 @@ export default function Consultation() {
       selector: (row: Consultation) =>
         row?.paymentDetails?.paymentMethod || "N/A",
       width: "100px",
+    },
+    {
+      name: "Created At",
+      selector: (row: Consultation) =>
+        row?.createdAt ? moment(row.createdAt).format('DD/MM/YYYY HH:mm') : "N/A",
+      sortable: true,
+      width: "150px",
     },
     {
       name: "Status",
@@ -418,7 +378,7 @@ export default function Consultation() {
       "Date of Birth": item?.dateOfBirth ? moment(item.dateOfBirth).format("DD/MM/YYYY") : "N/A",
       "Time of Birth": item?.timeOfBirth || "N/A",
       "Place of Birth": item?.placeOfBirth || "N/A",
-      Date: item?.date ? `\t${moment(item.date).format("YYYY-MM-DD")}` : "N/A",
+      "Consultation Date": item?.date ? moment(item.date).format("DD/MM/YYYY") : "N/A",
       "Slot From": item?.slotId?.fromTime || "N/A",
       "Slot To": item?.slotId?.toTime || "N/A",
       "Consultation Type": item?.consultationType || "N/A",
@@ -427,11 +387,11 @@ export default function Consultation() {
       "Payment Method": item?.paymentDetails?.paymentMethod || "N/A",
       Status: item?.status || "N/A",
       "Created At": item?.createdAt
-        ? `\t${moment(item.createdAt).format("YYYY-MM-DD HH:mm:ss")}`
-        : "",
+        ? moment(item.createdAt).format("DD/MM/YYYY HH:mm:ss")
+        : "N/A",
       "Updated At": item?.updatedAt
-        ? `\t${moment(item.updatedAt).format("YYYY-MM-DD HH:mm:ss")}`
-        : "",
+        ? moment(item.updatedAt).format("DD/MM/YYYY HH:mm:ss")
+        : "N/A",
     }));
   };
 
@@ -495,6 +455,7 @@ export default function Consultation() {
             value={filters.startDate}
             onChange={handleFilterChange}
             max={filters.endDate || undefined}
+            placeholder="Created From"
             className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
           />
 
@@ -504,6 +465,7 @@ export default function Consultation() {
             value={filters.endDate}
             onChange={handleFilterChange}
             min={filters.startDate || undefined}
+            placeholder="Created To"
             className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
           />
 
