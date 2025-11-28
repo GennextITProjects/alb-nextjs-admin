@@ -19,53 +19,57 @@ export default function Login() {
     return true;
   };
 
-  const handleLogin = async (): Promise<void> => {
-    if (validation()) {
-      setLoading(true);
-      try {
-        const response = await fetch('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password }),
-        });
+const handleLogin = async (): Promise<void> => {
+  if (validation()) {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
 
-        const data = await response.json();
+      const data = await response.json();
 
-        if (!response.ok) {
-          throw new Error(data.message || 'Login failed');
-        }
-
-        await Swal.fire({
-          icon: "success",
-          text: "Login Successfully",
-          showConfirmButton: false,
-          timer: 2000,
-        });
-
-        router.push("/");
-        router.refresh();
-
-      } catch (error) {
-        console.error("Login Error:", error);
-        await Swal.fire({
-          icon: "error",
-          text: error instanceof Error ? error.message : "Invalid username or password",
-          showConfirmButton: false,
-          timer: 2000,
-        });
-      } finally {
-        setLoading(false);
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
       }
-    } else {
+
+      // localStorage mein save karo
+      localStorage.setItem("adminToken", data.token);
+      localStorage.setItem("userDetails", username);
+
       await Swal.fire({
-        icon: "error",
-        title: "Validation Error",
-        text: "Please Fill Both Fields",
+        icon: "success",
+        text: "Login Successfully",
         showConfirmButton: false,
         timer: 2000,
       });
+
+      router.push("/");
+      router.refresh();
+
+    } catch (error) {
+      console.error("Login Error:", error);
+      await Swal.fire({
+        icon: "error",
+        text: error instanceof Error ? error.message : "Invalid username or password",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+    } finally {
+      setLoading(false);
     }
-  };
+  } else {
+    await Swal.fire({
+      icon: "error",
+      title: "Validation Error",
+      text: "Please Fill Both Fields",
+      showConfirmButton: false,
+      timer: 2000,
+    });
+  }
+};
 
   const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>): void => {
     if (e.key === 'Enter') {

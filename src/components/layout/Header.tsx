@@ -124,13 +124,6 @@ export default function Header({ isSidebarOpen, setIsSidebarOpen }: HeaderProps)
           {open && (
             <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden z-50">
               {/* Logout Button */}
-                 {/* Uncomment if needed */}
-                  {/* <button
-                    onClick={handleModalOpen}
-                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-                  >
-                    Change Password
-                  </button> */}
               <button
                 onClick={handleLogout}
                 className="w-full px-4 py-3 bg-red-500 hover:bg-red-600 text-white transition duration-200 flex items-center justify-center gap-2"
