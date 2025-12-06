@@ -13,7 +13,12 @@ interface SlotDuration {
 
 interface ConsultationPrice {
   _id?: string;
-  duration: string;
+  duration: string; // durationId
+  price: number;
+}
+
+interface SpecialPricingRate {
+  duration: number; // minutes (5, 15, 30, 45, ...)
   price: number;
 }
 
@@ -26,6 +31,8 @@ interface ConsultationsProps {
 export default function Consultations({ astrologerId, initialData, onUpdate }: ConsultationsProps) {
   const [totalConsultations, setTotalConsultations] = useState(initialData?.consultation || '0');
   const [consultationCommission, setConsultationCommission] = useState(initialData?.consultation_commission || '0');
+  const [isSpecialAstrologer, setIsSpecialAstrologer] = useState(initialData?.hasSpecialPricing || false);
+  const [specialPricingRates, setSpecialPricingRates] = useState<SpecialPricingRate[]>([]);
   const [originalPrice, setOriginalPrice] = useState(
     initialData?.original_price !== undefined && initialData?.original_price !== null
       ? String(initialData.original_price)
@@ -41,10 +48,15 @@ export default function Consultations({ astrologerId, initialData, onUpdate }: C
   const [submitting, setSubmitting] = useState(false);
   const [addingPrice, setAddingPrice] = useState(false);
 
+  // -------------------- load data --------------------
   useEffect(() => {
     fetchSlotDurations();
     loadExistingPrices();
   }, []);
+
+  useEffect(() => {
+    loadSpecialPricing();
+  }, [initialData?.specialPricingRates, allSlotDurations.length]);
 
   const loadExistingPrices = () => {
     const prices = initialData?.consultationPrices || [];
@@ -56,7 +68,6 @@ export default function Consultations({ astrologerId, initialData, onUpdate }: C
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/get_slots_duration`);
       const data = await response.json();
-
       if (data.success) {
         const slots = data.slots || [];
         const activeSlots = slots.filter((s: SlotDuration) => s.active);
@@ -70,7 +81,25 @@ export default function Consultations({ astrologerId, initialData, onUpdate }: C
     }
   };
 
-  const getSlotDuration = (durationId: string): SlotDuration | undefined => {
+  // specialPricingRates in DB is Map<minutes, price>. We keep it as minutes in state.
+  const loadSpecialPricing = () => {
+    if (!initialData?.specialPricingRates) {
+      setSpecialPricingRates([]);
+      return;
+    }
+
+    const rates: SpecialPricingRate[] = Object.entries(initialData.specialPricingRates).map(
+      ([minutesStr, price]) => ({
+        duration: Number(minutesStr),
+        price: Number(price),
+      })
+    );
+    setSpecialPricingRates(rates);
+  };
+
+  // -------------------- helpers --------------------
+  const getSlotDuration = (durationId: string | undefined): SlotDuration | undefined => {
+    if (!durationId) return undefined;
     return allSlotDurations.find(s => s._id === durationId);
   };
 
@@ -79,20 +108,32 @@ export default function Consultations({ astrologerId, initialData, onUpdate }: C
     return allSlotDurations.filter(s => !usedDurationIds.includes(s._id));
   };
 
+  const getMinutesByDurationId = (durationId: string): number | undefined => {
+    const s = allSlotDurations.find(slot => slot._id === durationId);
+    return s?.slotDuration;
+  };
+
+  const getSlotByMinutes = (minutes: number): SlotDuration | undefined =>
+    allSlotDurations.find(s => s.slotDuration === minutes);
+
+  const getNormalDurationsInMinutes = (): number[] => {
+    return existingPrices
+      .map(p => getMinutesByDurationId(p.duration))
+      .filter((m): m is number => m !== undefined);
+  };
+
   function getMinPrice(prices: ConsultationPrice[]): number {
     const valid = prices.map(p => p.price);
     if (valid.length === 0) return 0;
     return Math.min(...valid);
   }
 
-  // Get the second minimum price (next minimum after the current minimum)
   function getNextMinPrice(prices: ConsultationPrice[]): number {
     const valid = prices.map(p => p.price).sort((a, b) => a - b);
     if (valid.length <= 1) return 0;
-    return valid[1]; // Return second smallest value
+    return valid[1];
   }
 
-  // Check if the price being deleted is the minimum price
   function isMinPrice(durationId: string, prices: ConsultationPrice[]): boolean {
     const priceToDelete = prices.find(p => p.duration === durationId);
     if (!priceToDelete) return false;
@@ -100,19 +141,18 @@ export default function Consultations({ astrologerId, initialData, onUpdate }: C
     return priceToDelete.price === minPrice;
   }
 
-  // Check if save button should be disabled
   const isSaveDisabled = (): boolean => {
     const actualShownPrice = getMinPrice(initialData?.consultationPrices || []);
     const enteredOriginalPrice = Number(originalPrice);
-    
-    // Disable if original price is entered and is less than actual shown price
+
     if (originalPrice !== '' && enteredOriginalPrice < actualShownPrice + 1) {
       return true;
     }
-    
+
     return submitting;
   };
 
+  // -------------------- normal prices --------------------
   const handleAddPrice = async () => {
     if (!newPrice.durationId) {
       toast.error('Please select a duration');
@@ -160,8 +200,7 @@ export default function Consultations({ astrologerId, initialData, onUpdate }: C
   const handleDeletePrice = async (durationId: string) => {
     try {
       const isDeletingMinPrice = isMinPrice(durationId, existingPrices);
-      
-      // Delete the price first
+
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/admin/delete-consultation-price`,
         {
@@ -178,16 +217,13 @@ export default function Consultations({ astrologerId, initialData, onUpdate }: C
 
       if (data.success) {
         toast.success('Consultation price deleted successfully');
-        
-        // If we deleted the minimum price, update with next min price + 1000
+
         if (isDeletingMinPrice && existingPrices.length > 1) {
           const nextMinPrice = getNextMinPrice(existingPrices);
           const newOriginalPrice = nextMinPrice + 1000;
-          
-          // Call the update API with new original price
           await updateOriginalPriceAfterDelete(newOriginalPrice);
         }
-        
+
         onUpdate();
       } else {
         toast.error(data.message || 'Failed to delete price');
@@ -198,7 +234,6 @@ export default function Consultations({ astrologerId, initialData, onUpdate }: C
     }
   };
 
-  // Update original price after deleting minimum price
   const updateOriginalPriceAfterDelete = async (newOriginalPrice: number) => {
     try {
       const payload: any = {
@@ -219,7 +254,7 @@ export default function Consultations({ astrologerId, initialData, onUpdate }: C
         zipCode: initialData?.zipCode || '',
         password: initialData?.password || '',
         confirm_password: initialData?.confirm_password || initialData?.password || '',
-        
+
         experience: initialData?.experience || '',
         about: initialData?.about || '',
         short_bio: initialData?.short_bio || '',
@@ -228,11 +263,11 @@ export default function Consultations({ astrologerId, initialData, onUpdate }: C
         tagLine: initialData?.tagLine || '',
         language: initialData?.language || [],
         workingOnOtherApps: initialData?.workingOnOtherApps || 'No',
-        
+
         skill: initialData?.skill?.map((s: any) => s._id) || [],
         mainExpertise: initialData?.mainExpertise?.map((e: any) => e._id) || [],
         remedies: initialData?.remedies?.map((r: any) => r._id) || [],
-        
+
         account_holder_name: initialData?.account_holder_name || '',
         account_number: initialData?.account_number || '',
         account_type: initialData?.account_type || '',
@@ -240,11 +275,11 @@ export default function Consultations({ astrologerId, initialData, onUpdate }: C
         account_name: initialData?.account_name || '',
         panCard: initialData?.panCard || '',
         aadharNumber: initialData?.aadharNumber || '',
-        
+
         consultation: totalConsultations,
         consultation_commission: consultationCommission,
         original_price: newOriginalPrice,
-        
+
         free_min: initialData?.free_min || 0,
         chat_price: initialData?.chat_price || null,
         call_price: initialData?.call_price || null,
@@ -255,13 +290,13 @@ export default function Consultations({ astrologerId, initialData, onUpdate }: C
         commission_video_call_price: initialData?.commission_video_call_price || 0,
         commission_normal_video_call_price: initialData?.commission_normal_video_call_price || 0,
         gift_commission: initialData?.gift_commission || 0,
-        
+
         follower_count: initialData?.follower_count || 0,
         totalCallDuration: initialData?.totalCallDuration || 0,
         totalChatDuration: initialData?.totalChatDuration || 0,
         totalVideoCallDuration: initialData?.totalVideoCallDuration || 0,
         currency: initialData?.currency || 'INR',
-        
+
         isDealInReport: initialData?.isDealInReport || false,
         reportTypes: initialData?.reportTypes || [],
       };
@@ -287,6 +322,46 @@ export default function Consultations({ astrologerId, initialData, onUpdate }: C
     }
   };
 
+  // -------------------- special pricing --------------------
+  const getAvailableDurationsForSpecialPricing = (currentDuration: number): number[] => {
+    const normalDurations = getNormalDurationsInMinutes();
+    const usedDurations = specialPricingRates
+      .map(r => r.duration)
+      .filter(d => d !== currentDuration);
+
+    return normalDurations.filter(d => !usedDurations.includes(d));
+  };
+
+  const handleAddSpecialPrice = () => {
+    const normalDurations = getNormalDurationsInMinutes();
+    const alreadyUsed = specialPricingRates.map(r => r.duration);
+    const available = normalDurations.filter(m => !alreadyUsed.includes(m));
+
+    if (available.length === 0) {
+      toast.info('All durations already have special pricing');
+      return;
+    }
+
+    setSpecialPricingRates(prev => [...prev, { duration: available[0], price: 0 }]);
+  };
+
+  const handleRemoveSpecialPrice = (index: number) => {
+    setSpecialPricingRates(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSpecialPriceChange = (
+    index: number,
+    field: 'duration' | 'price',
+    value: number
+  ) => {
+    setSpecialPricingRates(prev => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], [field]: value };
+      return copy;
+    });
+  };
+
+  // -------------------- save basic + specials --------------------
   const handleUpdateBasicInfo = async () => {
     setSubmitting(true);
 
@@ -309,7 +384,7 @@ export default function Consultations({ astrologerId, initialData, onUpdate }: C
         zipCode: initialData?.zipCode || '',
         password: initialData?.password || '',
         confirm_password: initialData?.confirm_password || initialData?.password || '',
-        
+
         experience: initialData?.experience || '',
         about: initialData?.about || '',
         short_bio: initialData?.short_bio || '',
@@ -318,11 +393,11 @@ export default function Consultations({ astrologerId, initialData, onUpdate }: C
         tagLine: initialData?.tagLine || '',
         language: initialData?.language || [],
         workingOnOtherApps: initialData?.workingOnOtherApps || 'No',
-        
+
         skill: initialData?.skill?.map((s: any) => s._id) || [],
         mainExpertise: initialData?.mainExpertise?.map((e: any) => e._id) || [],
         remedies: initialData?.remedies?.map((r: any) => r._id) || [],
-        
+
         account_holder_name: initialData?.account_holder_name || '',
         account_number: initialData?.account_number || '',
         account_type: initialData?.account_type || '',
@@ -330,10 +405,10 @@ export default function Consultations({ astrologerId, initialData, onUpdate }: C
         account_name: initialData?.account_name || '',
         panCard: initialData?.panCard || '',
         aadharNumber: initialData?.aadharNumber || '',
-        
+
         consultation: totalConsultations,
         consultation_commission: consultationCommission,
-        
+
         free_min: initialData?.free_min || 0,
         chat_price: initialData?.chat_price || null,
         call_price: initialData?.call_price || null,
@@ -344,18 +419,27 @@ export default function Consultations({ astrologerId, initialData, onUpdate }: C
         commission_video_call_price: initialData?.commission_video_call_price || 0,
         commission_normal_video_call_price: initialData?.commission_normal_video_call_price || 0,
         gift_commission: initialData?.gift_commission || 0,
-        
+
         follower_count: initialData?.follower_count || 0,
         totalCallDuration: initialData?.totalCallDuration || 0,
         totalChatDuration: initialData?.totalChatDuration || 0,
         totalVideoCallDuration: initialData?.totalVideoCallDuration || 0,
         currency: initialData?.currency || 'INR',
-        
+
         isDealInReport: initialData?.isDealInReport || false,
         reportTypes: initialData?.reportTypes || [],
+        hasSpecialPricing: isSpecialAstrologer,
       };
 
-      // only send original_price if user entered something
+      // store specials as { [minutes]: price }
+      if (isSpecialAstrologer && specialPricingRates.length > 0) {
+        payload.specialPricingRates = Object.fromEntries(
+          specialPricingRates.map(r => [String(r.duration), r.price])
+        );
+      } else {
+        payload.specialPricingRates = {};
+      }
+
       if (originalPrice !== '') {
         payload.original_price = Number(originalPrice);
       }
@@ -372,7 +456,7 @@ export default function Consultations({ astrologerId, initialData, onUpdate }: C
       const data = await response.json();
 
       if (data.success) {
-        toast.success('Basic consultation info updated successfully');
+        toast.success('Consultation settings updated successfully');
         onUpdate();
       } else {
         toast.error(data.message || 'Failed to update');
@@ -390,15 +474,37 @@ export default function Consultations({ astrologerId, initialData, onUpdate }: C
   const enteredOriginalPrice = Number(originalPrice);
   const showValidationError = originalPrice !== '' && enteredOriginalPrice < actualShownPrice;
 
+  // when toggling ON, auto-add first available duration row
+  const handleToggleSpecialPricing = (checked: boolean) => {
+    setIsSpecialAstrologer(checked);
+
+    if (!checked) {
+      setSpecialPricingRates([]);
+      return;
+    }
+
+    const normalDurations = getNormalDurationsInMinutes();
+    if (normalDurations.length === 0) {
+      setSpecialPricingRates([]);
+      return;
+    }
+
+    if (specialPricingRates.length === 0) {
+      setSpecialPricingRates([{ duration: normalDurations[0], price: 0 }]);
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div>
         <h2 className="text-2xl font-bold text-gray-900 mb-1">Consultation Settings</h2>
-        <p className="text-gray-600 text-sm">Manage consultation pricing and commission</p>
+        <p className="text-gray-600 text-sm">Manage consultation pricing, commission and special pricing</p>
       </div>
 
-      {/* Compact Basic Info Section */}
-      <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+      {/* Main card wrapping everything for consistent layout */}
+      <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-6">
+        {/* Basic info row */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -437,16 +543,11 @@ export default function Consultations({ astrologerId, initialData, onUpdate }: C
               onChange={(e) => setOriginalPrice(e.target.value)}
               min="0"
               className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 text-sm ${
-                showValidationError 
-                  ? 'border-red-500 focus:ring-red-500' 
+                showValidationError
+                  ? 'border-red-500 focus:ring-red-500'
                   : 'border-gray-300 focus:ring-red-500'
               }`}
             />
-            {/* {showValidationError && (
-              <p className="text-xs text-red-600 mt-1">
-                Must be ≥ ₹{actualShownPrice}
-              </p>
-            )} */}
           </div>
 
           <div>
@@ -461,147 +562,343 @@ export default function Consultations({ astrologerId, initialData, onUpdate }: C
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm bg-gray-100"
             />
           </div>
-
+          {astrologerId !== "68b546bad26a07574a62453d" &&
+        <div className=" w-full">
           <button
             type="button"
             onClick={handleUpdateBasicInfo}
             disabled={isSaveDisabled()}
-            className="px-4 py-2 bg-red-600 text-white rounded-[2px] font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 text-sm"
+            className="px-5 py-2.5 bg-red-600 text-white rounded-[2px] font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 text-sm"
           >
             {submitting ? (
               <>
-                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <svg
+                  className="animate-spin h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
                 </svg>
                 Saving...
               </>
             ) : (
               <>
                 <Save className="w-4 h-4" />
-                Save
+                Save Settings
               </>
             )}
           </button>
-        </div>
-      </div>
-
-      {/* Consultation Prices Section */}
-      <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="text-base font-semibold text-gray-900">Consultation Prices by Duration</h3>
-            <p className="text-xs text-gray-600 mt-0.5">Add prices for different consultation durations</p>
-          </div>
+        </div>}
         </div>
 
-        {loadingSlots ? (
-          <div className="text-center py-6">
-            <div className="animate-spin rounded-full h-6 w-6 border-4 border-gray-200 border-t-red-500 mx-auto"></div>
-            <p className="text-gray-500 text-xs mt-2">Loading...</p>
+        {/* Normal prices section */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900">Consultation Prices by Duration</h3>
+              <p className="text-xs text-gray-600 mt-0.5">Add prices for different consultation durations</p>
+            </div>
           </div>
-        ) : (
-          <>
-            {/* Existing Prices - Compact Grid */}
-            {existingPrices.length > 0 && (
-              <div className="mb-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                  {existingPrices.map((price) => {
-                    const slot = getSlotDuration(price.duration);
+
+          {loadingSlots ? (
+            <div className="text-center py-6">
+              <div className="animate-spin rounded-full h-6 w-6 border-4 border-gray-200 border-t-red-500 mx-auto"></div>
+              <p className="text-gray-500 text-xs mt-2">Loading...</p>
+            </div>
+          ) : (
+            <>
+              {existingPrices.length > 0 && (
+                <div className="mb-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {existingPrices.map((price) => {
+                      const slot = getSlotDuration(price.duration);
+                      return (
+                        <div
+                          key={price._id || price.duration}
+                          className="flex items-center justify-between bg-gray-50 p-2 rounded-lg border border-gray-200"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-semibold text-gray-900 text-sm">
+                                {slot?.slotDuration}min
+                              </span>
+                              <span className="text-gray-400">•</span>
+                              <span className="font-bold text-red-600 text-sm">₹{price.price}</span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleDeletePrice(price.duration)}
+                            className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {availableSlots.length > 0 ? (
+                <div className="bg-gray-50 p-3 rounded-lg border-2 border-dashed border-gray-300">
+                  <p className="text-xs font-medium text-gray-700 mb-2">Add New Price</p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    <select
+                      value={newPrice.durationId}
+                      onChange={(e) => setNewPrice({ ...newPrice, durationId: e.target.value })}
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                    >
+                      <option value="">Select Duration</option>
+                      {availableSlots.map(slot => (
+                        <option key={slot._id} value={slot._id}>
+                          {slot.slotDuration} minutes
+                        </option>
+                      ))}
+                    </select>
+
+                    <input
+                      type="number"
+                      value={newPrice.price}
+                      onChange={(e) => setNewPrice({ ...newPrice, price: e.target.value })}
+                      placeholder="Enter price"
+                      min="0"
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={handleAddPrice}
+                      disabled={addingPrice}
+                      className="flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-[2px] hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                    >
+                      {addingPrice ? (
+                        <>
+                          <svg
+                            className="animate-spin h-4 w-4 text-white"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                          Adding...
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="w-4 h-4" />
+                          Add
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <Check className="w-8 h-8 text-green-500 mx-auto mb-1" />
+                  <p className="text-gray-700 font-medium text-sm">All durations have prices</p>
+                  <p className="text-gray-500 text-xs mt-0.5">
+                    Delete a price to add a different one
+                  </p>
+                </div>
+              )}
+
+              {existingPrices.length === 0 && availableSlots.length > 0 && (
+                <div className="text-center py-4 bg-gray-50 rounded-lg border border-gray-200 mb-3">
+                  <Clock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-600 text-sm">No consultation prices set yet</p>
+                  <p className="text-gray-500 text-xs mt-1">
+                    Add your first price using the form above
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Special pricing section - visually aligned */}
+        {astrologerId === "68b546bad26a07574a62453d" &&
+        <div className=" rounded-lg p-4 border border-red-200 space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                Special Pricing Configuration
+              </h3>
+              <p className="text-xs text-gray-600 mt-0.5">
+                Set discounted prices for specific durations (Normal mode only)
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white p-3 rounded-lg border border-red-200">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isSpecialAstrologer}
+                onChange={(e) => handleToggleSpecialPricing(e.target.checked)}
+                className="w-5 h-5 text-red-600 rounded "
+              />
+              <div>
+                <span className="font-semibold text-gray-900 text-sm">Enable Special Pricing</span>
+                <p className="text-xs text-gray-600">
+                  Astrologer will have discounted rates in Normal mode
+                </p>
+              </div>
+            </label>
+          </div>
+
+          {isSpecialAstrologer && (
+            <div className="space-y-3">
+              {specialPricingRates.length > 0 && (
+                <div className="space-y-2">
+                  {specialPricingRates.map((rate, index) => {
+                    const availableDurations = getAvailableDurationsForSpecialPricing(rate.duration);
+                    const allDurations = [rate.duration, ...availableDurations]
+                      .filter((v, i, arr) => arr.indexOf(v) === i)
+                      .sort((a, b) => a - b);
+
                     return (
-                      <div key={price._id} className="flex items-center justify-between bg-white p-2 rounded-lg border border-gray-200">
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-semibold text-gray-900 text-sm">
-                              {slot?.slotDuration}min
-                            </span>
-                            <span className="text-gray-400">•</span>
-                            <span className="font-bold text-red-600 text-sm">₹{price.price}</span>
+                      <div
+                        key={rate.duration + '-' + index}
+                        className="bg-white p-3 rounded-lg border border-red-200"
+                      >
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Duration (minutes)
+                            </label>
+                            <select
+                              value={rate.duration}
+                              onChange={(e) =>
+                                handleSpecialPriceChange(index, 'duration', Number(e.target.value))
+                              }
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                            >
+                              {allDurations.map(duration => (
+                                <option key={duration} value={duration}>
+                                  {duration} minutes
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Special Price (₹)
+                            </label>
+                            <input
+                              type="number"
+                              value={rate.price}
+                              onChange={(e) =>
+                                handleSpecialPriceChange(index, 'price', Number(e.target.value))
+                              }
+                              placeholder="Enter special price"
+                              min="0"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                            />
+                          </div>
+
+                          <div className="flex items-end">
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveSpecialPrice(index)}
+                              className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Remove
+                            </button>
                           </div>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => handleDeletePrice(price.duration)}
-                          className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
                       </div>
                     );
                   })}
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Add New Price Form - Compact */}
-            {availableSlots.length > 0 ? (
-              <div className="bg-white p-3 rounded-lg border-2 border-dashed border-gray-300">
-                <p className="text-xs font-medium text-gray-700 mb-2">Add New Price</p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                  <select
-                    value={newPrice.durationId}
-                    onChange={(e) => setNewPrice({ ...newPrice, durationId: e.target.value })}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
-                  >
-                    <option value="">Select Duration</option>
-                    {availableSlots.map(slot => (
-                      <option key={slot._id} value={slot._id}>
-                        {slot.slotDuration} minutes
-                      </option>
-                    ))}
-                  </select>
-
-                  <input
-                    type="number"
-                    value={newPrice.price}
-                    onChange={(e) => setNewPrice({ ...newPrice, price: e.target.value })}
-                    placeholder="Enter price"
-                    min="0"
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
-                  />
-
-                  <button
-                    type="button"
-                    onClick={handleAddPrice}
-                    disabled={addingPrice}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-[2px] hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
-                  >
-                    {addingPrice ? (
-                      <>
-                        <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Adding...
-                      </>
-                    ) : (
-                      <>
-                        <Plus className="w-4 h-4" />
-                        Add
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
+              <button
+                type="button"
+                onClick={handleAddSpecialPrice}
+                disabled={
+                  specialPricingRates.length >= getNormalDurationsInMinutes().length ||
+                  getNormalDurationsInMinutes().length === 0
+                }
+                className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium flex items-center justify-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Add Special Price for Duration
+              </button>
+            </div>
+          )}
+        </div>
+}
+        {/* Save button at bottom for everything */}
+        {astrologerId === "68b546bad26a07574a62453d" &&
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={handleUpdateBasicInfo}
+            disabled={isSaveDisabled()}
+            className="px-5 py-2.5 bg-red-600 text-white rounded-[2px] font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 text-sm"
+          >
+            {submitting ? (
+              <>
+                <svg
+                  className="animate-spin h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Saving...
+              </>
             ) : (
-              <div className="text-center py-4 bg-white rounded-lg border border-gray-200">
-                <Check className="w-8 h-8 text-green-500 mx-auto mb-1" />
-                <p className="text-gray-700 font-medium text-sm">All durations have prices</p>
-                <p className="text-gray-500 text-xs mt-0.5">Delete a price to add a different one</p>
-              </div>
+              <>
+                <Save className="w-4 h-4" />
+                Save Settings
+              </>
             )}
-
-            {existingPrices.length === 0 && availableSlots.length > 0 && (
-              <div className="text-center py-4 bg-white rounded-lg border border-gray-200 mb-3">
-                <Clock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-600 text-sm">No consultation prices set yet</p>
-                <p className="text-gray-500 text-xs mt-1">Add your first price using the form above</p>
-              </div>
-            )}
-          </>
-        )}
+          </button>
+        </div>}
       </div>
     </div>
   );
