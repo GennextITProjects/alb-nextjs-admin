@@ -15,6 +15,11 @@ export const RouteName = [
     icon: <OtherRouteSvg />,
   },
   {
+    path: "/customer",
+    name: "Customer",
+    icon: <CustomerRouteSvg />,
+  },
+  {
     name: "Reports",
     icon: <NotificationRouteSvg />,
     subRoutes: [
@@ -30,11 +35,7 @@ export const RouteName = [
       },
     ],
   },
-  // {
-  //   path: "/customer",
-  //   name: "Customer",
-  //   icon: <CustomerRouteSvg />,
-  // },
+
   {
     name: "Astrologer",
     icon: <AstrologerRouteSvg />,
