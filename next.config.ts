@@ -2,26 +2,38 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
+    // for maximum compatibility
+    domains: [
+      'images.unsplash.com',
+      'unsplash.com',
+      'utfs.io',
+      'alb-web-assets.s3.ap-south-1.amazonaws.com',
+    ],
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'images.unsplash.com',
-        port: '',
-        pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: 'unsplash.com',
-        port: '',
-        pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: 'utfs.io',
-        port: '',
+      },
+      {
+        protocol: 'https',
+        hostname: 'alb-web-assets.s3.ap-south-1.amazonaws.com',
         pathname: '/**',
       },
     ],
+    // Optional: Image optimization settings
+    formats: ['image/webp'],
+    minimumCacheTTL: 60, // 60 seconds
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
  
   async headers() {
@@ -42,6 +54,10 @@ const nextConfig: NextConfig = {
     ];
   },
 
+  //  optional: large images
+  experimental: {
+    optimizeCss: true,
+  },
 };
 
 export default nextConfig;

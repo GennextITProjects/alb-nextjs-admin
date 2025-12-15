@@ -234,7 +234,7 @@ function ViewCustomerReview() {
   const baseURL = process.env.NEXT_PUBLIC_API_URL;
 
   const formatAddress = () => {
-    if (!address) return 'N/A';
+    if (!address) return '';
     
     if (address.birthPlace) {
       return address.birthPlace;
@@ -246,11 +246,11 @@ function ViewCustomerReview() {
     if (address.country) parts.push(address.country);
     if (address.zipCode) parts.push(address.zipCode);
     
-    return parts.length > 0 ? parts.join(', ') : 'N/A';
+    return parts.length > 0 ? parts.join(', ') : '';
   };
 
   const formatDateTime = (dateTimeString: string) => {
-    if (!dateTimeString) return 'N/A';
+    if (!dateTimeString) return '';
     
     try {
       if (dateTimeString.includes('T')) {
@@ -263,6 +263,24 @@ function ViewCustomerReview() {
     }
   };
 
+  const formatTime = (timeString: string) => {
+    if (!timeString) return 'N/A';
+    
+    try {
+      // Handle various time formats
+      if (timeString.includes('T')) {
+        return moment(timeString).format('hh:mm A');
+      } else if (timeString.match(/^\d{2}:\d{2}(:\d{2})?$/)) {
+        // Format: HH:mm or HH:mm:ss
+        return moment(timeString, 'HH:mm:ss').format('hh:mm A');
+      } else {
+        return timeString;
+      }
+    } catch (error) {
+      return timeString;
+    }
+  };
+
   return (
     <div className="p-5">
       {/* Customer Info Card */}
@@ -272,11 +290,10 @@ function ViewCustomerReview() {
           <div className="flex items-center gap-5">
             <div className="relative w-24 h-24 flex-shrink-0">
               {image ? (
-                <Image
-                  src={`${baseURL}/uploads/${image}`}
+                <img
+                  src={`${process.env.NEXT_PUBLIC_IMAGE_URL2}${image}`}
                   alt={customerName}
-                  fill
-                  className="rounded-full border-2 border-gray-300 object-cover"
+                  className="w-full h-full rounded-full border-2 border-gray-300 object-cover"
                   onError={(e) => {
                     console.log('❌ Image failed to load');
                     const target = e.target as HTMLImageElement;
@@ -299,10 +316,10 @@ function ViewCustomerReview() {
           <div className="flex flex-col gap-4 md:border-l md:pl-6">
             <div className="font-bold text-lg text-gray-800">Contact Details</div>
             <div className="text-gray-600 text-sm">
-              <span className="font-medium">Email:</span> {email || 'N/A'}
+              <span className="font-medium">Email:</span> {email || ''}
             </div>
             <div className="text-gray-600 text-sm">
-              <span className="font-medium">Alternate Phone:</span> {alternateNumber || 'N/A'}
+              <span className="font-medium">Alternate Phone:</span> {alternateNumber || ''}
             </div>
             <div className="text-gray-600 text-sm">
               <span className="font-medium">Location:</span> {formatAddress()}
@@ -319,15 +336,15 @@ function ViewCustomerReview() {
               <span className="font-medium">Date of Birth:</span> {formatDateTime(dateOfBirth || '')}
             </div>
             <div className="text-gray-600 text-sm">
-              <span className="font-medium">Time of Birth:</span> {formatDateTime(timeOfBirth || '')}
+              <span className="font-medium">Time of Birth:</span> {formatTime(timeOfBirth || '')}
             </div>
           </div>
         </div>
       </div>
 
       {/* Tabs Navigation */}
-      <div className="flex justify-center py-5">
-        <div className="bg-white rounded-lg shadow-md w-full max-w-6xl">
+      <div className="py-5">
+        <div className="bg-white rounded-lg shadow-md">
           <div className="overflow-x-auto">
             <div className="flex border-b border-gray-200 min-w-max">
               {tabHead.map((tab, index) => (

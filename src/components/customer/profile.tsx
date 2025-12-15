@@ -3,6 +3,7 @@
 
 import React from 'react';
 import moment from 'moment';
+import Image from 'next/image';
 
 // Types (use the same as in ViewCustomer)
 interface Address {
@@ -87,7 +88,7 @@ const Profile: React.FC<ProfileProps> = ({ customer }) => {
 
 
   const formatAddress = () => {
-    if (!address) return 'N/A';
+    if (!address) return '';
     
     if (address.birthPlace) {
       return address.birthPlace;
@@ -99,7 +100,7 @@ const Profile: React.FC<ProfileProps> = ({ customer }) => {
     if (address.country) parts.push(address.country);
     if (address.zipCode) parts.push(address.zipCode);
     
-    return parts.length > 0 ? parts.join(', ') : 'N/A';
+    return parts.length > 0 ? parts.join(', ') : '';
   };
 
   // Helper function to convert number status to boolean for display
@@ -120,29 +121,31 @@ const Profile: React.FC<ProfileProps> = ({ customer }) => {
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         {/* Profile Image Section */}
         <div className="md:col-span-4">
-          {/* <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden border border-gray-200">
+          <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden border border-gray-200 bg-gradient-to-br from-blue-100 to-blue-200">
             {image ? (
-              // Using regular img tag instead of Next.js Image to avoid configuration issues
-              <img
-              
-                src={`${baseURL}/uploads/${image}`}
-                
-                alt={customerName}
-                className="w-full h-full object-cover"
+              // Next.js Image component with proper configuration
+              <Image
+                src={`${process.env.NEXT_PUBLIC_IMAGE_URL2}${image}`}
+                alt={customerName || 'Customer Profile'}
+                fill
+                sizes="(max-width: 768px) 100vw, 33vw"
+                className="object-cover"
+                quality={85}
+                priority={true} // Since it's a main profile image
                 onError={(e) => {
-                  // Fallback if image fails to load
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
+                  console.error('Profile image failed to load');
+                  // Error handling - image will hide automatically
                 }}
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+              // Fallback when no image
+              <div className="w-full h-full flex items-center justify-center">
                 <div className="text-6xl font-bold text-blue-600">
-                  {customerName?.charAt(0)?.toUpperCase()}
+                  {customerName?.charAt(0)?.toUpperCase() || 'C'}
                 </div>
               </div>
             )}
-          </div> */}
+          </div>
         </div>
 
         {/* Profile Information Section */}
@@ -155,7 +158,7 @@ const Profile: React.FC<ProfileProps> = ({ customer }) => {
             <div className="grid grid-cols-1 gap-4">
               <div className="flex items-start">
                 <span className="font-semibold text-gray-700 min-w-[140px]">Phone:</span>
-                <span className="text-gray-600">{phoneNumber || 'N/A'}</span>
+                <span className="text-gray-600">{phoneNumber || ''}</span>
               </div>
 
               {email && (
@@ -183,7 +186,7 @@ const Profile: React.FC<ProfileProps> = ({ customer }) => {
                   <span className="text-gray-600">
                     {moment(dateOfBirth).isValid()
                       ? moment(dateOfBirth).format('DD MMM YYYY')
-                      : 'N/A'}
+                      : ''}
                   </span>
                 </div>
               )}
