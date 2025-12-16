@@ -45,41 +45,41 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({ astrologerId }) => {
     },
     { 
       name: 'Astrologer', 
-      selector: (row: ChatHistoryData) => row?.astrologerId?.astrologerName || 'N/A',
+      selector: (row: ChatHistoryData) => row?.astrologerId?.astrologerName || '',
       sortable: true 
     },
     { 
       name: 'Customers', 
-      selector: (row: ChatHistoryData) => row?.customerId?.customerName || 'N/A',
+      selector: (row: ChatHistoryData) => row?.customerId?.customerName || '',
       sortable: true 
     },
     { 
       name: 'Total Price', 
-      selector: (row: ChatHistoryData) => row?.totalPrice ? IndianRupee(row.totalPrice) : 'N/A' 
+      selector: (row: ChatHistoryData) => row?.totalPrice ? IndianRupee(row.totalPrice) : '' 
     },
     { 
       name: 'Admin Share', 
-      selector: (row: ChatHistoryData) => row?.adminPrice ? IndianRupee(row.adminPrice) : 'N/A' 
+      selector: (row: ChatHistoryData) => row?.adminPrice ? IndianRupee(row.adminPrice) : '' 
     },
     { 
       name: 'Astrologer Share', 
-      selector: (row: ChatHistoryData) => row?.partnerPrice ? IndianRupee(row.partnerPrice) : 'N/A' 
+      selector: (row: ChatHistoryData) => row?.partnerPrice ? IndianRupee(row.partnerPrice) : '' 
     },
     { 
       name: 'Duration', 
-      selector: (row: ChatHistoryData) => row?.duration ? secondsToHMS(row.duration) : 'N/A' 
+      selector: (row: ChatHistoryData) => row?.duration ? secondsToHMS(row.duration) : '' 
     },
     { 
       name: 'Start Time', 
-      selector: (row: ChatHistoryData) => row?.startTime ? moment(Number(row.startTime)).format('hh:mm:ss a') : 'N/A' 
+      selector: (row: ChatHistoryData) => row?.startTime ? moment(Number(row.startTime)).format('hh:mm:ss a') : '' 
     },
     { 
       name: 'End Time', 
-      selector: (row: ChatHistoryData) => row?.endTime ? moment(Number(row.endTime)).format('hh:mm:ss a') : 'N/A' 
+      selector: (row: ChatHistoryData) => row?.endTime ? moment(Number(row.endTime)).format('hh:mm:ss a') : '' 
     },
     { 
       name: 'Date', 
-      selector: (row: ChatHistoryData) => row?.createdAt ? moment(row.createdAt).format('DD MMMM YYYY') : 'N/A', 
+      selector: (row: ChatHistoryData) => row?.createdAt ? moment(row.createdAt).format('DD MMMM YYYY') : '', 
       width: "180px" 
     },
     {

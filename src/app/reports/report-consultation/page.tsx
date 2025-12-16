@@ -7,6 +7,7 @@ import { DeepSearchSpace } from '@/utils/common-function/index';
 import MainDatatable from '@/components/common/MainDatatable';
 import { ViewSvg } from '@/components/svgs/page';
 import Swal from 'sweetalert2';
+import { Tooltip } from '@mui/material';
 
 
 const reportPrefixes = [
@@ -223,77 +224,84 @@ const handleEndDateChange = (newDate: string) => {
     { name: "S.No.", selector: (_: ConsultationSlot, idx?: number) => (idx || 0) + 1, width: "70px" },
     {
       name: "Order ID",
-      selector: (row: ConsultationSlot) => row?.orderID || 'N/A',
+      selector: (row: ConsultationSlot) => row?.orderID || '',
       width: "110px"
     },
     {
       name: "Plan Name",
-      selector: (row: ConsultationSlot) => row?.planName || 'N/A',
+      selector: (row: ConsultationSlot) => row?.planName || '',
       width: "250px"
     },
     {
       name: "Customer Name",
-      selector: (row: ConsultationSlot) => row?.name || 'N/A',
+      selector: (row: ConsultationSlot) => row?.name || '',
       width: "150px"
     },
     {
       name: "Email",
-      selector: (row: ConsultationSlot) => row?.email || 'N/A',
-      width: "220px"
+      cell: (row: ConsultationSlot) => {
+        const email = row?.email?.trim() || "N/A";
+        return (
+          <Tooltip title={email}>
+            <span className="truncate block w-full">{email}</span>
+          </Tooltip>
+        );
+      },
+      width: "200px",
     },
     {
       name: "WhatsApp",
-      selector: (row: ConsultationSlot) => row?.whatsapp || 'N/A',
+      selector: (row: ConsultationSlot) => row?.whatsapp || '',
       width: "120px"
     },
     {
       name: "DOB",
       selector: (row: ConsultationSlot) => 
-        row?.dateOfBirth ? moment(row.dateOfBirth).format('DD/MM/YYYY') : 'N/A',
+        row?.dateOfBirth ? moment(row.dateOfBirth).format('DD/MM/YYYY') : '',
       width: "110px"
     },
     {
       name: "TOB",
-      selector: (row: ConsultationSlot) => row?.timeOfBirth || 'N/A',
+      selector: (row: ConsultationSlot) => row?.timeOfBirth || '',
       width: "80px"
     },
     {
       name: "POB",
-      selector: (row: ConsultationSlot) => row?.placeOfBirth || 'N/A',
+      selector: (row: ConsultationSlot) => row?.placeOfBirth || '',
       width: "110px"
     },
     {
       name: "Partner's Name",
-      selector: (row: ConsultationSlot) => row?.partnerName || 'N/A',
+      selector: (row: ConsultationSlot) => row?.partnerName || '',
       width: "150px"
     },
     {
       name: "Partner's DOB",
       selector: (row: ConsultationSlot) => 
-        row?.partnerDateOfBirth ? moment(row.partnerDateOfBirth).format('DD/MM/YYYY') : 'N/A',
+        row?.partnerDateOfBirth ? moment(row.partnerDateOfBirth).format('DD/MM/YYYY') : '',
       width: "130px"
     },
     {
       name: "Partner's TOB",
-      selector: (row: ConsultationSlot) => row?.partnerTimeOfBirth || 'N/A',
+      selector: (row: ConsultationSlot) => row?.partnerTimeOfBirth || '',
       width: "130px"
     },
     {
       name: "Partner's POB",
-      selector: (row: ConsultationSlot) => row?.partnerPlaceOfBirth || 'N/A',
+      selector: (row: ConsultationSlot) => row?.partnerPlaceOfBirth || '',
       width: "130px"
     },
 
     {
       name: "Time Slot",
-      selector: (row: ConsultationSlot) => row?.consultationTime || 'N/A',
+      selector: (row: ConsultationSlot) => row?.consultationTime || '',
       width: "150px"
     },
  
     {
       name: "Booked At",
       selector: (row: ConsultationSlot) => 
-        row?.consultationDate ? moment(row.consultationDate).format('DD/MM/YYYY hh:mm A') : 'N/A',
+        row?.consultationDate ? moment(row.consultationDate).format('DD/MM/YYYY hh:mm A') : '',
       width: "180px"
     },
    

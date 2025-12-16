@@ -142,7 +142,7 @@ const Profile: React.FC<ProfileProps> = ({ astrologer }) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
             <p><strong>Experience:</strong> {experience} years</p>
             <p><strong>Location:</strong> {city}, {state}, {country} - {zipCode}</p>
-            <p><strong>Phone:</strong> {phoneNumber} | Alt: {alternateNumber || 'N/A'}</p>
+            <p><strong>Phone:</strong> {phoneNumber} | Alt: {alternateNumber || ''}</p>
             <p><strong>Email:</strong> {email}</p>
             <p><strong>Gender:</strong> {gender}</p>
             <p><strong>Date of Birth:</strong> {moment(dateOfBirth).format('DD MMM YYYY')}</p>
@@ -235,13 +235,13 @@ const Profile: React.FC<ProfileProps> = ({ astrologer }) => {
         <h2 className="text-2xl font-semibold text-gray-800 mb-4">Bank Information</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <p><strong>Account Holder:</strong> {account_holder_name || 'N/A'}</p>
-            <p><strong>Account Number:</strong> {account_number || 'N/A'}</p>
-            <p><strong>Account Type:</strong> <span className="capitalize">{account_type || 'N/A'}</span></p>
+            <p><strong>Account Holder:</strong> {account_holder_name || ''}</p>
+            <p><strong>Account Number:</strong> {account_number || ''}</p>
+            <p><strong>Account Type:</strong> <span className="capitalize">{account_type || ''}</span></p>
           </div>
           <div className="space-y-2">
-            <p><strong>Bank Name:</strong> {account_name || 'N/A'}</p>
-            <p><strong>IFSC Code:</strong> {IFSC_code || 'N/A'}</p>
+            <p><strong>Bank Name:</strong> {account_name || ''}</p>
+            <p><strong>IFSC Code:</strong> {IFSC_code || ''}</p>
           </div>
         </div>
       </div>
@@ -252,13 +252,13 @@ const Profile: React.FC<ProfileProps> = ({ astrologer }) => {
         <h2 className="text-2xl font-semibold text-gray-800 mb-4">Additional Information</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <p><strong>Pan Card:</strong> {panCard || 'N/A'}</p>
-            <p><strong>Aadhar Card:</strong> {aadharNumber || 'N/A'}</p>
+            <p><strong>Pan Card:</strong> {panCard || ''}</p>
+            <p><strong>Aadhar Card:</strong> {aadharNumber || ''}</p>
           </div>
           <div className="space-y-2">
-            <p><strong>Chat Status:</strong> {chat_status || 'N/A'}</p>
-            <p><strong>Call Status:</strong> {call_status || 'N/A'}</p>
-            <p><strong>Video Call Status:</strong> {video_call_status || 'N/A'}</p>
+            <p><strong>Chat Status:</strong> {chat_status || ''}</p>
+            <p><strong>Call Status:</strong> {call_status || ''}</p>
+            <p><strong>Video Call Status:</strong> {video_call_status || ''}</p>
           </div>
         </div>
       </div>

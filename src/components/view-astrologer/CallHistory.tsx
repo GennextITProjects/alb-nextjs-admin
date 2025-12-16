@@ -41,41 +41,41 @@ const CallHistory: React.FC<CallHistoryProps> = ({ astrologerId }) => {
     },
     { 
       name: 'Astrologer', 
-      selector: (row: CallHistoryData) => row?.astrologerId?.astrologerName || 'N/A',
+      selector: (row: CallHistoryData) => row?.astrologerId?.astrologerName || '',
       sortable: true 
     },
     { 
       name: 'Customers', 
-      selector: (row: CallHistoryData) => row?.customerId?.customerName || 'N/A',
+      selector: (row: CallHistoryData) => row?.customerId?.customerName || '',
       sortable: true 
     },
     { 
       name: 'Total Price', 
-      selector: (row: CallHistoryData) => row?.totalPrice ? IndianRupee(row.totalPrice) : 'N/A' 
+      selector: (row: CallHistoryData) => row?.totalPrice ? IndianRupee(row.totalPrice) : '' 
     },
     { 
       name: 'Admin Share', 
-      selector: (row: CallHistoryData) => row?.adminPrice ? IndianRupee(row.adminPrice) : 'N/A' 
+      selector: (row: CallHistoryData) => row?.adminPrice ? IndianRupee(row.adminPrice) : '' 
     },
     { 
       name: 'Astrologer Share', 
-      selector: (row: CallHistoryData) => row?.partnerPrice ? IndianRupee(row.partnerPrice) : 'N/A' 
+      selector: (row: CallHistoryData) => row?.partnerPrice ? IndianRupee(row.partnerPrice) : '' 
     },
     { 
       name: 'Duration', 
-      selector: (row: CallHistoryData) => row?.duration ? secondsToHMS(row.duration) : 'N/A' 
+      selector: (row: CallHistoryData) => row?.duration ? secondsToHMS(row.duration) : '' 
     },
     { 
       name: 'Start Time', 
-      selector: (row: CallHistoryData) => row?.startTime ? moment(row.startTime).format('hh:mm:ss a') : 'N/A' 
+      selector: (row: CallHistoryData) => row?.startTime ? moment(row.startTime).format('hh:mm:ss a') : '' 
     },
     { 
       name: 'End Time', 
-      selector: (row: CallHistoryData) => row?.endTime ? moment(Number(row.endTime)).format('hh:mm:ss a') : 'N/A' 
+      selector: (row: CallHistoryData) => row?.endTime ? moment(Number(row.endTime)).format('hh:mm:ss a') : '' 
     },
     { 
       name: 'Date', 
-      selector: (row: CallHistoryData) => row?.createdAt ? moment(row.createdAt).format('DD MMMM YYYY') : 'N/A', 
+      selector: (row: CallHistoryData) => row?.createdAt ? moment(row.createdAt).format('DD MMMM YYYY') : '', 
       width: "180px" 
     },
   ];

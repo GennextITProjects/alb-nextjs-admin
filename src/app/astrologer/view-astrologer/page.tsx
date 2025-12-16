@@ -234,10 +234,18 @@ export default function ViewAstrologer() {
               Birth Date: {moment(dateOfBirth).format('DD MMM YYYY')}
             </div>
             <div className="text-gray-700">
-              Active Duration: {durationData ? timeFormat(durationData.totalActiveDuration / 1000) : '00:00:00'}
+              Active Duration: {
+                durationData && durationData.totalActiveDuration > 0
+                  ? timeFormat(durationData.totalActiveDuration / 1000)
+                  : '00:00:00'
+              }
             </div>
             <div className="text-gray-700">
-              Offline Duration: {durationData ? timeFormat(durationData.totalOfflineDuration / 1000) : '00:00:00'}
+              Offline Duration: {
+                durationData && durationData.totalOfflineDuration > 0
+                  ? timeFormat(durationData.totalOfflineDuration / 1000)
+                  : '00:00:00'
+              }
             </div>
           </div>
         </div>

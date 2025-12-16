@@ -39,41 +39,41 @@ const VideoCallHistory: React.FC<VideoCallHistoryProps> = ({ astrologerId }) => 
     },
     { 
       name: 'Astrologer', 
-      selector: (row: VideoCallHistoryData) => row?.astrologerId?.astrologerName || 'N/A',
+      selector: (row: VideoCallHistoryData) => row?.astrologerId?.astrologerName || '',
       sortable: true 
     },
     { 
       name: 'Customers', 
-      selector: (row: VideoCallHistoryData) => row?.customerId?.customerName || 'N/A',
+      selector: (row: VideoCallHistoryData) => row?.customerId?.customerName || '',
       sortable: true 
     },
     { 
       name: 'Total Price', 
-      selector: (row: VideoCallHistoryData) => row?.totalPrice ? IndianRupee(row.totalPrice) : 'N/A' 
+      selector: (row: VideoCallHistoryData) => row?.totalPrice ? IndianRupee(row.totalPrice) : '' 
     },
     { 
       name: 'Admin Share', 
-      selector: (row: VideoCallHistoryData) => row?.adminPrice ? IndianRupee(row.adminPrice) : 'N/A' 
+      selector: (row: VideoCallHistoryData) => row?.adminPrice ? IndianRupee(row.adminPrice) : '' 
     },
     { 
       name: 'Astrologer Share', 
-      selector: (row: VideoCallHistoryData) => row?.partnerPrice ? IndianRupee(row.partnerPrice) : 'N/A' 
+      selector: (row: VideoCallHistoryData) => row?.partnerPrice ? IndianRupee(row.partnerPrice) : '' 
     },
     { 
       name: 'Duration', 
-      selector: (row: VideoCallHistoryData) => row?.duration ? secondsToHMS(row.duration) : 'N/A' 
+      selector: (row: VideoCallHistoryData) => row?.duration ? secondsToHMS(row.duration) : '' 
     },
     { 
       name: 'Start Time', 
-      selector: (row: VideoCallHistoryData) => row?.startTime ? moment(row.startTime).format('hh:mm:ss a') : 'N/A' 
+      selector: (row: VideoCallHistoryData) => row?.startTime ? moment(row.startTime).format('hh:mm:ss a') : '' 
     },
     { 
       name: 'End Time', 
-      selector: (row: VideoCallHistoryData) => row?.endTime ? moment(Number(row.endTime)).format('hh:mm:ss a') : 'N/A' 
+      selector: (row: VideoCallHistoryData) => row?.endTime ? moment(Number(row.endTime)).format('hh:mm:ss a') : '' 
     },
     { 
       name: 'Date', 
-      selector: (row: VideoCallHistoryData) => row?.createdAt ? moment(row.createdAt).format('DD MMMM YYYY') : 'N/A', 
+      selector: (row: VideoCallHistoryData) => row?.createdAt ? moment(row.createdAt).format('DD MMMM YYYY') : '', 
       width: "180px" 
     },
   ];

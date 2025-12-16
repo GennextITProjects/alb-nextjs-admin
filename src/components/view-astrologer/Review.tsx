@@ -47,17 +47,17 @@ const Review: React.FC<ReviewProps> = ({ astrologerId }) => {
     },
     { 
       name: 'Astrologer', 
-      selector: (row: ReviewData) => row?.astrologerName || 'N/A',
+      selector: (row: ReviewData) => row?.astrologerName || '',
       sortable: true 
     },
     { 
       name: 'Customer', 
-      selector: (row: ReviewData) => row?.customerName || 'N/A',
+      selector: (row: ReviewData) => row?.customerName || '',
       sortable: true 
     },
     { 
       name: 'Type', 
-      selector: (row: ReviewData) => row?.type || 'N/A',
+      selector: (row: ReviewData) => row?.type || '',
       sortable: true 
     },
     { 
@@ -67,7 +67,7 @@ const Review: React.FC<ReviewProps> = ({ astrologerId }) => {
         const ratingValue = row?.rating ?? row?.ratings;
         return ratingValue !== undefined && ratingValue !== null 
           ? ratingValue.toString() 
-          : 'N/A';
+          : '';
       },
       sortable: true,
       width: '100px'

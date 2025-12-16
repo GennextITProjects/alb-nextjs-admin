@@ -264,7 +264,7 @@ function ViewCustomerReview() {
   };
 
   const formatTime = (timeString: string) => {
-    if (!timeString) return 'N/A';
+    if (!timeString) return '';
     
     try {
       // Handle various time formats

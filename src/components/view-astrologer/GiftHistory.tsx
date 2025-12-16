@@ -36,25 +36,25 @@ const GiftHistory: React.FC<GiftHistoryProps> = ({ astrologerId }) => {
     },
     { 
       name: 'Astrologer', 
-      selector: (row: GiftHistoryData) => row?.astrologerId?.astrologerName || 'N/A',
+      selector: (row: GiftHistoryData) => row?.astrologerId?.astrologerName || '',
       sortable: true 
     },
     { 
       name: 'User', 
-      selector: (row: GiftHistoryData) => row?.customerId?.customerName || 'N/A',
+      selector: (row: GiftHistoryData) => row?.customerId?.customerName || '',
       sortable: true 
     },
     { 
       name: 'Total Price', 
-      selector: (row: GiftHistoryData) => row?.totalPrice ? IndianRupee(parseFloat(row.totalPrice.toString()).toFixed(2)) : 'N/A' 
+      selector: (row: GiftHistoryData) => row?.totalPrice ? IndianRupee(parseFloat(row.totalPrice.toString()).toFixed(2)) : '' 
     },
     { 
       name: 'Admin Share', 
-      selector: (row: GiftHistoryData) => row?.adminPrice ? IndianRupee(parseFloat(row.adminPrice.toString()).toFixed(2)) : 'N/A' 
+      selector: (row: GiftHistoryData) => row?.adminPrice ? IndianRupee(parseFloat(row.adminPrice.toString()).toFixed(2)) : '' 
     },
     { 
       name: 'Astro Share', 
-      selector: (row: GiftHistoryData) => row?.partnerPrice ? IndianRupee(parseFloat(row.partnerPrice.toString()).toFixed(2)) : 'N/A' 
+      selector: (row: GiftHistoryData) => row?.partnerPrice ? IndianRupee(parseFloat(row.partnerPrice.toString()).toFixed(2)) : '' 
     },
   ];
 

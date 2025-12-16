@@ -411,7 +411,7 @@ export default function AstrologerPage() {
         <MainDatatable
           columns={columns.map((col) => ({
             ...col,
-            minWidth: col.width,
+            minwidth: col.width,
             width: undefined,
           }))}
           data={filteredData}

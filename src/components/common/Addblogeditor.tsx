@@ -228,7 +228,7 @@ const StaticPageEditor: React.FC<StaticPageEditorProps> = ({
 
   const getToolbarButtonStyle = (isActive: boolean = false) => ({
     padding: '6px',
-    minWidth: '36px',
+    minwidth: '36px',
     height: '36px',
     border: '1px solid #d1d5db',
     borderRadius: '4px',
@@ -334,7 +334,7 @@ const StaticPageEditor: React.FC<StaticPageEditorProps> = ({
           size="small"
           variant="outlined"
           sx={{
-            minWidth: '140px',
+            minwidth: '140px',
             height: '36px',
             backgroundColor: '#fff',
             '& .MuiOutlinedInput-notchedOutline': {
