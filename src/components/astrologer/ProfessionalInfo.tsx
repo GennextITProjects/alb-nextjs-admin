@@ -478,7 +478,7 @@ export default function ProfessionalInfo({ astrologerId, initialData, onUpdate }
           />
           {errors.about && <p className="text-red-600 text-sm mt-1">{errors.about}</p>}
         </div>
-
+{/* 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Short Bio
@@ -491,7 +491,7 @@ export default function ProfessionalInfo({ astrologerId, initialData, onUpdate }
             placeholder="Brief introduction (100-150 characters)"
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
           />
-        </div>
+        </div> */}
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
