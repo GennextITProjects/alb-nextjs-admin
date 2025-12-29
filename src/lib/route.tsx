@@ -19,6 +19,16 @@ export const RouteName = [
     name: "Customer",
     icon: <CustomerRouteSvg />,
   },
+  // {
+  //   path: "/pooja",
+  //   name: "New Pooja",
+  //   icon: <CustomerRouteSvg />,
+  // },
+  {
+    path: "/gemstone-lead",
+    name: "Gemstone Lead",
+    icon: <CustomerRouteSvg />,
+  },
   {
     name: "Reports",
     icon: <NotificationRouteSvg />,

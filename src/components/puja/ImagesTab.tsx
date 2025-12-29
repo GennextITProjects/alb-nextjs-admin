@@ -27,6 +27,7 @@ const ImagesTab: React.FC<Props> = ({
 }) => {
   const mainImageInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+  console.log(imagePreview, "dbhbwkgdvwytdfwydtfwdtf")
 
   return (
     <div className="space-y-8">
@@ -55,7 +56,10 @@ const ImagesTab: React.FC<Props> = ({
                 <div className="space-y-4">
                   <div className="relative mx-auto w-48 h-48 rounded-lg overflow-hidden border border-gray-200">
                     <Image
-                      src={imagePreview}
+                      src={imagePreview.startsWith('blob:') || imagePreview.startsWith('data:') 
+                        ? imagePreview 
+                        : `${process.env.NEXT_PUBLIC_IMAGE_URL3}${imagePreview}`
+                      }
                       alt="Main preview"
                       fill
                       className="object-cover"
@@ -82,19 +86,6 @@ const ImagesTab: React.FC<Props> = ({
             />
           </div>
 
-          {/* Instructions */}
-          <div className="md:w-1/3">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="font-medium text-blue-800 mb-2">Image Guidelines</h4>
-              <ul className="text-sm text-blue-700 space-y-1">
-                <li>• High-quality image recommended</li>
-                <li>• Aspect ratio: 4:3 (landscape)</li>
-                <li>• Max file size: 5MB</li>
-                <li>• Formats: JPG, PNG, WebP</li>
-                <li>• No watermarks or logos</li>
-              </ul>
-            </div>
-          </div>
         </div>
       </div>
 
