@@ -18,7 +18,7 @@ const DetailsTab: React.FC<Props> = ({ inputFieldDetail, handleInputChange }) =>
 
       <div className="space-y-6">
         {/* Description */}
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Description <span className="text-red-500">*</span>
           </label>
@@ -30,7 +30,7 @@ const DetailsTab: React.FC<Props> = ({ inputFieldDetail, handleInputChange }) =>
             placeholder="Enter detailed puja description..."
             required
           />
-        </div>
+        </div> */}
 
         {/* Overview */}
         <div>
@@ -63,7 +63,7 @@ const DetailsTab: React.FC<Props> = ({ inputFieldDetail, handleInputChange }) =>
         {/* Puja Details */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Detailed Puja Procedure
+            Puja Details
           </label>
           <textarea
             name="pujaDetails"
@@ -75,7 +75,7 @@ const DetailsTab: React.FC<Props> = ({ inputFieldDetail, handleInputChange }) =>
         </div>
 
         {/* Preparation Required */}
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Preparation Required
           </label>
@@ -86,10 +86,10 @@ const DetailsTab: React.FC<Props> = ({ inputFieldDetail, handleInputChange }) =>
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none min-h-[100px]"
             placeholder="What devotees need to prepare beforehand..."
           />
-        </div>
+        </div> */}
 
         {/* Cancellation Policy */}
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Cancellation Policy
           </label>
@@ -100,7 +100,7 @@ const DetailsTab: React.FC<Props> = ({ inputFieldDetail, handleInputChange }) =>
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none min-h-[100px]"
             placeholder="Cancellation terms and conditions..."
           />
-        </div>
+        </div> */}
       </div>
     </div>
   );

@@ -89,10 +89,6 @@ interface PujaItem {
     about: any[];
 }
 
-// API Configuration
-const IMG_URL = process.env.NEXT_PUBLIC_IMG_URL || '';
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
-
 // Utility Functions
 const deepSearchSpace = (data: PujaItem[], searchText: string): PujaItem[] => {
     if (!searchText.trim()) return data;
@@ -113,7 +109,7 @@ const formatIndianRupee = (amount: number): string => {
 // API Functions
 const getPujaList = async (): Promise<PujaItem[]> => {
     try {
-        const response = await fetch(`${API_URL}/api/puja-new/get_all_puja`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/puja-new/get_all_puja`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -134,14 +130,14 @@ const getPujaList = async (): Promise<PujaItem[]> => {
 
 const deletePujaItem = async (pujaId: string): Promise<boolean> => {
     try {
-        const response = await fetch(`${API_URL}/api/puja/delete_puja`, {
-            method: 'POST',
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/puja-new/delete-puja/${pujaId}`, {
+            method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                pujaId: pujaId
-            }),
+            // body: JSON.stringify({
+            //     pujaId: pujaId
+            // }),
         });
 
         if (!response.ok) {

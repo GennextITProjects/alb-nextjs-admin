@@ -30,24 +30,18 @@ interface Category {
 }
 
 interface Benefit {
-  id: number;
-  title: string;
   description: string;
-  icon: string;
 }
 
-interface WhyYouShould {
-  id: number;
+interface whyYouShould {
   title: string;
   description: string;
   icon: string;
+  _id: string;
 }
 
 interface WhoShouldBook {
-  id: number;
-  title: string;
   description: string;
-  icon: string;
 }
 
 interface PricingPackage {
@@ -95,17 +89,17 @@ interface InputFieldDetail {
   pujaName: string;
   price: string;
   adminCommission: string;
-  description: string;
+  // description: string;
   overview: string;
   whyPerform: string;
   pujaDetails: string;
   duration: string;
-  languages: string;
-  cancellationPolicy: string;
-  preparationRequired: string;
-  discount: string;
-  panditRequired: boolean;
-  isPopular: boolean;
+  // languages: string;
+  // cancellationPolicy: string;
+  // preparationRequired: string;
+  // discount: string;
+  // panditRequired: boolean;
+  // isPopular: boolean;
 }
 
 interface ImageState {
@@ -114,14 +108,11 @@ interface ImageState {
   url: string;
 }
 
-// API URLs
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003';
-const IMG_URL = process.env.NEXT_PUBLIC_IMG_URL || 'http://localhost:3003';
 
 // Get single puja API
 const getPujaById = async (id: string) => {
   try {
-    const response = await fetch(`${API_URL}/api/puja-new/get_puja_by/${id}`);
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/puja-new/get_puja_by/${id}`);
     if (!response.ok) throw new Error('Failed to fetch puja');
     const data = await response.json();
     return data.data || data.puja;
@@ -134,12 +125,11 @@ const getPujaById = async (id: string) => {
 // Get categories API
 const getCategories = async () => {
   try {
-    const response = await fetch(`${API_URL}/api/puja/get_puja_category`);
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/puja/get_puja_category`);
     if (!response.ok) throw new Error('Failed to fetch categories');
     const data = await response.json();
     return data.results || [];
   } catch (error) {
-    console.error('Error fetching categories:', error);
     return [];
   }
 };
@@ -147,13 +137,12 @@ const getCategories = async () => {
 // Create puja API
 const createPuja = async (formData: FormData) => {
   try {
-    const response = await fetch(`${API_URL}/api/puja-new/create_puja`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/puja-new/create_puja`, {
       method: 'POST',
       body: formData,
     });
     return response.ok;
   } catch (error) {
-    console.error('Error creating puja:', error);
     return false;
   }
 };
@@ -161,13 +150,12 @@ const createPuja = async (formData: FormData) => {
 // Update puja API
 const updatePuja = async (id: string, formData: FormData) => {
   try {
-    const response = await fetch(`${API_URL}/api/puja-new/update_puja/${id}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/puja-new/update-puja/${id}`, {
       method: 'PUT',
       body: formData,
     });
     return response.ok;
   } catch (error) {
-    console.error('Error updating puja:', error);
     return false;
   }
 };
@@ -193,17 +181,17 @@ const AddPujaContent = () => {
     pujaName: '',
     price: '',
     adminCommission: '',
-    description: '',
+    // description: '',
     overview: '',
     whyPerform: '',
     pujaDetails: '',
-    duration: '2-3 hours',
-    languages: 'Hindi,English',
-    cancellationPolicy: 'Free cancellation up to 24 hours before puja',
-    preparationRequired: '',
-    discount: '',
-    panditRequired: true,
-    isPopular: false
+    duration: '',
+    // languages: 'Hindi,English',
+    // cancellationPolicy: 'Free cancellation up to 24 hours before puja',
+    // preparationRequired: '',
+    // discount: '',
+    // panditRequired: true,
+    // isPopular: false
   });
 
   const [image, setImage] = useState<ImageState>({ 
@@ -213,17 +201,18 @@ const AddPujaContent = () => {
   });
 
   // Dynamic arrays
-  const [benefits, setBenefits] = useState<Benefit[]>([
-    { id: 1, title: '', description: '', icon: 'CheckCircle' }
-  ]);
+const [benefits, setBenefits] = useState<string[]>(['']);
   
-  const [whyYouShould, setWhyYouShould] = useState<WhyYouShould[]>([
-    { id: 1, title: '', description: '', icon: 'Target' }
-  ]);
+const [whyYouShould, setWhyYouShould] = useState([
+  { 
+    _id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // ✅ Unique ID
+    title: '', 
+    description: '', 
+    icon: 'Target' 
+  }
+]);
   
-  const [whoShouldBook, setWhoShouldBook] = useState<WhoShouldBook[]>([
-    { id: 1, title: '', description: '', icon: 'Users' }
-  ]);
+const [whoShouldBook, setWhoShouldBook] = useState<string[]>(['']);
   
   const [pricingPackages, setPricingPackages] = useState<PricingPackage[]>([
     { id: 1, title: '', price: 0, isPopular: false, features: [''] }
@@ -255,70 +244,98 @@ const AddPujaContent = () => {
   // Tabs
   const tabs = [
     { id: 0, label: 'Basic Info', icon: <Home className="w-4 h-4" /> },
-    { id: 1, label: 'Details', icon: <BookOpen className="w-4 h-4" /> },
-    { id: 2, label: 'Images', icon: <Images className="w-4 h-4" /> },
+    { id: 1, label: 'Images', icon: <Images className="w-4 h-4" /> },
+    { id: 2, label: 'Details', icon: <BookOpen className="w-4 h-4" /> },
     { id: 3, label: 'Benefits', icon: <Star className="w-4 h-4" /> },
-    { id: 4, label: 'Why Perform', icon: <Target className="w-4 h-4" /> },
-    { id: 5, label: 'Who Should Book', icon: <Users className="w-4 h-4" /> },
+    { id: 4, label: 'Who Should Book', icon: <Users className="w-4 h-4" /> },
+    { id: 5, label: 'Why Perform', icon: <Target className="w-4 h-4" /> },
     { id: 6, label: 'Packages', icon: <BanknoteIcon className="w-4 h-4" /> },
     { id: 7, label: 'Testimonials', icon: <MessageSquare className="w-4 h-4" /> },
     { id: 8, label: 'FAQs', icon: <MessageSquare className="w-4 h-4" /> },
     // { id: 9, label: 'Trust CTA', icon: <Shield className="w-4 h-4" /> },
   ];
 
+
+  
   // Fetch data on mount
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      
-      // Fetch categories
-      const categoriesData = await getCategories();
-      setCategories(categoriesData);
+const fetchData = async () => {
+  setLoading(true);
+  
+  // Fetch categories
+  const categoriesData = await getCategories();
+  setCategories(categoriesData);
 
-      // If editing, fetch puja data
-      if (editId) {
-        const pujaData = await getPujaById(editId);
-        if (pujaData) {
-          // Update basic info
-          setPujaName(pujaData.title || pujaData.pujaName || '');
-          setInputFieldDetail({
-            categoryId: pujaData.categoryId || '',
-            pujaName: pujaData.title || pujaData.pujaName || '',
-            price: pujaData.price?.toString() || '',
-            adminCommission: pujaData.adminCommission?.toString() || '',
-            description: pujaData.description || '',
-            overview: pujaData.overview || '',
-            whyPerform: pujaData.whyPerform || '',
-            pujaDetails: pujaData.pujaDetails || '',
-            duration: pujaData.duration || '2-3 hours',
-            languages: Array.isArray(pujaData.languages) ? pujaData.languages.join(',') : pujaData.languages || 'Hindi,English',
-            cancellationPolicy: pujaData.cancellationPolicy || '',
-            preparationRequired: pujaData.preparationRequired || '',
-            discount: pujaData.discount?.toString() || '',
-            panditRequired: pujaData.panditRequired !== false,
-            isPopular: pujaData.isPopular || false
-          });
+  // If editing, fetch puja data
+  if (editId) {
+    const pujaData = await getPujaById(editId);
+    if (pujaData) {
+      // Update basic info
+      setPujaName(pujaData.title || pujaData.pujaName || '');
+      setInputFieldDetail({
+        categoryId: pujaData.categoryId || '',
+        pujaName: pujaData.title || pujaData.pujaName || '',
+        price: pujaData.price?.toString() || '',
+        adminCommission: pujaData.adminCommission?.toString() || '',
+        overview: pujaData.overview || '',
+        whyPerform: pujaData.whyPerform || '',
+        pujaDetails: pujaData.pujaDetails || '',
+        duration: pujaData.duration || '',
+      });
 
-          // Update image
-          if (pujaData.imageUrl || pujaData.mainImage) {
-            const imgUrl = pujaData.imageUrl || pujaData.mainImage;
-            setImage({
-              file: imgUrl,
-              bytes: null,
-              url: `${IMG_URL}${imgUrl}`
-            });
-            setImagePreview(`${IMG_URL}${imgUrl}`);
+      // Update image
+      if (pujaData.imageUrl || pujaData.mainImage) {
+        const imgUrl = pujaData.imageUrl || pujaData.mainImage;
+        setImage({
+          file: imgUrl,
+          bytes: null,
+          url: `${process.env.NEXT_PUBLIC_IMAGE_URL3}${imgUrl}`
+        });
+        setImagePreview(`${process.env.NEXT_PUBLIC_IMAGE_URL3}${imgUrl}`);
+      }
+
+      // ========== IMPORTANT: Why You Should Data Formatting ==========
+      if (pujaData.whyYouShould && Array.isArray(pujaData.whyYouShould)) {
+        const formattedWhyYouShould = pujaData.whyYouShould.map((item: any, index: number) => ({
+          _id: item._id || `item_${Date.now()}_${index}_${Math.random().toString(36).substr(2, 9)}`, // ✅ Ensure unique ID
+          title: item.title || '',
+          description: item.description || '',
+          icon: item.icon || 'Target'
+        }));
+        
+        setWhyYouShould(formattedWhyYouShould.length > 0 ? formattedWhyYouShould : [
+          { 
+            _id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, 
+            title: '', 
+            description: '', 
+            icon: 'Target' 
           }
+        ]);
+      } else {
+        // Default data if no whyYouShould in API
+        setWhyYouShould([
+          { 
+            _id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, 
+            title: '', 
+            description: '', 
+            icon: 'Target' 
+          }
+        ]);
+      }
 
           // Update arrays (handle both enhanced and regular fields)
-          if (pujaData.enhancedBenefits && pujaData.enhancedBenefits.length > 0) {
-            const mappedBenefits = pujaData.enhancedBenefits.map((benefit: any, index: number) => ({
-              id: index + 1,
-              title: benefit.title || '',
-              description: benefit.description || '',
-              icon: benefit.icon || 'CheckCircle'
-            }));
-            setBenefits(mappedBenefits.length > 0 ? mappedBenefits : [{ id: 1, title: '', description: '', icon: 'CheckCircle' }]);
+          if (pujaData.benefits) {
+            // If benefits is a string (comma-separated), convert to array
+            if (typeof pujaData.benefits === 'string') {
+              const benefitsArray = pujaData.benefits
+                .split(',')
+                .map((b: any) => b.trim())
+                .filter((b: any) => b !== '');
+              setBenefits(benefitsArray.length > 0 ? benefitsArray : ['']);
+            } else if (Array.isArray(pujaData.benefits)) {
+              // If already array
+              setBenefits(pujaData.benefits.filter((b: any) => b && b.trim() !== ''));
+            }
           }
 
           if (pujaData.enhancedWhoShouldBook && pujaData.enhancedWhoShouldBook.length > 0) {
@@ -330,16 +347,19 @@ const AddPujaContent = () => {
             }));
             setWhoShouldBook(mappedWhoShouldBook.length > 0 ? mappedWhoShouldBook : [{ id: 1, title: '', description: '', icon: 'Users' }]);
           }
+          
 
-          if (pujaData.whyYouShould && pujaData.whyYouShould.length > 0) {
-            const mappedWhyYouShould = pujaData.whyYouShould.map((item: any, index: number) => ({
-              id: index + 1,
-              title: item.title || '',
-              description: item.description || '',
-              icon: item.icon || 'Target'
-            }));
-            setWhyYouShould(mappedWhyYouShould.length > 0 ? mappedWhyYouShould : [{ id: 1, title: '', description: '', icon: 'Target' }]);
-          }
+          if (pujaData.whoShouldBook) {
+              if (typeof pujaData.whoShouldBook === 'string') {
+                const whoShouldBookArray = pujaData.whoShouldBook
+                  .split(',')
+                  .map((w: any) => w.trim())
+                  .filter((w: any) => w !== '');
+                setWhoShouldBook(whoShouldBookArray.length > 0 ? whoShouldBookArray : ['']);
+              } else if (Array.isArray(pujaData.whoShouldBook)) {
+                setWhoShouldBook(pujaData.whoShouldBook.filter((w: any) => w && w.trim() !== ''));
+              }
+            }
 
           if (pujaData.pricingPackages && pujaData.pricingPackages.length > 0) {
             const mappedPackages = pujaData.pricingPackages.map((pkg: any, index: number) => ({
@@ -432,35 +452,61 @@ const AddPujaContent = () => {
     setGalleryPreviews(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Dynamic array helpers
-  const addItem = <T extends { id: number }>(
+  const addItem = <T extends { id?: number; _id?: string }>(
     array: T[],
     setArray: React.Dispatch<React.SetStateAction<T[]>>,
-    template: Omit<T, 'id'>
+    template: Omit<T, 'id' | '_id'>
   ) => {
-    const newId = array.length > 0 ? Math.max(...array.map(item => item.id)) + 1 : 1;
-    setArray([...array, { ...template, id: newId } as T]);
+    // For arrays using 'id' (numeric)
+    if (array.length > 0 && 'id' in array[0] && typeof array[0].id === 'number') {
+      const newId = array.length > 0 ? Math.max(...array.map(item => item.id || 0)) + 1 : 1;
+      setArray([...array, { ...template, id: newId } as T]);
+    } 
+    // For arrays using '_id' (string) - like whyYouShould
+    else {
+      const uniqueId = `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      setArray([...array, { ...template, _id: uniqueId } as T]);
+    }
   };
 
-  const updateItem = <T extends { id: number }>(
+
+  // updateItem function ko replace karo with this:
+
+  const updateItem = <T extends { id?: number; _id?: string }>(
     array: T[],
     setArray: React.Dispatch<React.SetStateAction<T[]>>,
-    id: number,
+    identifier: number | string,
     field: keyof T,
     value: any
   ) => {
-    setArray(array.map(item => 
-      item.id === id ? { ...item, [field]: value } : item
-    ));
+    setArray(array.map(item => {
+      // First check _id (string comparison)
+      if (item._id && item._id === identifier) {
+        return { ...item, [field]: value };
+      }
+      // Then check id (number comparison)
+      if (item.id && item.id === identifier) {
+        return { ...item, [field]: value };
+      }
+      return item;
+    }));
   };
 
-  const removeItem = <T extends { id: number }>(
+
+  // removeItem function ko replace karo with this:
+
+  const removeItem = <T extends { id?: number; _id?: string }>(
     array: T[],
     setArray: React.Dispatch<React.SetStateAction<T[]>>,
-    id: number
+    identifier: number | string
   ) => {
     if (array.length > 1) {
-      setArray(array.filter(item => item.id !== id));
+      setArray(array.filter(item => {
+        // Filter out item with matching _id or id
+        const matches_id = item._id && item._id === identifier;
+        const matches_id_numeric = item.id && item.id === identifier;
+        return !(matches_id || matches_id_numeric);
+      }));
     }
   };
 
@@ -536,69 +582,89 @@ const AddPujaContent = () => {
   };
 
   // Submit handler
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  if (!validateForm()) return;
+  
+  setSaving(true);
+
+  try {
+    const formData = new FormData();
     
-    if (!validateForm()) return;
+    // Basic fields
+    Object.entries(inputFieldDetail).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        formData.append(key, value.toString());
+      }
+    });
+
+    // ========== KEY CHANGES HERE ==========
+    // 1. Benefits - simple array of strings (JSON format mein)
+    const benefitsArray = benefits
+      .map(benefit => benefit.trim())
+      .filter(benefit => benefit !== '');
+    formData.append("benefits", JSON.stringify(benefitsArray));
     
-    setSaving(true);
+    // 2. Who Should Book - simple array of strings (JSON format mein)
+    const whoShouldBookArray = whoShouldBook
+      .map(item => item.trim())
+      .filter(item => item !== '');
+    formData.append("whoShouldBook", JSON.stringify(whoShouldBookArray));
+    
+    // 3. Why You Should - array of objects (same as before)
+    // handleSubmit function में whyYouShould को submit करते समय:
+formData.append("whyYouShould", JSON.stringify(
+  whyYouShould.map(item => ({
+    title: item.title,
+    description: item.description,
+    icon: item.icon,
+  }))
+));
+    
+    // 4. Other arrays - same as before
+    formData.append("pricingPackages", JSON.stringify(pricingPackages));
+    formData.append("testimonials", JSON.stringify(testimonials));
+    formData.append("faqs", JSON.stringify(faqs));
+    // formData.append("trustCTA", JSON.stringify(trustCTA));
 
-    try {
-      const formData = new FormData();
-      
-      // Basic fields
-      Object.entries(inputFieldDetail).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          formData.append(key, value.toString());
-        }
-      });
-
-      // Arrays
-      formData.append("enhancedBenefits", JSON.stringify(benefits));
-      formData.append("enhancedWhoShouldBook", JSON.stringify(whoShouldBook));
-      formData.append("whyYouShould", JSON.stringify(whyYouShould));
-      formData.append("pricingPackages", JSON.stringify(pricingPackages));
-      formData.append("testimonials", JSON.stringify(testimonials));
-      formData.append("faqs", JSON.stringify(faqs));
-      // formData.append("trustCTA", JSON.stringify(trustCTA));
-
-      // Image
-      if (image.bytes) {
-        formData.append("image", image.bytes);
-      }
-
-      // Gallery images
-      galleryImages.forEach((img, index) => {
-        formData.append("galleryImages", img);
-      });
-
-      // Call API
-      let success;
-      if (editId) {
-        success = await updatePuja(editId, formData);
-      } else {
-        success = await createPuja(formData);
-      }
-
-      if (success) {
-        Swal.fire({
-          icon: 'success',
-          title: `Puja ${editId ? 'Updated' : 'Created'} Successfully`,
-          showConfirmButton: false,
-          timer: 1500
-        }).then(() => {
-          router.push('/astro-puja/puja');
-        });
-      } else {
-        throw new Error(`Failed to ${editId ? 'update' : 'create'} puja`);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      Swal.fire('Error', 'Something went wrong. Please try again.', 'error');
-    } finally {
-      setSaving(false);
+    // Image
+    if (image.bytes) {
+      formData.append("image", image.bytes);
     }
-  };
+
+    // Gallery images
+    galleryImages.forEach((img) => {
+      formData.append("galleryImages", img);
+    });
+
+
+    // Call API
+    let success;
+    if (editId) {
+      success = await updatePuja(editId, formData);
+    } else {
+      success = await createPuja(formData);
+    }
+
+    if (success) {
+      Swal.fire({
+        icon: 'success',
+        title: `Puja ${editId ? 'Updated' : 'Created'} Successfully`,
+        showConfirmButton: false,
+        timer: 1500
+      }).then(() => {
+        router.push('/pooja');
+      });
+    } else {
+      throw new Error(`Failed to ${editId ? 'update' : 'create'} puja`);
+    }
+  } catch (error) {
+    Swal.fire('Error', 'Something went wrong. Please try again.', 'error');
+  } finally {
+    setSaving(false);
+  }
+};
 
   // Loading state
   if (loading) {
@@ -651,15 +717,15 @@ const AddPujaContent = () => {
       case 0:
         return <BasicInfoTab {...props} />;
       case 1:
-        return <DetailsTab {...props} />;
-      case 2:
         return <ImagesTab {...props} />;
+      case 2:
+        return <DetailsTab {...props} />;
       case 3:
         return <BenefitsTab {...props} />;
       case 4:
-        return <WhyPerformTab {...props} />;
-      case 5:
         return <WhoShouldBookTab {...props} />;
+      case 5:
+        return <WhyPerformTab {...props} />;
       case 6:
         return <PackagesTab {...props} />;
       case 7:
@@ -706,13 +772,13 @@ const AddPujaContent = () => {
                   />
                 </div>
               )}
-              <div className="text-right">
+              {/* <div className="text-right">
                 <div className="text-sm text-red-200">Status</div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                   <span className="font-medium">{editId ? 'Editing' : 'Creating'}</span>
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>

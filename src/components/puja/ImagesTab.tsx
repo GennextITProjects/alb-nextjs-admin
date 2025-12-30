@@ -58,7 +58,7 @@ const ImagesTab: React.FC<Props> = ({
                     <Image
                       src={imagePreview.startsWith('blob:') || imagePreview.startsWith('data:') 
                         ? imagePreview 
-                        : `${process.env.NEXT_PUBLIC_IMAGE_URL3}${imagePreview}`
+                        : `${imagePreview}`
                       }
                       alt="Main preview"
                       fill
@@ -89,77 +89,6 @@ const ImagesTab: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Gallery Images */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          Gallery Images
-          <span className="text-xs text-gray-500 ml-2">(Additional images for gallery)</span>
-        </label>
-
-        {/* Upload Button */}
-        <div className="mb-6">
-          <button
-            type="button"
-            onClick={() => galleryInputRef.current?.click()}
-            className="flex items-center gap-2 px-6 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-red-500 hover:bg-red-50 transition-colors"
-          >
-            <Upload className="w-5 h-5" />
-            <span>Add Gallery Images</span>
-          </button>
-          <input
-            ref={galleryInputRef}
-            type="file"
-            onChange={handleGalleryImages}
-            className="hidden"
-            accept="image/*"
-            multiple
-          />
-          <p className="text-xs text-gray-500 mt-2">
-            You can select multiple images at once
-          </p>
-        </div>
-
-        {/* Gallery Preview */}
-        {galleryPreviews.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h4 className="font-medium text-gray-700">
-                Gallery Preview ({galleryPreviews.length} images)
-              </h4>
-              <span className="text-sm text-gray-500">
-                Click on × to remove
-              </span>
-            </div>
-            
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {galleryPreviews.map((preview, index) => (
-                <div key={index} className="relative group">
-                  <div className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 shadow-sm">
-                    <Image
-                      src={preview}
-                      alt={`Gallery ${index + 1}`}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => removeGalleryImage(index)}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                  <div className="mt-2 text-center">
-                    <p className="text-xs text-gray-500 truncate">
-                      {galleryImages[index]?.name || `Image ${index + 1}`}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
     </div>
   );
 };
