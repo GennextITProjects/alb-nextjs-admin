@@ -408,7 +408,7 @@ const ReportOrders: React.FC = () => {
     const maxVisibleButtons = 5;
     
     let startPage = Math.max(1, page - Math.floor(maxVisibleButtons / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisibleButtons - 1);
+    const endPage = Math.min(totalPages, startPage + maxVisibleButtons - 1);
     
     // Adjust start page if we're near the end
     if (endPage - startPage + 1 < maxVisibleButtons) {
