@@ -36,23 +36,7 @@ const BasicInfoTab: React.FC<Props> = ({
   const mainImageInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
-  // Helper function to get proper image URL
-  const getImageUrl = (url: string) => {
-    if (!url) return '';
-    
-    // If it's a blob or data URL (newly uploaded), return as-is
-    if (url.startsWith('blob:') || url.startsWith('data:')) {
-      return url;
-    }
-    
-    // If it's already a full HTTP URL, return as-is
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
-    
-    // If it's a relative path, prepend the base URL
-    return `${process.env.NEXT_PUBLIC_IMAGE_URL3}${url}`;
-  };
+  // No helper needed - parent component already handles full URLs
 
   return (
     <div className="space-y-8">
@@ -81,7 +65,7 @@ const BasicInfoTab: React.FC<Props> = ({
                   <div className="space-y-3">
                     <div className="relative mx-auto w-40 h-40 rounded-lg overflow-hidden border-2 border-gray-200 shadow-sm">
                       <Image
-                        src={getImageUrl(imagePreview)}
+                        src={imagePreview}
                         alt="Main preview"
                         fill
                         sizes="160px"
@@ -125,7 +109,7 @@ const BasicInfoTab: React.FC<Props> = ({
                 <div key={index} className="relative group">
                   <div className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 shadow-sm">
                     <Image
-                      src={getImageUrl(preview)}
+                      src={preview}
                       alt={`Gallery ${index + 1}`}
                       fill
                       sizes="(max-width: 768px) 33vw, (max-width: 1024px) 20vw, 16vw"
