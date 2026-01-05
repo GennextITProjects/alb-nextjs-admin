@@ -509,37 +509,77 @@ const ReportOrders: React.FC = () => {
   };
 
   const downloadCSV = () => {
-    const headers = [
-      "_id", "orderID", "planName", "name", "email", "whatsapp", "gender", "reportLanguage", "amount", "status",
-      "paymentTxnId", "razorpayOrderId", "paymentAt", "astroConsultation", "consultationDate", "consultationTime",
-      "expressDelivery", "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "createdAt", "deletedAt"
-    ];
+  const headers = [
+    "_id", "orderID", "planName", "name", "email", "whatsapp", "gender", "reportLanguage", 
+    "dateOfBirth", "timeOfBirth", "placeOfBirth", "placeOfBirthPincode",
+    "amount", "status", "paymentTxnId", "razorpayOrderId", "paymentAt", 
+    "partnerName", "partnerDateOfBirth", "partnerTimeOfBirth", "partnerPlaceOfBirth", "partnerPlaceOfBirthPincode",
+    "astroConsultation", "consultationDate", "consultationTime", "problemType",
+    "expressDelivery", "questionOne", "questionTwo",
+    "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", 
+    "orderFingerprint", "attemptCount", "lastAttemptAt",
+    "createdAt", "updatedAt", "deletedAt", "expiresAt"
+  ];
 
-    const csvRows = [
-      headers.join(","),
-      ...rows.map(r => [
-        r._id, r.orderID, r.planName, r.name, r.email, r.whatsapp, r.gender || "",
-        r.reportLanguage, r.amount, r.status, r.paymentTxnId, r.razorpayOrderId,
-        r.paymentAt ? moment.tz(r.paymentAt, "Asia/Kolkata").format("YYYY-MM-DD hh:mm a") : "",
-        r.astroConsultation ? "Yes" : "No", r.consultationDate || "", r.consultationTime || "",
-        r.expressDelivery ? "Yes" : "No", r.utm_source || "", r.utm_medium || "", r.utm_campaign || "",
-        r.utm_term || "", r.utm_content || "",
-        r.createdAt ? moment.tz(r.createdAt, "Asia/Kolkata").format("YYYY-MM-DD hh:mm a") : "",
-        r.deletedAt ? moment.tz(r.deletedAt, "Asia/Kolkata").format("YYYY-MM-DD hh:mm a") : ""
-      ].map(field => `"${String(field).replace(/"/g, '""')}"`).join(","))
-    ];
+  const csvRows = [
+    headers.join(","),
+    ...rows.map(r => [
+      r._id, 
+      r.orderID, 
+      r.planName, 
+      r.name, 
+      r.email, 
+      r.whatsapp, 
+      r.gender || "",
+      r.reportLanguage,
+      r.dateOfBirth || "",
+      r.timeOfBirth || "",
+      r.placeOfBirth || "",
+      r.placeOfBirthPincode || "",
+      r.amount, 
+      r.status, 
+      r.paymentTxnId, 
+      r.razorpayOrderId,
+      r.paymentAt ? moment.tz(r.paymentAt, "Asia/Kolkata").format("YYYY-MM-DD hh:mm a") : "",
+      r.partnerName || "",
+      r.partnerDateOfBirth || "",
+      r.partnerTimeOfBirth || "",
+      r.partnerPlaceOfBirth || "",
+      r.partnerPlaceOfBirthPincode || "",
+      r.astroConsultation ? "Yes" : "No", 
+      r.consultationDate || "", 
+      r.consultationTime || "",
+      r.problemType || "",
+      r.expressDelivery ? "Yes" : "No", 
+      r.questionOne || "",
+      r.questionTwo || "",
+      r.utm_source || "", 
+      r.utm_medium || "", 
+      r.utm_campaign || "",
+      r.utm_term || "", 
+      r.utm_content || "",
+      r.orderFingerprint || "",
+      r.attemptCount || "",
+      r.lastAttemptAt ? moment.tz(r.lastAttemptAt, "Asia/Kolkata").format("YYYY-MM-DD hh:mm a") : "",
+      r.createdAt ? moment.tz(r.createdAt, "Asia/Kolkata").format("YYYY-MM-DD hh:mm a") : "",
+      r.updatedAt ? moment.tz(r.updatedAt, "Asia/Kolkata").format("YYYY-MM-DD hh:mm a") : "",
+      r.deletedAt ? moment.tz(r.deletedAt, "Asia/Kolkata").format("YYYY-MM-DD hh:mm a") : "",
+      r.expiresAt ? moment.tz(r.expiresAt, "Asia/Kolkata").format("YYYY-MM-DD hh:mm a") : ""
+    ].map(field => `"${String(field).replace(/"/g, '""')}"`).join(","))
+  ];
 
-    const csvString = csvRows.join("\n");
-    const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `life_journey_orders_page_${page}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.URL.revokeObjectURL(url);
-  };
+  const csvString = csvRows.join("\n");
+  const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `life_journey_orders_page_${page}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
+};
+
 
   const downloadServerCSV = async () => {
     try {
