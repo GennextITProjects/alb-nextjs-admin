@@ -43,6 +43,11 @@ export const RouteName = [
         name: "Report Consultations",
         icon: <OtherRouteSvg />,
       },
+      {
+        path: "/reports/report-orders",
+        name: "Report Order",
+        icon: <OtherRouteSvg />,
+      },
     ],
   },
 
@@ -261,12 +266,7 @@ export const RouteName = [
   //   name: "Admin Earning",
   //   icon: <OtherRouteSvg />,
   // },
-  {
-    path: "/reports/report-orders",
-    name: "Report Order",
-    icon: <OtherRouteSvg />,
 
-  },
   // {
   //   path: "/language",
   //   name: "Language",
