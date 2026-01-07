@@ -91,6 +91,11 @@ export const RouteName = [
         name: "Puja",
         icon: <OtherRouteSvg />,
       },
+      {
+          path: "/pooja-bookings",
+          name: "Puja Booking",
+          icon: <OtherRouteSvg />,
+      },
       // {
       //   path: "/astro-puja/puja-booked",
       //   name: "Puja Booked",
