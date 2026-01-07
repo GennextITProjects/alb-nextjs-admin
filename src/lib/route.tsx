@@ -30,6 +30,11 @@ export const RouteName = [
     icon: <CustomerRouteSvg />,
   },
   {
+    path: "/gemstone-consultation",
+    name: "Gemstone Consultation",
+    icon: <CustomerRouteSvg />,
+  },
+  {
     name: "Reports",
     icon: <NotificationRouteSvg />,
     subRoutes: [
