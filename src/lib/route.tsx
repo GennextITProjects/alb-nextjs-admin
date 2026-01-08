@@ -192,22 +192,22 @@ export const RouteName = [
   //   name: "Review",
   //   icon: <RatingRouteSvg />,
   // },
-  // {
-  //   name: "Astroblog",
-  //   icon: <BlogsRouteSvg />,
-  //   subRoutes: [
-  //     {
-  //       path: "/astro-blog/category",
-  //       name: "Category",
-  //       icon: <OtherRouteSvg />,
-  //     },
-  //     {
-  //       path: "/astro-blog/blog",
-  //       name: "Blog",
-  //       icon: <OtherRouteSvg />,
-  //     },
-  //   ],
-  // },
+  {
+    name: "Astroblog",
+    icon: <BlogsRouteSvg />,
+    subRoutes: [
+      {
+        path: "/astro-blog/category",
+        name: "Category",
+        icon: <OtherRouteSvg />,
+      },
+      {
+        path: "/astro-blog/blog",
+        name: "Blog",
+        icon: <OtherRouteSvg />,
+      },
+    ],
+  },
   // {
   //   name: "Master",
   //   icon: <OtherRouteSvg />,
