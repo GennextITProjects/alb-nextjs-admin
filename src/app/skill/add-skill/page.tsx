@@ -40,7 +40,7 @@ function AddSkillReview(){
   const [fetching, setFetching] = useState(editMode && !skillNameFromUrl);
 
   // Regex pattern for validation
-  const Regex_Accept_Alpha = /^[a-zA-Z\s]*$/;
+const Regex_Accept_Alpha = /^[a-zA-Z0-9\s!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]*$/;
 
   // Fetch skill data if in edit mode
   useEffect(() => {

@@ -56,7 +56,7 @@ function AddMainExpertiseContent(){
   const [fetching, setFetching] = useState(editMode && !!expertiseId);
 
   // Regex pattern for validation
-  const Regex_Accept_Alpha = /^[a-zA-Z\s]*$/;
+const Regex_Accept_Alpha = /^[a-zA-Z0-9\s!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]*$/;
 
   // Fetch expertise data if in edit mode
   useEffect(() => {
@@ -87,7 +87,7 @@ function AddMainExpertiseContent(){
                 });
                 if (expertiseToEdit.image) {
                   setImage({
-                    file: `${process.env.NEXT_PUBLIC_API_URL}/${expertiseToEdit.image}`,
+                    file: `${process.env.NEXT_PUBLIC_IMAGE_URL}${expertiseToEdit.image}`,
                     bytes: null
                   });
                 }
@@ -177,7 +177,7 @@ function AddMainExpertiseContent(){
       isValid = false;
     }
     if (!Regex_Accept_Alpha.test(title)) {
-      handleInputFieldError("title", "Please Enter Valid Title (Letters only)");
+      handleInputFieldError("title", "Please Enter Valid Title (No Escape characters or blank)");
       isValid = false;
     }
     if (!description.trim()) {
