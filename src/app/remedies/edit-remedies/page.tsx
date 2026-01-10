@@ -221,7 +221,6 @@ const EditRemedies: React.FC = () => {
           border: 1px solid #e5e7eb;
           border-radius: 8px;
           padding: 24px;
-          max-width: 700px;
           margin: 0 auto;
         }
         .header {
@@ -381,7 +380,7 @@ const EditRemedies: React.FC = () => {
           </div>
 
           {/* Image Upload */}
-          <div className="field">
+          {/* <div className="field">
             <label className="label">Remedy Icon (Optional)</label>
             <div className="dropzone" onDragOver={(e) => e.preventDefault()} onDrop={handleDrop} onClick={() => document.getElementById('upload-image')?.click()}>
               {image.file ? (
@@ -398,7 +397,7 @@ const EditRemedies: React.FC = () => {
               )}
               <input id="upload-image" type="file" accept="image/*" hidden onChange={handleImage} />
             </div>
-          </div>
+          </div> */}
 
           {/* Submit */}
           <div style={{ marginTop: '20px' }}>

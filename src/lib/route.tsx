@@ -218,11 +218,11 @@ export const RouteName = [
         name: "Skill",
         icon: <SkillRouteSvg />,
       },
-      // {
-      //   path: "/remedies",
-      //   name: "Remedies",
-      //   icon: <RemediesRouteSvg />,
-      // },
+      {
+        path: "/remedies",
+        name: "Remedies",
+        icon: <RemediesRouteSvg />,
+      },
       
     ],
   },

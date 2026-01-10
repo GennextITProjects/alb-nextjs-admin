@@ -705,7 +705,7 @@ function AddRemediesContent(){
           </div>
 
           {/* Image Upload (Optional) */}
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
               Remedy Icon (Optional)
             </label>
@@ -745,7 +745,7 @@ function AddRemediesContent(){
             {inputFieldError.image && (
               <p className="text-red-500 text-sm mt-1">{inputFieldError.image}</p>
             )}
-          </div>
+          </div> */}
 
           {/* Submit Button */}
           <div className="flex justify-start">
