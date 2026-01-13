@@ -269,38 +269,38 @@ export const RouteName = [
   //     },
   //   ],
   // },
-  // {
-  //   path: "/pages",
-  //   name: "Pages",
-  //   icon: <OtherRouteSvg />,
-  //   subRoutes: [
-  //     {
-  //       path: "/pages/terms-and-conditions",
-  //       name: "Terms and Conditions",
-  //       icon: <OtherRouteSvg />,
-  //     },
-  //     {
-  //       path: "/pages/privacy-policy",
-  //       name: "Privacy Policy",
-  //       icon: <OtherRouteSvg />,
-  //     },
-  //     {
-  //       path: "/pages/about-us",
-  //       name: "About Us",
-  //       icon: <OtherRouteSvg />,
-  //     },
-  //     // {
-  //     //   path: "/displayHowToUse",
-  //     //   name: "How to use- ScreenShots",
-  //     //   icon: <OtherRouteSvg />,
-  //     // },
-  //     // {
-  //     //   path: "/displayHowToUseVideos",
-  //     //   name: "How to use - Videos",
-  //     //   icon: <OtherRouteSvg />,
-  //     // },
-  //   ],
-  // },
+  {
+    path: "/pages",
+    name: "Pages",
+    icon: <OtherRouteSvg />,
+    subRoutes: [
+      {
+        path: "/pages/terms-and-conditions",
+        name: "Terms and Conditions",
+        icon: <OtherRouteSvg />,
+      },
+      {
+        path: "/pages/privacy-policy",
+        name: "Privacy Policy",
+        icon: <OtherRouteSvg />,
+      },
+      {
+        path: "/pages/about-us",
+        name: "About Us",
+        icon: <OtherRouteSvg />,
+      },
+      // {
+      //   path: "/displayHowToUse",
+      //   name: "How to use- ScreenShots",
+      //   icon: <OtherRouteSvg />,
+      // },
+      // {
+      //   path: "/displayHowToUseVideos",
+      //   name: "How to use - Videos",
+      //   icon: <OtherRouteSvg />,
+      // },
+    ],
+  },
   {
     path: "/reports/admin-earning",
     name: "Admin Earning",

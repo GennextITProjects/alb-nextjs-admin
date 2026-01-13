@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react';
-import StaticPageEditor from '@/components/StaticPageEditor';
 import { base_url } from '@/lib/api-routes';
+import StaticPageEditor from '@/components/common/Addblogeditor';
 
 const TermsAndConditionsPage: React.FC = () => {
   const [content, setContent] = useState<string>('');
@@ -55,6 +55,8 @@ const TermsAndConditionsPage: React.FC = () => {
   };
 
   return (
+    <div className='p-4'>
+
     <StaticPageEditor
       key={`${type}-${content.length}`} // Force re-render when type or content changes
       title="Terms And Conditions"
@@ -65,6 +67,7 @@ const TermsAndConditionsPage: React.FC = () => {
       onTypeChange={handleTypeChange}
       loading={loading}
     />
+    </div>
   );
 };
 
