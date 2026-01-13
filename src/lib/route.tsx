@@ -71,11 +71,11 @@ export const RouteName = [
         name: "List Of Astrologers",
         icon: <OtherRouteSvg />,
       },
-      // {
-      //   path: "/astrologer-enquiry",
-      //   name: "Astrologer Enquiry",
-      //   icon: <OtherRouteSvg />,
-      // },
+      {
+        path: "/astrologer-enquiry",
+        name: "Astrologer Enquiry",
+        icon: <OtherRouteSvg />,
+      },
       // {
       //   path: "/astrologer-issues",
       //   name: "Astrologer Issues",
