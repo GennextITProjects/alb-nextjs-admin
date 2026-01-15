@@ -368,7 +368,7 @@ export default function SuperAdminDashboard() {
     if (result.isConfirmed) {
       try {
         setLoading(true);
-        const response = await fetch(`${API_URL}/api/admin/admin/${adminId}`, {
+        const response = await fetch(`${API_URL}/api/admin/delete-admin/${adminId}`, {
           method: 'DELETE',
           credentials: 'include'
         });
