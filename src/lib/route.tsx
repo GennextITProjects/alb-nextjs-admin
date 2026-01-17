@@ -59,6 +59,11 @@ export const RouteName = [
         name: "Report Order",
         icon: <OtherRouteSvg />,
       },
+      {
+        path: "/reports/report-sending",
+        name: "Report Send",
+        icon: <OtherRouteSvg />,
+      },
     ],
   },
 
