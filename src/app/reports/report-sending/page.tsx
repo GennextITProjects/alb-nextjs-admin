@@ -171,7 +171,7 @@ const ReportOrders: React.FC = () => {
       if (!result.isConfirmed) return;
 
       // API call
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/life-journey-report/process-lcr-reports`, {
+      const response = await fetch(`https://alb.gennextit.com/api/life-journey-report/process-lcr-reports`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify({ reportIds })

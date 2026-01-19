@@ -61,7 +61,7 @@ export const RouteName = [
       },
       {
         path: "/reports/report-sending",
-        name: "Report Send",
+        name: "Report Automation",
         icon: <OtherRouteSvg />,
       },
     ],

@@ -92,7 +92,7 @@ export const FilterBar: React.FC<Props> = ({
       <div className="relative">
         <input
           type="number"
-          placeholder="First N pending only"
+          placeholder="Enter Number to select..."
           value={filters.selectFirstN || ""}
           onChange={(e) => {
             const value = e.target.value ? parseInt(e.target.value) : undefined;
@@ -100,7 +100,7 @@ export const FilterBar: React.FC<Props> = ({
           }}
           min="1"
           max="1000"
-          className="px-3 py-1.5 border-2 border-green-500 rounded-md focus:ring-2 focus:ring-green-600 min-w-[180px] bg-green-50 font-semibold text-green-800"
+          className="px-3 py-1.5 border-2 min-w-[180px] bg-green-50 font-semibold"
           title="Shows ONLY pending orders (excludes delivered)"
         />
         {filters.selectFirstN && filters.selectFirstN > 0 && (
