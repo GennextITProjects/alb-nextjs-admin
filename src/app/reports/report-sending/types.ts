@@ -40,6 +40,20 @@ export interface ApiResponse {
   items: Order[];
 }
 
+// export interface Filters {
+//   q: string;
+//   from: string;
+//   to: string;
+//   language: string;
+//   planName: string;
+//   status: string;
+//   sortBy: string;
+//   sortOrder: "asc" | "desc";
+//   limit: number;
+// }
+
+
+// types.ts - Add this to your existing types file
 export interface Filters {
   q: string;
   from: string;
@@ -50,4 +64,5 @@ export interface Filters {
   sortBy: string;
   sortOrder: "asc" | "desc";
   limit: number;
+  selectFirstN?: number; // NEW: For selecting first N rows
 }

@@ -57,7 +57,7 @@ export const OrdersTable: React.FC<Props> = ({ data, loading, page, limit, onVie
         
         if (!deliveryStatus || deliveryStatus === 'pending') {
           return (
-            <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium">
+            <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium">
               Pending
             </span>
           );
