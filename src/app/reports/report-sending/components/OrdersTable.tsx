@@ -109,7 +109,7 @@ export const OrdersTable: React.FC<Props> = ({
                 <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
                   Delivered
                 </span>
-                {driveUrl && (
+                {/* {driveUrl && (
                   <a 
                     href={driveUrl} 
                     target="_blank" 
@@ -119,7 +119,7 @@ export const OrdersTable: React.FC<Props> = ({
                   >
                     📄
                   </a>
-                )}
+                )} */}
               </div>
             );
           }
