@@ -184,8 +184,8 @@ export default function GemstoneConsultationPage() {
   const handleClearFilters = () => {
     setFilters({
       status: "",
-      startDate: "",
-      endDate: "",
+      startDate: moment().format("YYYY-MM-DD"),
+      endDate: moment().format("YYYY-MM-DD"),
     });
     setSearchText("");
   };
