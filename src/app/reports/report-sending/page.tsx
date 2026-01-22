@@ -8,12 +8,13 @@ import { ViewModal } from "./components/ViewModal";
 import { Pagination } from "./components/Pagination";
 import { useDebounce } from "@/hooks/useDebounce";
 import Swal from "sweetalert2";
+import moment from "moment-timezone";
 
 const ReportOrders: React.FC = () => {
   const [filters, setFilters] = useState<Filters>({
     q: "",
-    from: "",
-    to: "",
+    from: moment().tz("Asia/Kolkata").format("YYYY-MM-DD"),
+    to: moment().tz("Asia/Kolkata").format("YYYY-MM-DD"),
     language: "all",
     planName: "life changing",
     status: "paid",
@@ -316,7 +317,9 @@ const ReportOrders: React.FC = () => {
 
       if (!result.isConfirmed) return;
 
-      console.log("📤 Sending IDs:", selectedIds);
+      setTimeout(() => {
+        fetchOrders(filters, page);
+      }, 2500);
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/life-journey-report/process-lcr-reports`, {
         method: "POST",
@@ -350,18 +353,21 @@ const ReportOrders: React.FC = () => {
 
   const failedCount = rows.filter(r => r.reportDeliveryStatus === 'failed').length;
   const deliveredCount = rows.filter(r => r.reportDeliveryStatus === 'delivered').length;
+  const pendingCount = rows.filter(r => r.reportDeliveryStatus === 'pending').length;
+  const processingCount = rows.filter(r => r.reportDeliveryStatus === 'processing').length;
 
   return (
     <div className="p-4 bg-white rounded-lg shadow-sm">
+      <div className=" flex flex-col md:flex-row justify-between items-center gap-x-8">
       <h1 className="font-bold text-2xl mb-4">Report Automation</h1>
       
       {/* Stats Banner */}
       {rows.length > 0 && (
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className=" flex-1 mb-4 p-3  rounded-lg">
+          <div className="flex items-center justify-end flex-wrap gap-2 mr-2">
             <div className="flex items-center gap-4 flex-wrap">
-              <span className="font-semibold text-blue-800">
-                Showing {rows.length} of {totalItems} orders
+              <span className="font-semibold text-primary">
+                Total {totalItems} orders
               </span>
               <div className="flex gap-3 text-sm">
                 <span className="px-2 py-1 bg-red-100 text-red-700 rounded">
@@ -369,6 +375,12 @@ const ReportOrders: React.FC = () => {
                 </span>
                 <span className="px-2 py-1 bg-green-100 text-green-700 rounded">
                   Delivered: {deliveredCount}
+                </span>
+                <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded">
+                  Pending: {pendingCount}
+                </span>
+                <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded">
+                  Processing: {processingCount}
                 </span>
                 {selectedIds.length > 0 && (
                   <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded font-semibold">
@@ -380,6 +392,7 @@ const ReportOrders: React.FC = () => {
           </div>
         </div>
       )}
+      </div>
       
       <FilterBar
         filters={filters}
