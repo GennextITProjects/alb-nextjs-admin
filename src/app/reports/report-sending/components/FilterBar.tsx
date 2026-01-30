@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Filters } from "../types";
 import moment from "moment-timezone";
 
@@ -19,8 +19,13 @@ export const FilterBar: React.FC<Props> = ({
   onProcessSelected,
   selectedCount
 }) => {
-  const getTodayDate = () => moment().tz("Asia/Kolkata").format("YYYY-MM-DD");
-
+  const todayDate = useMemo(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }, []);
   return (
     <div className="flex flex-wrap items-center gap-3 mb-4 text-sm">
       {/* Search */}
@@ -39,7 +44,7 @@ export const FilterBar: React.FC<Props> = ({
           type="date"
           value={filters.from}
           onChange={(e) => onChange({ from: e.target.value })}
-          max={getTodayDate()}
+          // max={todayDate}
           className="px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
           placeholder="From date"
         />
@@ -48,7 +53,7 @@ export const FilterBar: React.FC<Props> = ({
           type="date"
           value={filters.to}
           onChange={(e) => onChange({ to: e.target.value })}
-          max={getTodayDate()}
+          // max={todayDate}
           className="px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
           placeholder="To date"
         />
