@@ -235,7 +235,8 @@ function PasswordModal({ isOpen, onClose }: PasswordModalProps) {
 
 export default function Header({ isSidebarOpen, setIsSidebarOpen }: HeaderProps) {
   const router = useRouter();
-  const [data, setData] = useState<string>("");
+  const [userName, setUserName] = useState<string>("");
+
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
@@ -275,7 +276,7 @@ export default function Header({ isSidebarOpen, setIsSidebarOpen }: HeaderProps)
         // STEP 2: Clear localStorage and sessionStorage
         localStorage.clear();
         sessionStorage.clear();
-        setData("");
+        setUserName("");
 
         // STEP 3: Show success message (brief)
         Swal.fire({
@@ -296,7 +297,7 @@ export default function Header({ isSidebarOpen, setIsSidebarOpen }: HeaderProps)
         // Even if API fails, clear everything
         localStorage.clear();
         sessionStorage.clear();
-        setData("");
+        setUserName("");
         
         // Hard redirect
         window.location.replace('/login');
@@ -304,16 +305,27 @@ export default function Header({ isSidebarOpen, setIsSidebarOpen }: HeaderProps)
     }
   };
 
-  useEffect(() => {
-    try {
-      const userData = localStorage.getItem("userDetails");
-      if (userData) {
-        setData(userData);
+   useEffect(() => {
+    const getCookie = (name: string): string | null => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+      return null;
+    };
+
+    const usernameCookie = getCookie('username');
+    if (usernameCookie) {
+      setUserName(usernameCookie);
+      // Also update localStorage for backward compatibility
+      localStorage.setItem("userDetails", usernameCookie);
+    } else {
+      // Fallback to localStorage if cookie doesn't exist yet
+      const storedUsername = localStorage.getItem("userDetails");
+      if (storedUsername) {
+        setUserName(storedUsername);
       }
-    } catch (e) {
-      console.log(e);
     }
-  }, []);
+  }, [])
 
   useEffect(() => {
     const handleResize = () => {
@@ -352,7 +364,7 @@ export default function Header({ isSidebarOpen, setIsSidebarOpen }: HeaderProps)
               className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-red-500 hover:bg-gray-50 transition duration-200"
             >
               <FaUser className="text-sm" />
-              <span className="lowercase">Admin</span>
+              <span className="">{userName ? userName : "admin"}</span>
             </button>
 
             {/* Dropdown Menu */}

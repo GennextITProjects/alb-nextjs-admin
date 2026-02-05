@@ -76,21 +76,30 @@ export async function middleware(request: NextRequest) {
       redirectResponse.cookies.delete('sessionId');
       redirectResponse.cookies.delete('userType');
       redirectResponse.cookies.delete('userId');
-      
+      redirectResponse.cookies.delete('username'); 
       return redirectResponse;
     }
 
     // Session is valid, get user data
     const userData = await response.json();
-    console.log(`✅ Session valid for: ${userData.username} (${userData.userType})`);
+    // console.log(`✅ Session valid for: ${userData.username} (${userData.userType})`);
     
+    const nextResponse = NextResponse.next();
+  
     // Update userType if changed
     if (userData.userType !== userType) {
-      console.log(`🔄 User type updated: ${userType} → ${userData.userType}`);
-      const nextResponse = NextResponse.next();
+      // console.log(`🔄 User type updated: ${userType} → ${userData.userType}`);
       nextResponse.cookies.set('userType', userData.userType);
-      return nextResponse;
     }
+
+    nextResponse.cookies.set('username', userData.username, {
+      httpOnly: false, 
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7 // 7 days
+    });
+
+    return nextResponse; 
 
   } catch (error) {
     console.error(`Session validation failed:`, error);
