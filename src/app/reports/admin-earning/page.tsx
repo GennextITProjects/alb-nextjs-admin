@@ -14,6 +14,7 @@ interface CustomerDetails {
   _id: string;
   customerName: string;
   email: string;
+  phoneNumber: string;
 }
 
 interface AstrologerDetails {
@@ -230,6 +231,7 @@ const AdminEarning: React.FC = () => {
         "Location": isInHouse(item.astrologerId) ? 'In-house' : 'Outside',
         "Customer Name": item.customerId?.customerName || 'N/A',
         "Customer Email": item.customerId?.email || 'N/A',
+        "Customer Phone" :item.customerId?.phoneNumber || 'N/A',
         "Total Amount": hasBreakdown ? breakdown?.totalPaidByUser || item.totalPrice : item.totalPrice,
         "GST Amount": hasBreakdown ? breakdown?.gstAmount || 0 : 0,
         "Net Amount (After GST)": hasBreakdown ? breakdown?.netAmount || 0 : item.totalPrice,
@@ -404,6 +406,11 @@ const AdminEarning: React.FC = () => {
           {row?.customerId?.email && (
             <span className="text-xs text-gray-500 truncate max-w-[150px]">
               {row.customerId.email}
+            </span>
+          )}
+          {row?.customerId?.phoneNumber && (
+            <span className="text-xs text-gray-500 truncate max-w-[150px]">
+              {row.customerId.phoneNumber}
             </span>
           )}
         </div>
