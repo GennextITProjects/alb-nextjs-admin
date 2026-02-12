@@ -401,7 +401,7 @@ const AdminEarning: React.FC = () => {
       cell: (row: AdminEarningRow) => (
         <div className="flex flex-col">
           <span className="font-medium text-gray-800">
-            {row?.customerId?.customerName || 'N/A'}
+            {row?.customerId?.customerName }
           </span>
           {row?.customerId?.email && (
             <span className="text-xs text-gray-500 truncate max-w-[150px]">
