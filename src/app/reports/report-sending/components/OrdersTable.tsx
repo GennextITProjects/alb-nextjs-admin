@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useMemo } from "react";
 import moment from "moment";
 import { Order } from "../types";
 import { ViewSvg } from "@/components/svgs/page";
 import MainDatatable from "@/components/common/MainDatatable";
-import { Pen, RotateCw, SendHorizonal } from "lucide-react";
+import { Pen, RotateCw, SendHorizonal, Mail, MailX } from "lucide-react";
 import { SendAndArchive } from "@mui/icons-material";
 
 interface Props {
@@ -133,6 +135,41 @@ export const OrdersTable: React.FC<Props> = ({
           }
           
           return <span className="text-gray-500">—</span>;
+        },
+        width: "140px",
+      },
+      {
+        name: "Email Status",
+        cell: (row: Order) => {
+          const emailDelivered = row?.emailDelivered;
+          
+          if (emailDelivered === true) {
+            return (
+              <div className="flex items-center gap-1.5">
+                <Mail className="w-4 h-4 text-green-600" />
+                <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                  Sent
+                </span>
+              </div>
+            );
+          }
+          
+          if (emailDelivered === false) {
+            return (
+              <div className="flex items-center gap-1.5">
+                <MailX className="w-4 h-4 text-red-600" />
+                <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
+                  Failed
+                </span>
+              </div>
+            );
+          }
+          
+          return (
+            <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">
+              Pending
+            </span>
+          );
         },
         width: "140px",
       },

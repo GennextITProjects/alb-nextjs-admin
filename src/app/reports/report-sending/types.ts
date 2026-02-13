@@ -14,6 +14,7 @@ export interface Filters {
 }
 
 export interface Order {
+  emailDelivered: any;
   _id: string;
   orderID: string;
   name: string;
