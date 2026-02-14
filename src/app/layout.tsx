@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import Sidebar from "./layout/sidebar";
+import GoogleMapsProvider from '@/components/providers/GoogleMapsProvider';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -12,7 +13,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   const handleToggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
-  //hide sidebar for login page
   if (pathname === "/login" || pathname === "/super-admin-dashboard") {
     return (
       <html lang="en">
@@ -26,6 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className="bg-[rgb(241,242,247)]">
+        <GoogleMapsProvider>
         <div className="flex h-screen text-gray-800">
           {/* Sidebar */}
           <aside
@@ -46,7 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                       <header className="bg-white shadow-sm border-b border-gray-200 z-10 flex-shrink-0">
               <Header 
                 isSidebarOpen={isSidebarOpen} 
-                setIsSidebarOpen={setIsSidebarOpen}  // ← Ye correct hai
+                setIsSidebarOpen={setIsSidebarOpen}  
               />
             </header>
 
@@ -56,6 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </main>
           </div>
         </div>
+        </GoogleMapsProvider>
       </body>
     </html>
   );
