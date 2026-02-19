@@ -17,12 +17,14 @@ export interface ConsultationPrice {
 
 // Astrologer Profile Types
 export interface AstrologerData {
-  isOnline: any;
   _id: string;
   astrologerName: string;
   tagLine?: string;
   about?: string;
   experience: number;
+  video_call_status : "offline" | "online",
+  chat_status : "offline" | "online",
+  call_status : "offline" | "online",
   language: string[];
   skill?: Array<{ skill: string }>;
   mainExpertise?: Array<{ mainExpertise: string }>;
@@ -30,32 +32,10 @@ export interface AstrologerData {
   profileImage: string;
   multipleImages?: string[];
   multipleVideos?: string[];
-  video_call_status: "offline" | "online";
-  chat_status: "offline" | "online";
-  call_status: "offline" | "online";
   long_bio?: string;
-  rating?: string;
+  isoneline:string;
   consultationPrices?: ConsultationPrice[];
-  
-  // Special Pricing Properties
-  hasSpecialPricing?: boolean;
-  specialPricingRates?: {
-    [key: string]: number;
-  };
-  
-  // First-Time Offer Properties (ADD THESE)
-  GoWithCustomPricings?: boolean;
-  firstTimeOfferPrices?: Array<{
-    duration: {
-      slotDuration: number;
-      _id?: string;
-    };
-    price: number;
-    _id?: string;
-  }>;
-  useGlobalFirstTimeOfferPrice?: boolean;
 }
-
 // Review Types
 export interface Review {
   _id: string;
