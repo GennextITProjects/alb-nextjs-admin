@@ -247,19 +247,19 @@ const SingleAstrologer: React.FC = () => {
 
   return (
     <>
-      <TopHeaderSection />
+      {/* <TopHeaderSection /> */}
       <div className="p-5 lg:grid grid-cols-9 gap-5 max-lg:space-y-5 select-none">
 
         {/* Astrologer Profile Section */}
-        {canRenderAstrologerInfo && (
+        {/* {canRenderAstrologerInfo && (
           <div className="lg:col-span-5">
             <AstrologerProfile astrologerData={astrologerData} />
           </div>
-        )}
+        )} */}
 
         {/* Booking Section */}
         {canRenderAstrologerInfo && astrologerId && (
-          <div ref={bookingSectionRef} className="lg:col-span-4">
+          <div ref={bookingSectionRef} className="lg:col-span-6">
             <BookingSection
               astrologerId={astrologerId}
               astrologerData={astrologerData}
@@ -271,7 +271,7 @@ const SingleAstrologer: React.FC = () => {
         )}
 
         {/* Reviews Section */}
-        <div className="col-span-9">
+        {/* <div className="col-span-9">
           <ReviewsSection
             reviews={reviews}
             loadingReviews={loadingReviews}
@@ -279,7 +279,7 @@ const SingleAstrologer: React.FC = () => {
             astrologerId={astrologerId}
             onRetryReviews={() => astrologerId && fetchAstrologerReviews(astrologerId)}
           />
-        </div>
+        </div> */}
       </div>
 
       {showFloatingButton && canRenderAstrologerInfo && availableButtons.length > 0 && (
