@@ -41,6 +41,7 @@ interface InputFieldDetail {
   inclusion?: string;
   mode: string;
   purpose: string;
+  discountedPrice?: string;
 }
 
 interface ImageState {
@@ -157,6 +158,7 @@ const AddPujaContent = () => {
     mode: '',
     inclusion: '',
     purpose: '',
+    discountedPrice : ''
   });
 
   const [image, setImage] = useState<ImageState>({ 
@@ -352,6 +354,7 @@ const AddPujaContent = () => {
             mode: pujaData.mode || '',
             inclusion: pujaData.inclusion || '',  
             purpose: pujaData.purpose || '',
+            discountedPrice : pujaData.discountedPrice?.toString() || ''
           });
 
           if ( pujaData.mainImage) {
