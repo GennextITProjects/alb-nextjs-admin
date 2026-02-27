@@ -36,6 +36,10 @@ const BasicInfoTab: React.FC<Props> = ({
   const mainImageInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
+  const previewSrc = image.bytes
+    ? imagePreview
+    : `${process.env.NEXT_PUBLIC_IMAGE_URL3}${image.file}`;
+
   return (
     <div className="space-y-8">
       {/* Images Section */}
@@ -60,13 +64,11 @@ const BasicInfoTab: React.FC<Props> = ({
               >
                 {imagePreview ? (
                   <div className="space-y-3">
-                    <div className="relative mx-auto w-40 h-40 rounded-lg overflow-hidden border-2 border-gray-200 shadow-sm">
-                      <Image
-                        src={`${process.env.NEXT_PUBLIC_IMAGE_URL3}${image.file}`}
+                    <div className="mx-auto w-40 h-40 rounded-lg overflow-hidden border-2 border-gray-200 shadow-sm">
+                      <img
+                        src={previewSrc}
                         alt="Main preview"
-                        fill
-                        sizes="160px"
-                        className="object-cover"
+                        className="w-full h-full object-cover"
                       />
                     </div>
                     <p className="text-sm text-gray-600">Click to change image</p>
@@ -196,6 +198,7 @@ const BasicInfoTab: React.FC<Props> = ({
               type="number"
               name="price"
               value={inputFieldDetail.price}
+              onWheel={(e) => (e.currentTarget as HTMLInputElement).blur()}
               onChange={handleInputChange}
               className={`w-full h-10 px-3 text-sm border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all ${
                 fieldErrors['price'] ? 'border-red-500' : 'border-gray-300'
@@ -212,24 +215,46 @@ const BasicInfoTab: React.FC<Props> = ({
           {/* Discounted Price */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Discounted Price (₹) 
+              Original Price (₹) 
             </label>
             <input
               type="number"
               name="discountedPrice"
               value={inputFieldDetail.discountedPrice || ''}
-
+              onWheel={(e) => (e.currentTarget as HTMLInputElement).blur()}
               onChange={handleInputChange}
               className={`w-full h-10 px-3 text-sm border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all ${
                 fieldErrors['discountedPrice'] ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Enter discounted price"
               required
-              min="0"
-              step="0.01"
+             
             />
             {fieldErrors['discountedPrice'] && (
               <p className="text-red-500 text-xs mt-1.5">{fieldErrors['discountedPrice']}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Subtitle (Puja)
+            </label>
+            <input
+              type="text"
+              name="subTitle"
+              value={inputFieldDetail.subTitle || ''}
+
+              onChange={handleInputChange}
+              className={`w-full h-10 px-3 text-sm border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all ${
+                fieldErrors['subTitle'] ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="Enter Subtitle"
+              required
+              min="0"
+              step="0.01"
+            />
+            {fieldErrors['subTitle'] && (
+              <p className="text-red-500 text-xs mt-1.5">{fieldErrors['subTitle']}</p>
             )}
           </div>
 
@@ -242,6 +267,7 @@ const BasicInfoTab: React.FC<Props> = ({
               type="number"
               name="adminCommission"
               value={inputFieldDetail.adminCommission}
+              onWheel={(e) => (e.currentTarget as HTMLInputElement).blur()}
               onChange={handleInputChange}
               className={`w-full h-10 px-3 text-sm border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all ${
                 fieldErrors['adminCommission'] ? 'border-red-500' : 'border-gray-300'
