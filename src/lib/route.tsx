@@ -40,6 +40,22 @@ export const RouteName = [
       },
     ],
   },
+    {
+    name: "User Consultation Bookings",
+    icon: <CustomerRouteSvg />,
+    subRoutes: [
+      {
+        path: "/user-consultation",
+        name: "Consultation Booking",
+        icon: <CustomerRouteSvg />,
+      },
+      {
+        path: "/my-booking",
+        name: "User Bookings",
+        icon: <CustomerRouteSvg />,
+      },
+    ],
+  },
   {
     name: "Reports",
     icon: <NotificationRouteSvg />,

@@ -196,7 +196,7 @@ const MyBooking = () => {
     let adminId: string | null = null;
     try {
       const adminRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/me`,
+        `/api/admin/me`,
         { method: 'GET', credentials: 'include' }   
       );
       if (adminRes.ok) {
@@ -535,7 +535,7 @@ const MyBooking = () => {
 
   return (
     <>
-      <section className="px-5 py-6 pt-28 bg-gradient-to-br from-gray-50 to-red-50/30 min-h-screen">
+      <section className="px-5 py-6 pt-20 bg-gradient-to-br from-gray-50 to-red-50/30 min-h-screen">
         <article className="max-w-7xl mx-auto space-y-8">
           <div className="flex justify-center gap-3 flex-wrap">
             {['upcoming', 'completed', 'cancelled', 'expired'].map((tab) => {

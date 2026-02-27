@@ -248,7 +248,7 @@ const SingleAstrologer: React.FC = () => {
   return (
     <>
       {/* <TopHeaderSection /> */}
-      <div className="p-5 lg:grid grid-cols-9 gap-5 max-lg:space-y-5 select-none">
+      <div className="p-5 lg:grid grid-cols-15 gap-5  select-none">
 
         {/* Astrologer Profile Section */}
         {/* {canRenderAstrologerInfo && (
