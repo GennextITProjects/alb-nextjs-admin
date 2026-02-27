@@ -135,6 +135,7 @@ const BookingSection: React.FC<BookingSectionProps> = ({
   const [availableDurations,setAvailableDurations]    = useState<number[]>([]);
   const [loadingDurations, setLoadingDurations] = useState(false);
   const [durationCounts,setDurationCounts]= useState<DurationCount[]>([]);
+  const [adminID,setAdminID] = useState('')
   const [paymentLinkStatus,setPaymentLinkStatus]= useState<{
     consultationLogId: string;
     status: 'pending' | 'paid' | 'failed';
@@ -144,6 +145,8 @@ const BookingSection: React.FC<BookingSectionProps> = ({
   const paymentCheckInterval    = useRef<NodeJS.Timeout | null>(null);
   const sessionTypes            = getAvailableSessionTypes(astrologerData);
 
+
+  
   // ── Price logic ───────────────────────────────────────────────
   const getCorrectPrice = (durationSlot: number): number => {
     const base = consultationPrices.find((p) => p.duration.slotDuration === durationSlot);
@@ -157,7 +160,6 @@ const BookingSection: React.FC<BookingSectionProps> = ({
 
     const candidates: number[] = [];
 
-    // ✅ Fix error 18048 — optional chaining on firstTimeOfferPrices
     const offerPrices = astrologerData?.firstTimeOfferPrices ?? [];
 
     if (
@@ -174,7 +176,7 @@ const BookingSection: React.FC<BookingSectionProps> = ({
     if (
       isNewCustomer &&
       astrologerData?.useGlobalFirstTimeOfferPrice === true &&
-      astrologerData?.GoWithCustomPricings === false &&   // ✅ removed duplicate true comparison
+      astrologerData?.GoWithCustomPricings === false &&
       offerPrices.length === 0 &&
       durationSlot === 15 &&
       globalOfferPrice !== null
@@ -424,143 +426,84 @@ const BookingSection: React.FC<BookingSectionProps> = ({
     }
   };
 
-  // ── Payment status polling ────────────────────────────────────
-  const startPaymentStatusCheck = (consultationLogId: string) => {
-    if (paymentCheckInterval.current) clearInterval(paymentCheckInterval.current);
-    paymentCheckInterval.current = setInterval(async () => {
-      try {
-        const res  = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/customers/payment-status/${consultationLogId}`);
-        const data = await res.json();
-        if (data.success && data.data?.paymentCompleted) {
-          clearInterval(paymentCheckInterval.current!);
-          Swal.fire({ icon: 'success', title: 'Payment Successful!', text: 'Consultation confirmed.', confirmButtonColor: '#980d0d' })
-            .then(() => router.push('/my-booking'));
-        } else if (['expired', 'failed'].includes(data.data?.status)) {
-          clearInterval(paymentCheckInterval.current!);
-          Swal.fire({ icon: 'error', title: 'Payment Failed', text: 'Link expired or failed.', confirmButtonColor: '#980d0d' });
-        }
-      } catch { /* silent */ }
-    }, 5000);
-  };
-
-  // ── Create Payment Link ───────────────────────────────────────
-const handleCreatePaymentLink = async () => {
+  // ── Direct Booking (no payment) ───────────────────────────────
+  const handleDirectBooking = async () => {
     if (!modalData.selectedSlot) { toaster.info({ text: 'Please select a slot first' }); return; }
     if (!customerSession)        { toaster.error({ text: 'Please login with customer phone number first' }); return; }
     if (!isFormValid)            { toaster.error({ text: 'Please fill all required customer details' }); return; }
 
+    setIsBooking(true);
+     const adminRes = await fetch(
+          `/api/admin/me`,
+          { method: 'GET', credentials: 'include' }   
+        );
+        if (adminRes.ok) {
+          const adminData = await adminRes.json();
+           const adminId = adminData?.userId ?? null;
+
+          setAdminID(adminId)
+          console.log('Admin fetched:', adminData?.username, '| ID:', adminId);
+        }
+
     Swal.fire({
-      title: 'Creating Payment Link',
+      title: 'Booking Consultation',
       html:  '<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#980d0d] mx-auto"></div><p class="mt-2">Please wait...</p>',
       allowOutsideClick: false,
       showConfirmButton: false,
     });
 
     try {
-      const dur        = parseInt(modalData.duration_minutes.replace('min', ''));
-      const finalPrice = getCorrectPrice(dur);
-
-      // ── Get current admin ID ──────────────────────────────────
-      let adminId: string | null = null;
-      try {
-        const adminRes = await fetch(
-          `/api/admin/me`,
-          { method: 'GET', credentials: 'include' }   
-        );
-        if (adminRes.ok) {
-          const adminData = await adminRes.json();
-          adminId = adminData?.userId ?? null;
-          console.log('Admin fetched:', adminData?.username, '| ID:', adminId);
-        } else {
-          console.warn('Could not fetch admin info, proceeding without adminId');
-        }
-      } catch (e) {
-        console.warn('Admin fetch failed:', e);
-      }
-      
-      let startTime = null;
-      if (modalData.selectedSlot && modalData.selectedDate) {
-        const fromTime12hr = moment(modalData.selectedSlot.fromTime, 'HH:mm').format('hh:mm A');
-        startTime = `${modalData.selectedDate} ${fromTime12hr}`;
-        console.log('📅 Generated startTime (12hr format):', startTime);
-      }
-      // ─────────────────────────────────────────────────────────
-
       const payload = {
-        amount:            finalPrice,
+        customerId:        customerSession.customerId,
         astrologerId,
-        slotId: modalData.selectedSlot._id,
-        consultationType: modalData.consultation_type,
-        duration: modalData.selectedSlot.duration,
-        customerName: consultationFormData?.fullName ?? customerSession.customerName,
-        customerPhone: consultationFormData?.mobileNumber  ?? customerSession.phoneNumber,
-        customerEmail: consultationFormData?.email         ?? customerSession.email ?? '',
-        gender: consultationFormData?.gender        ?? '',
-        dateOfBirth: consultationFormData?.dateOfBirth   ?? '',
-        timeOfBirth: consultationFormData?.timeOfBirth   ?? '',
-        placeOfBirth: consultationFormData?.placeOfBirth  ?? '',
-        latitude: consultationFormData?.latitude      ?? 0,
-        longitude: consultationFormData?.longitude     ?? 0,
-        dontKnowBirthDate: consultationFormData?.dontKnowDOB  ?? false,
-        dontKnowBirthTime: consultationFormData?.dontKnowTOB  ?? false,
+        adminId:           adminID ,
+
+        slotId:            modalData.selectedSlot._id,
+        consultationType:  modalData.consultation_type,
+        fullName:          consultationFormData?.fullName          ?? customerSession.customerName,
+        mobileNumber:      consultationFormData?.mobileNumber      ?? customerSession.phoneNumber,
+        dateOfBirth:       consultationFormData?.dateOfBirth       ?? '',
+        timeOfBirth:       consultationFormData?.timeOfBirth       ?? '',
+        placeOfBirth:      consultationFormData?.placeOfBirth      ?? '',
+        gender:            consultationFormData?.gender            ?? '',
+        latitude:          consultationFormData?.latitude          ?? 0,
+        longitude:         consultationFormData?.longitude         ?? 0,
         consultationTopic: consultationFormData?.consultationTopic ?? 'Astrology Consultation',
-        createdBy: { userId: customerSession.customerId, userType: 'customer' },
-        createdByAdminId: adminId,
-        startTime: startTime,
-        astrologerName: astrologerData.astrologerName,
+        couponCode:        '',
+        meetingId:         '',
+        meetingPassword:   '',
       };
 
-      // Debug: Check if startTime is present for video calls
-      if (modalData.consultation_type === 'videocall') {
-        console.log('🎥 Video call payload:', {
-          consultationType: payload.consultationType,
-          startTime: payload.startTime,
-          slotFromTime: modalData.selectedSlot.fromTime,
-          fromTime12hr: moment(modalData.selectedSlot.fromTime, 'HH:mm').format('hh:mm A'),
-          selectedDate: modalData.selectedDate
-        });
-      }
-
       const res  = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/customers/payment-link/create`,
-        { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(payload) }
+        `${process.env.NEXT_PUBLIC_API_URL}/api/customers/book_without_payment`,
+        {
+          method:      'POST',
+          headers:     { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body:        JSON.stringify(payload),
+        }
       );
       const data = await res.json();
+
       Swal.close();
 
       if (data.success) {
-        setPaymentLinkStatus({ consultationLogId: data.consultationLogId, status: 'pending' });
-        await showShareModal(data.data.paymentLink);
-        startPaymentStatusCheck(data.data.consultationLogId);
+        await Swal.fire({
+          icon:               'success',
+          title:              'Booking Confirmed!',
+          text:               'Consultation has been booked successfully.',
+          confirmButtonColor: '#980d0d',
+        });
+        router.push('/my-booking');
       } else {
-        throw new Error(data.message ?? 'Failed to create payment link');
+        throw new Error(data.message ?? 'Booking failed');
       }
     } catch (err: any) {
       Swal.close();
-      toaster.error({ text: err.message ?? 'Failed to create payment link.' });
+      toaster.error({ text: err.message ?? 'Booking failed. Please try again.' });
+    } finally {
+      setIsBooking(false);
     }
-  };
-
-  const showShareModal = async (paymentLink: string) => {
-    Swal.fire({
-      title: 'Payment Link Created!',
-      html: `
-        <div class="text-left">
-          <p class="text-sm text-gray-600 mb-3">Share this link with the customer to complete payment.</p>
-          <div class="bg-gray-100 p-3 rounded-lg">
-            <div class="flex items-center justify-between gap-2">
-              <input type="text" value="${paymentLink}" readonly class="bg-transparent text-sm w-full outline-none truncate" />
-              <button onclick="navigator.clipboard.writeText('${paymentLink}')"
-                class="text-[#980d0d] font-medium text-sm whitespace-nowrap hover:text-[#7a0a0a]">Copy</button>
-            </div>
-          </div>
-          <p class="text-xs text-gray-500 text-center mt-4">Booking confirms automatically after payment.</p>
-        </div>`,
-      showConfirmButton: false,
-      showCloseButton:   true,
-      width:             '480px',
-      customClass: { popup: 'rounded-xl' },
-    });
   };
 
   // ── Razorpay helpers (kept for future use) ────────────────────
@@ -898,22 +841,22 @@ const handleCreatePaymentLink = async () => {
           </div>
         )}
 
-        {/* ── Generate Payment Link ── */}
+        {/* ── Book Consultation Button (no payment) ── */}
         {showConsultationForm && modalData.selectedSlot && (
           <div className="mt-2">
             <button
-              onClick={handleCreatePaymentLink}
-              disabled={isLinkDisabled}
+              onClick={handleDirectBooking}
+              disabled={isLinkDisabled || isBooking}
               className="w-full py-3 border-2 border-dashed border-[#980d0d] text-[#980d0d] rounded-lg font-semibold hover:bg-red-50 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
               </svg>
-              Generate Payment Link to Share
+              {isBooking ? 'Booking...' : 'Book Consultation'}
             </button>
             <p className="text-xs text-gray-500 text-center mt-1">
-              Create a shareable payment link for the customer
+              Click to confirm and book the consultation
             </p>
           </div>
         )}
