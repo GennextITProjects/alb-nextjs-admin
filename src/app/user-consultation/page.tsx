@@ -157,7 +157,7 @@ const ConsultationPage: React.FC = () => {
 
   return (
     <>
-      {/* <TopHeaderSection /> */}
+      <TopHeaderSection />
 
       <section className="bg-white py-2 space-y-6">
         <div className="px-4 sm:px-6 pt-4 sm:pt-6 pb-4 sm:pb-6 max-w-7xl mx-auto">

@@ -15,7 +15,6 @@ import { createStripePayment } from '@/utils/stripe-payment';
 import { AstrologerData, User as UserType } from '../types';
 import DatePicker from './DatePicker';
 import DatePickerSpecial from './DatePickerSpecial';
-import { astrologer } from '../../schema';
 
 
 interface ConsultationPrice {
@@ -102,9 +101,7 @@ const BookingSection: React.FC<BookingSectionProps> = ({
   astrologerId,
   astrologerData,
   consultationPrices,
-}): React.ReactElement => { 
-  
-  console.log(astrologerData, '--- Astrologer Data in BookingSection ---');
+}): React.ReactElement => {    
 
   const router = useRouter();
   const { error: razorpayError, Razorpay } = useRazorpay();
@@ -464,7 +461,7 @@ const handleCreatePaymentLink = async () => {
       let adminId: string | null = null;
       try {
         const adminRes = await fetch(
-          `/api/admin/me`,
+          `${process.env.NEXT_PUBLIC_API_URL}/api/admin/me`,
           { method: 'GET', credentials: 'include' }   
         );
         if (adminRes.ok) {
@@ -507,7 +504,6 @@ const handleCreatePaymentLink = async () => {
         createdBy: { userId: customerSession.customerId, userType: 'customer' },
         createdByAdminId: adminId,
         startTime: startTime,
-        astrologerName: astrologerData.astrologerName,
       };
 
       // Debug: Check if startTime is present for video calls
