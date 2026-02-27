@@ -196,7 +196,7 @@ const MyBooking = () => {
     let adminId: string | null = null;
     try {
       const adminRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/me`,
+        `/api/admin/me`,
         { method: 'GET', credentials: 'include' }   
       );
       if (adminRes.ok) {
