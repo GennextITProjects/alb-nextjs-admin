@@ -20,7 +20,6 @@ export const basicInfoSchema = z.object({
   mode: z.string().min(1, 'Mode is required'),
   inclusion: z.string().min(1, 'Inclusion is required'),
   discountedPrice : z.string().optional(),
-  subTitle: z.string().optional(),
 });
 
 // Images Validation (part of Tab 0 in UI)
@@ -144,7 +143,6 @@ export const validateTab = (tabIndex: number, data: any) => {
           mode: data.mode || '',
           inclusion: data.inclusion || '',
           discountedPrice: data.discountedPrice || '',
-          subTitle: data.subTitle || ''
         };
         basicInfoSchema.parse(basicData);
         
