@@ -68,7 +68,13 @@ export interface ConsultationFormProps {
 
 const formSchema = z.object({
   fullName:          z.string().min(1, 'Full name is required'),
-  email:             z.string().optional().default(''),
+  email: z
+  .string()
+  .refine((val) => val === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+    message: 'Invalid email format',
+  })
+  .optional()
+  .default(''),
   mobileNumber:      z.string().optional().default(''),
   placeOfBirth:      z.string().min(1, 'Place of birth is required'),
   gender:            z.string().min(1, 'Gender is required'),
@@ -268,6 +274,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
       dontKnowDOB: false, dontKnowTOB: false, countryCode: '91',
     },
     mode: 'onChange',
+    reValidateMode: 'onChange',
   });
 
   // ── Stable notify function — empty dep array, uses refs ───────
@@ -278,7 +285,7 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
     notifyTimer.current = setTimeout(() => {
       onFormDataChangeRef.current({
         fullName:          values.fullName          ?? '',
-        email:             values.email             ?? '',
+        email:             (values.email ?? '').trim(),
         mobileNumber:      values.mobileNumber      ?? '',
         dateOfBirth:       values.dateOfBirth       ?? '',
         timeOfBirth:       values.timeOfBirth       ?? '',
@@ -299,7 +306,10 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
   useEffect(() => {
     if (!loggedInCustomer) return;
     const sub = watch((values) => {
-      notify(values as FormValues, isValid);
+    
+      formSchema.safeParseAsync(values).then(({ success }) => {
+        notify(values as FormValues, success);
+      });
     });
     return () => {
       sub.unsubscribe();
@@ -308,10 +318,9 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loggedInCustomer, watch, notify]);
 
-  // Notify when isValid changes (without re-subscribing watch)
   const isValidRef = useRef(isValid);
   useEffect(() => {
-    if (isValidRef.current === isValid) return; // skip if unchanged
+    if (isValidRef.current === isValid) return;
     isValidRef.current = isValid;
     if (!loggedInCustomer) return;
     notify(watch() as FormValues, isValid);
@@ -458,10 +467,14 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
 
         {/* Email */}
         <div>
-          <label className="text-sm font-medium text-gray-700 block mb-1">Email</label>
+          <label className="text-sm font-medium text-gray-700 block mb-1">
+            Email (optional)
+          </label>
           <input
             type="email"
-            {...register('email')}
+            {...register('email', {
+              onChange: () => trigger('email'),   
+            })}
             placeholder="Enter email"
             autoComplete="off"
             className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#980d0d] bg-white ${

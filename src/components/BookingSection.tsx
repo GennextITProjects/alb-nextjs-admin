@@ -460,6 +460,8 @@
 
 //         slotId:            modalData.selectedSlot._id,
 //         consultationType:  modalData.consultation_type,
+//         // prefer email entered in the form, fall back to non-blank session email
+//         email:             (consultationFormData?.email?.trim() || customerSession.email?.trim() || ''),
 //         fullName:          consultationFormData?.fullName          ?? customerSession.customerName,
 //         mobileNumber:      consultationFormData?.mobileNumber      ?? customerSession.phoneNumber,
 //         dateOfBirth:       consultationFormData?.dateOfBirth       ?? '',
@@ -1340,6 +1342,8 @@ const BookingSection: React.FC<BookingSectionProps> = ({
         createdByAdminId,                               // ✅ backend wali key naam se bhejo
         slotId:            modalData.selectedSlot._id,
         consultationType:  modalData.consultation_type,
+        // prefer email entered in the form, fall back to non-blank session email
+        email:             (consultationFormData?.email?.trim() || customerSession.email?.trim() || ''),
         fullName:          consultationFormData?.fullName          ?? customerSession.customerName,
         mobileNumber:      consultationFormData?.mobileNumber      ?? customerSession.phoneNumber,
         dateOfBirth:       consultationFormData?.dateOfBirth       ?? '',
