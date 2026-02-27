@@ -209,6 +209,7 @@ const PackagesTab: React.FC<Props> = ({
                   <input
                     type="number"
                     value={pkg.price}
+                    onWheel={(e) => (e.currentTarget as HTMLInputElement).blur()}
                     onChange={(e) => updateItem(pricingPackages, setPricingPackages, pkg.id, 'price', parseFloat(e.target.value) || 0)}
                     className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-red-500 outline-none transition-all ${
                       priceError ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-red-500'
