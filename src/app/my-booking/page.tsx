@@ -304,7 +304,7 @@ const MyBooking = () => {
         const activeAdmins: Admin[] = data.admins.filter((a: Admin) => a.isActive);
         setAdmins(activeAdmins);
         try {
-          const meRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/me`, {
+          const meRes = await fetch(`/api/admin/me`, {
             method: 'GET',
             credentials: 'include',
           });
