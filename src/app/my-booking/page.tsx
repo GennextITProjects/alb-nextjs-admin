@@ -83,7 +83,7 @@ interface ConsultationHistory {
   completed: Consultation[];
   cancelled: Consultation[];
   expired: Consultation[];
-  rescheduled: Consultation[];
+  rescheduled_history: Consultation[];
 }
 
 interface RescheduleState {
@@ -246,7 +246,7 @@ const RescheduleHistoryTable = ({ history, currentDate, currentFromTime, current
 
 const IST = (input?: any) => moment.tz(input || new Date(), 'Asia/Kolkata');
 
-const TABS = ['upcoming', 'completed', 'cancelled', 'expired', 'rescheduled'];
+const TABS = ['upcoming', 'completed', 'cancelled', 'expired', 'rescheduled_history'];
 
 const MyBooking = () => {
   const router = useRouter();
@@ -258,7 +258,7 @@ const MyBooking = () => {
     completed: [],
     cancelled: [],
     expired: [],
-    rescheduled: [],
+    rescheduled_history: [],
   });
   const [loading, setLoading] = useState(true);
   const [joiningMeeting, setJoiningMeeting] = useState<string | null>(null);
@@ -336,7 +336,7 @@ const MyBooking = () => {
       completed: [],
       cancelled: [],
       expired: [],
-      rescheduled: [],
+      rescheduled_history: [],
     };
 
     consultations.forEach((c) => {
@@ -344,7 +344,7 @@ const MyBooking = () => {
 
       // rescheduled tab — any consultation rescheduled at least once
       if (c.rescheduleCount && c.rescheduleCount > 0) {
-        filtered.rescheduled.push(c);
+        filtered.rescheduled_history.push(c);
       }
 
       if (c.status === 'cancelled') {
@@ -392,7 +392,7 @@ const MyBooking = () => {
           setConsultationHistory({
             ...data.consultations,
             upcoming: sortedUpcoming,
-            rescheduled: data.consultations.rescheduled || [],
+            rescheduled: data.consultations.rescheduled_history || [],
           });
         }
       }
@@ -406,7 +406,7 @@ const MyBooking = () => {
   const handleAdminChange = (id: string) => {
     setSelectedAdminId(id);
     setActiveReschedule(null);
-    setConsultationHistory({ upcoming: [], completed: [], cancelled: [], expired: [], rescheduled: [] });
+    setConsultationHistory({ upcoming: [], completed: [], cancelled: [], expired: [], rescheduled_history: [] });
   };
 
   const handleJoinConsultation = async (consultation: Consultation) => {
@@ -471,7 +471,7 @@ const MyBooking = () => {
   const renderAppointmentCard = (data: Consultation, type: string) => {
     const canReschedule = type === 'upcoming' || type === 'expired';
     const isRescheduleOpen = activeReschedule?.bookingId === data._id;
-    const isRescheduledTab = type === 'rescheduled';
+    const isRescheduledTab = type === 'rescheduled_history';
 
     return (
       <div
@@ -558,9 +558,9 @@ const MyBooking = () => {
 
           {type === 'expired' && (
             <div className="flex gap-3 justify-end">
-              <span className="bg-gray-200 text-gray-500 px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 shadow-sm">
+              {/* <span className="bg-gray-200 text-gray-500 px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 shadow-sm">
                 <Clock size={16} /> Expired
-              </span>
+              </span> */}
               <button
                 onClick={() => toggleReschedule(data)}
                 className={`px-6 py-3 rounded-xl flex items-center gap-2 shadow-md text-sm font-semibold transition-all duration-300 transform hover:scale-105 ${
@@ -631,13 +631,12 @@ const MyBooking = () => {
                     }}
                     className={`px-6 py-3 rounded-xl transition-all duration-300 text-sm font-bold capitalize shadow-md transform hover:scale-105 ${
                       isActive
-                        ? tab === 'rescheduled'
+                        ? tab === 'rescheduled_history'
                           ? 'bg-gradient-to-r from-red-500 to-red-700 text-white shadow-lg'
                           : 'bg-gradient-to-r from-red-500 to-red-700 text-white shadow-lg'
                         : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
                     }`}
                   >
-                    {tab === 'rescheduled' && <RefreshCw size={13} className="inline mr-1.5 -mt-0.5" />}
                     {tab}
                   </button>
                 );
@@ -667,8 +666,8 @@ const MyBooking = () => {
               )
             ) : (
               <div className="flex flex-col items-center justify-center text-gray-400 py-20 bg-white rounded-2xl shadow-sm">
-                <div className={`p-6 rounded-full mb-4 ${activeTab === 'rescheduled' ? 'bg-gradient-to-br from-red-100 to-pink-100/50' : 'bg-gradient-to-br from-gray-100 to-red-100/50'}`}>
-                  {activeTab === 'rescheduled'
+                <div className={`p-6 rounded-full mb-4 ${activeTab === 'rescheduled_history' ? 'bg-gradient-to-br from-red-100 to-pink-100/50' : 'bg-gradient-to-br from-gray-100 to-red-100/50'}`}>
+                  {activeTab === 'rescheduled_history'
                     ? <RefreshCw size={48} className="text-red-300" />
                     : <Video size={48} className="text-gray-400" />
                   }

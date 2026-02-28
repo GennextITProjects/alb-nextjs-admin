@@ -296,30 +296,28 @@ const InlineReschedule = ({
             // Skeleton replaces only the grid — header + dates untouched
             <SlotSkeleton />
           ) : availableSlots.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 slots-fade">
+            <div className="grid grid-cols-3 gap-4 slots-fade">
               {availableSlots.map((slot, idx) => (
                 <div
                   key={idx}
-                  className={`p-3 rounded-xl border flex flex-col gap-1.5 transition-all duration-200 ${
-                    slot.status === 'available'
-                      ? 'border-green-200 bg-green-50/50 hover:shadow-md hover:border-green-400'
-                      : 'border-gray-100 bg-gray-50 opacity-50'
-                  }`}
+                  className="p-4 bg-white rounded-md shadow-md flex justify-between items-center border border-gray-200 hover:shadow-lg transition-all"
                 >
-                  <p className="text-xs font-semibold text-gray-800">
-                    {slot.fromTime} – {slot.toTime}
-                  </p>
-                  <p className="text-[10px] text-gray-400">{slot.duration} min</p>
+                  <div>
+                    <p className="text-black font-medium text-sm">
+                      {slot.fromTime} - {slot.toTime}
+                    </p>
+                    <p className="text-xs text-gray-500">Duration: {slot.duration} Min</p>
+                  </div>
                   <button
                     onClick={() => handleReschedule(slot)}
                     disabled={slot.status !== 'available' || isRescheduling}
-                    className={`w-full py-1.5 rounded-lg text-[11px] font-bold transition-all duration-150 ${
+                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition shrink-0 ml-3 ${
                       slot.status === 'available' && !isRescheduling
-                        ? 'bg-green-500 hover:bg-green-600 active:scale-95 text-white cursor-pointer'
-                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        ? 'bg-green-100 text-green-700 hover:bg-green-200 cursor-pointer'
+                        : 'bg-gray-200 text-gray-500 cursor-not-allowed'
                     }`}
                   >
-                    {slot.status === 'available' ? 'Book' : 'Booked'}
+                    {slot.status === 'available' ? 'Proceed' : 'Booked'}
                   </button>
                 </div>
               ))}
