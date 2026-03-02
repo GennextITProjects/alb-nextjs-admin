@@ -12,6 +12,7 @@ import ReviewsSection from '@/components/ReviewsSection';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
 import { toaster } from '../../../utils/services/toast-service';
 import { Review, User } from './types';
+import SlotBookingSection from '@/components/BookingSection';
 // import { trackConsultationEvent } from '@/utils/consultationTracking';
 
 const SingleAstrologer: React.FC = () => {
@@ -260,13 +261,21 @@ const SingleAstrologer: React.FC = () => {
         {/* Booking Section */}
         {canRenderAstrologerInfo && astrologerId && (
           <div ref={bookingSectionRef} className="lg:col-span-6">
-            <BookingSection
+            {/* <BookingSection
               astrologerId={astrologerId}
               astrologerData={astrologerData}
               currentUser={currentUser}
               onLoginRequired={handleOpenLoginModal}
               consultationPrices={astrologerData?.consultationPrices || []}
-            />
+            /> */}
+         
+<SlotBookingSection
+  astrologerId={astrologerId}
+  astrologerData={astrologerData}
+  currentUser={currentUser}
+  onLoginRequired={handleOpenLoginModal}
+  consultationPrices={astrologerData?.consultationPrices || []}
+/>
           </div>
         )}
 
