@@ -193,7 +193,7 @@ const buildFormData = (
  * Throws with a clear message if auth fails — callers surface the error to the user
  */
 const getCurrentUserId = async (): Promise<string> => {
-  const response = await fetch(`${API_BASE_URL}/api/admin/me`, {
+  const response = await fetch(`/api/admin/me`, {
     method: 'GET',
     credentials: 'include',
     cache: 'no-store',

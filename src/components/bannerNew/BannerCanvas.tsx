@@ -1,81 +1,91 @@
 /*eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { type BannerElement, type ButtonElement, type CreateBannerInput, type TextElement } from "@/lib/api/banners";
-import { Crop, Move } from "lucide-react";
+import {
+  type BannerElement,
+  type ButtonElement,
+  type CreateBannerInput,
+  type TextElement,
+} from "@/lib/api/banners";
+import { Move } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { CropRegion, SCREEN_MIN_SIZES } from "./Helper";
 
-// ── Crop Overlay ──────────────────────────────────────────────────────────────
-function CropOverlay({
+// ─────────────────────────────────────────────────────────────────────────────
+// CROP CANVAS
+// Shows the full original image. User drags the fixed-size crop box to select
+// which region becomes the banner background.
+// ─────────────────────────────────────────────────────────────────────────────
+function CropCanvas({
+  imageUrl,
+  imageWidth,
+  imageHeight,
   bannerWidth,
   bannerHeight,
-  minWidth,
-  minHeight,
-  initialCrop,
   onDone,
   onCancel,
 }: {
+  imageUrl: string;
+  imageWidth: number;
+  imageHeight: number;
   bannerWidth: number;
   bannerHeight: number;
-  minWidth: number;
-  minHeight: number;
-  initialCrop: CropRegion;
-  onDone: (crop: CropRegion) => void;
+  onDone: (crop: CropRegion) => void | Promise<void>;
   onCancel: () => void;
 }) {
-  const [crop, setCrop] = useState<CropRegion>(initialCrop);
-  const dragging = useRef<{ edge: string; startX: number; startY: number; startCrop: CropRegion } | null>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerSize, setContainerSize] = useState({ w: 800, h: 500 });
 
-  const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(max, val));
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const update = () => {
+      if (!containerRef.current) return;
+      const r = containerRef.current.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) return;
+      setContainerSize({ w: r.width, h: r.height });
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(containerRef.current);
+    return () => ro.disconnect();
+  }, []);
 
-  const onMouseDown = (e: React.MouseEvent, edge: string) => {
+  // Scale full image to fit container
+  const fitScale = Math.min(
+    (containerSize.w - 48) / imageWidth,
+    (containerSize.h - 48) / imageHeight,
+    1
+  );
+  const dispW = imageWidth * fitScale;
+  const dispH = imageHeight * fitScale;
+
+  // Crop box size in display space
+  const cropDispW = Math.min(bannerWidth * fitScale, dispW);
+  const cropDispH = Math.min(bannerHeight * fitScale, dispH);
+
+  // Box position in display space (clamped inside image)
+  const [boxPos, setBoxPos] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    setBoxPos({
+      x: Math.max(0, (dispW - cropDispW) / 2),
+      y: Math.max(0, (dispH - cropDispH) / 2),
+    });
+  }, [dispW, dispH, cropDispW, cropDispH]);
+
+  const dragging = useRef<{ sx: number; sy: number; bx: number; by: number } | null>(null);
+  const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+
+  const onBoxMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
-    e.stopPropagation();
-    dragging.current = { edge, startX: e.clientX, startY: e.clientY, startCrop: { ...crop } };
-
+    dragging.current = { sx: e.clientX, sy: e.clientY, bx: boxPos.x, by: boxPos.y };
     const onMove = (me: MouseEvent) => {
-      if (!dragging.current || !overlayRef.current) return;
-      const rect = overlayRef.current.getBoundingClientRect();
-      const scaleX = bannerWidth / rect.width;
-      const scaleY = bannerHeight / rect.height;
-      const dx = (me.clientX - dragging.current.startX) * scaleX;
-      const dy = (me.clientY - dragging.current.startY) * scaleY;
-      const sc = dragging.current.startCrop;
-
-      setCrop((prev) => {
-        let { x, y, w, h } = sc;
-        const edge = dragging.current!.edge;
-
-        if (edge === "move") {
-          x = clamp(sc.x + dx, 0, bannerWidth - w);
-          y = clamp(sc.y + dy, 0, bannerHeight - h);
-        }
-        if (edge === "e")  w = clamp(sc.w + dx, minWidth, bannerWidth - x);
-        if (edge === "s")  h = clamp(sc.h + dy, minHeight, bannerHeight - y);
-        if (edge === "w") { const nw = clamp(sc.w - dx, minWidth, sc.x + sc.w); x = sc.x + sc.w - nw; w = nw; }
-        if (edge === "n") { const nh = clamp(sc.h - dy, minHeight, sc.y + sc.h); y = sc.y + sc.h - nh; h = nh; }
-        if (edge === "nw") {
-          const nw = clamp(sc.w - dx, minWidth, sc.x + sc.w); x = sc.x + sc.w - nw; w = nw;
-          const nh = clamp(sc.h - dy, minHeight, sc.y + sc.h); y = sc.y + sc.h - nh; h = nh;
-        }
-        if (edge === "ne") {
-          w = clamp(sc.w + dx, minWidth, bannerWidth - x);
-          const nh = clamp(sc.h - dy, minHeight, sc.y + sc.h); y = sc.y + sc.h - nh; h = nh;
-        }
-        if (edge === "sw") {
-          const nw = clamp(sc.w - dx, minWidth, sc.x + sc.w); x = sc.x + sc.w - nw; w = nw;
-          h = clamp(sc.h + dy, minHeight, bannerHeight - y);
-        }
-        if (edge === "se") {
-          w = clamp(sc.w + dx, minWidth, bannerWidth - x);
-          h = clamp(sc.h + dy, minHeight, bannerHeight - y);
-        }
-        return { x, y, w, h };
+      if (!dragging.current) return;
+      setBoxPos({
+        x: clamp(dragging.current.bx + (me.clientX - dragging.current.sx), 0, dispW - cropDispW),
+        y: clamp(dragging.current.by + (me.clientY - dragging.current.sy), 0, dispH - cropDispH),
       });
     };
-
     const onUp = () => {
       dragging.current = null;
       window.removeEventListener("mousemove", onMove);
@@ -85,92 +95,181 @@ function CropOverlay({
     window.addEventListener("mouseup", onUp);
   };
 
-  const pct = (v: number, total: number) => `${(v / total) * 100}%`;
-  const handleStyle = (cursor: string, extra: React.CSSProperties = {}): React.CSSProperties => ({
-    position: "absolute", width: 12, height: 12, background: "#fff", border: "2px solid #8b5cf6",
-    borderRadius: 2, cursor, zIndex: 10, transform: "translate(-50%,-50%)", ...extra,
-  });
+  const handleApply = () => {
+    // Convert display-space position back to original image space
+    const imgX = boxPos.x / fitScale;
+    const imgY = boxPos.y / fitScale;
+    onDone({ x: imgX, y: imgY, w: bannerWidth, h: bannerHeight });
+  };
 
   return (
-    <div ref={overlayRef} style={{ position: "absolute", inset: 0, zIndex: 50 }}>
-      {/* Dark mask outside crop */}
-      <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
-        <defs>
-          <mask id="crop-mask">
-            <rect width="100%" height="100%" fill="white" />
-            <rect
-              x={pct(crop.x, bannerWidth)} y={pct(crop.y, bannerHeight)}
-              width={pct(crop.w, bannerWidth)} height={pct(crop.h, bannerHeight)}
-              fill="black"
-            />
-          </mask>
-        </defs>
-        <rect width="100%" height="100%" fill="rgba(0,0,0,0.55)" mask="url(#crop-mask)" />
-      </svg>
-
-      {/* Crop box */}
-      <div
-        style={{
-          position: "absolute",
-          left: pct(crop.x, bannerWidth), top: pct(crop.y, bannerHeight),
-          width: pct(crop.w, bannerWidth), height: pct(crop.h, bannerHeight),
-          border: "2px solid #8b5cf6", boxSizing: "border-box", cursor: "move",
-        }}
-        onMouseDown={(e) => onMouseDown(e, "move")}
-      >
-        {/* Grid lines */}
-        {[33, 66].map((p) => (
-          <React.Fragment key={p}>
-            <div style={{ position: "absolute", left: `${p}%`, top: 0, bottom: 0, width: 1, background: "rgba(139,92,246,0.4)", pointerEvents: "none" }} />
-            <div style={{ position: "absolute", top: `${p}%`, left: 0, right: 0, height: 1, background: "rgba(139,92,246,0.4)", pointerEvents: "none" }} />
-          </React.Fragment>
-        ))}
-
-        {/* Size label */}
-        <div style={{ position: "absolute", top: 4, left: 4, background: "rgba(139,92,246,0.85)", color: "#fff", fontSize: 10, fontWeight: 700, borderRadius: 4, padding: "2px 6px", pointerEvents: "none", fontFamily: "monospace" }}>
-          {Math.round(crop.w)} × {Math.round(crop.h)}
+    <div className="flex flex-col h-full bg-[#0f0f0f]">
+      {/* Top bar */}
+      <div className="flex items-center justify-between px-5 py-3 bg-[#1a1a1a] border-b border-white/10 flex-shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="h-2 w-2 rounded-full bg-violet-500 animate-pulse" />
+          <span className="text-sm font-semibold text-white">Crop Background</span>
+          <span className="text-xs text-slate-400 hidden sm:inline">
+            Drag the purple box to choose which region to use
+          </span>
         </div>
-
-        {/* Handles */}
-        <div style={handleStyle("nw-resize", { left: "0%", top: "0%" })} onMouseDown={(e) => onMouseDown(e, "nw")} />
-        <div style={handleStyle("n-resize", { left: "50%", top: "0%" })} onMouseDown={(e) => onMouseDown(e, "n")} />
-        <div style={handleStyle("ne-resize", { left: "100%", top: "0%" })} onMouseDown={(e) => onMouseDown(e, "ne")} />
-        <div style={handleStyle("e-resize", { left: "100%", top: "50%" })} onMouseDown={(e) => onMouseDown(e, "e")} />
-        <div style={handleStyle("se-resize", { left: "100%", top: "100%" })} onMouseDown={(e) => onMouseDown(e, "se")} />
-        <div style={handleStyle("s-resize", { left: "50%", top: "100%" })} onMouseDown={(e) => onMouseDown(e, "s")} />
-        <div style={handleStyle("sw-resize", { left: "0%", top: "100%" })} onMouseDown={(e) => onMouseDown(e, "sw")} />
-        <div style={handleStyle("w-resize", { left: "0%", top: "50%" })} onMouseDown={(e) => onMouseDown(e, "w")} />
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onCancel}
+            className="px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleApply}
+            className="px-4 py-1.5 text-xs font-bold text-white bg-violet-600 hover:bg-violet-500 rounded-lg transition-all"
+          >
+            Apply Crop ✓
+          </button>
+        </div>
       </div>
 
-      {/* Buttons */}
-      <div style={{ position: "absolute", bottom: 16, left: "50%", transform: "translateX(-50%)", display: "flex", gap: 8, zIndex: 60 }}>
-        <button
-          onClick={onCancel}
-          style={{ background: "#fff", border: "1.5px solid #e2e8f0", color: "#64748b", borderRadius: 8, padding: "6px 18px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
-        >
-          Cancel
-        </button>
-        <button
-          onClick={() => onDone(crop)}
-          style={{ background: "#8b5cf6", border: "none", color: "#fff", borderRadius: 8, padding: "6px 18px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
-        >
-          Apply Crop
-        </button>
+      {/* Full image + draggable crop box */}
+      <div
+        ref={containerRef}
+        className="flex-1 flex items-center justify-center overflow-hidden"
+        style={{ minHeight: 0, padding: 24 }}
+      >
+        <div style={{ position: "relative", width: dispW, height: dispH, flexShrink: 0 }}>
+          {/* Full original image */}
+          <img
+            src={imageUrl}
+            alt="Crop source"
+            draggable={false}
+            style={{ width: dispW, height: dispH, display: "block", userSelect: "none", pointerEvents: "none" }}
+          />
+
+          {/* Dark mask outside crop box */}
+          <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
+            <defs>
+              <mask id="crop-hole">
+                <rect width="100%" height="100%" fill="white" />
+                <rect x={boxPos.x} y={boxPos.y} width={cropDispW} height={cropDispH} fill="black" />
+              </mask>
+            </defs>
+            <rect width="100%" height="100%" fill="rgba(0,0,0,0.6)" mask="url(#crop-hole)" />
+          </svg>
+
+          {/* Draggable crop box */}
+          <div
+            onMouseDown={onBoxMouseDown}
+            style={{
+              position: "absolute",
+              left: boxPos.x, top: boxPos.y,
+              width: cropDispW, height: cropDispH,
+              border: "2px solid #8b5cf6",
+              boxSizing: "border-box",
+              cursor: "move",
+            }}
+          >
+            {/* Rule-of-thirds */}
+            {[33.33, 66.66].map((p) => (
+              <React.Fragment key={p}>
+                <div style={{ position: "absolute", left: `${p}%`, top: 0, bottom: 0, width: 1, background: "rgba(139,92,246,0.45)", pointerEvents: "none" }} />
+                <div style={{ position: "absolute", top: `${p}%`, left: 0, right: 0, height: 1, background: "rgba(139,92,246,0.45)", pointerEvents: "none" }} />
+              </React.Fragment>
+            ))}
+
+            {/* Corner handles */}
+            {([
+              { top: -4, left: -4 },
+              { top: -4, right: -4 },
+              { bottom: -4, left: -4 },
+              { bottom: -4, right: -4 },
+            ] as React.CSSProperties[]).map((style, i) => (
+              <div key={i} style={{ position: "absolute", width: 10, height: 10, background: "#8b5cf6", border: "2px solid white", borderRadius: 2, pointerEvents: "none", ...style }} />
+            ))}
+
+            {/* Size badge */}
+            <div style={{
+              position: "absolute", top: 6, left: 6,
+              background: "rgba(139,92,246,0.92)", color: "#fff",
+              fontSize: 10, fontWeight: 700, borderRadius: 4, padding: "2px 8px",
+              pointerEvents: "none", fontFamily: "monospace", whiteSpace: "nowrap",
+            }}>
+              {bannerWidth} × {bannerHeight}px
+            </div>
+
+            {/* Center move icon */}
+            <div style={{
+              position: "absolute", top: "50%", left: "50%",
+              transform: "translate(-50%, -50%)",
+              color: "rgba(255,255,255,0.45)", fontSize: 26, pointerEvents: "none", lineHeight: 1,
+            }}>⤡</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom info */}
+      <div className="flex-shrink-0 text-center py-2 text-xs text-slate-500 bg-[#1a1a1a] border-t border-white/5">
+        Original image: {imageWidth} × {imageHeight}px &nbsp;·&nbsp; Crop area: {bannerWidth} × {bannerHeight}px
       </div>
     </div>
   );
 }
 
-// ── Canvas ────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// DRAGGABLE BG (fine-tune after crop)
+// ─────────────────────────────────────────────────────────────────────────────
+function DraggableBg({
+  imageUrl, containerWidth, containerHeight,
+  imageWidth, imageHeight, position, onPositionChange, onClose,
+}: {
+  imageUrl: string; containerWidth: number; containerHeight: number;
+  imageWidth: number; imageHeight: number;
+  position: { x: number; y: number };
+  onPositionChange: (pos: { x: number; y: number }) => void;
+  onClose: () => void;
+}) {
+  const [isDragging, setIsDragging] = useState(false);
+  const ds = useRef<{ x: number; y: number; px: number; py: number } | null>(null);
+
+  const ratio = imageWidth / imageHeight, contR = containerWidth / containerHeight;
+  let dw: number, dh: number;
+  if (ratio > contR) { dh = containerHeight; dw = dh * ratio; }
+  else { dw = containerWidth; dh = dw / ratio; }
+  const maxX = Math.max(0, (dw - containerWidth) / 2);
+  const maxY = Math.max(0, (dh - containerHeight) / 2);
+  const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+
+  const onDown = (e: React.MouseEvent) => {
+    e.preventDefault(); setIsDragging(true);
+    ds.current = { x: e.clientX, y: e.clientY, px: position.x, py: position.y };
+  };
+  const onMove = useCallback((e: MouseEvent) => {
+    if (!isDragging || !ds.current) return;
+    onPositionChange({ x: clamp(ds.current.px + (e.clientX - ds.current.x), -maxX, 0), y: clamp(ds.current.py + (e.clientY - ds.current.y), -maxY, 0) });
+  }, [isDragging, maxX, maxY, onPositionChange]);
+  const onUp = useCallback(() => { setIsDragging(false); ds.current = null; }, []);
+  useEffect(() => {
+    if (isDragging) { window.addEventListener("mousemove", onMove); window.addEventListener("mouseup", onUp); }
+    return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
+  }, [isDragging, onMove, onUp]);
+
+  return (
+    <div style={{ position: "absolute", inset: 0, overflow: "hidden", cursor: isDragging ? "grabbing" : "grab", backgroundColor: "#000", zIndex: 100 }} onMouseDown={onDown}>
+      <img src={imageUrl} alt="" draggable={false} style={{ position: "absolute", width: dw, height: dh, left: "50%", top: "50%", transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`, pointerEvents: "none", userSelect: "none" }} />
+      <div style={{ position: "absolute", inset: 0, border: "2px solid #8b5cf6", boxSizing: "border-box", pointerEvents: "none", borderRadius: "inherit" }} />
+      <div style={{ position: "absolute", bottom: 16, left: "50%", transform: "translateX(-50%)", background: "rgba(0,0,0,0.75)", color: "white", padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 600, display: "flex", gap: 12, alignItems: "center", backdropFilter: "blur(4px)", zIndex: 60 }}>
+        <span>👆 Fine-tune position</span>
+        <button onClick={onClose} style={{ background: "#8b5cf6", border: "none", color: "white", padding: "4px 14px", borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Done</button>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN CANVAS
+// ─────────────────────────────────────────────────────────────────────────────
 export function BannerCanvas({
-  banner,
-  selectedId,
-  onSelect,
-  onPositionChange,
-  onElementChange,
-  cropMode,
-  onCropDone,
-  onCropCancel,
+  banner, selectedId, onSelect, onPositionChange, onElementChange,
+  cropMode, cropImageUrl, cropImageDimensions, onCropDone, onCropCancel,
+  dragBgMode, onBgPositionChange, onBgDragClose, originalImageDimensions,
 }: {
   banner: CreateBannerInput;
   selectedId: string | null;
@@ -178,28 +277,29 @@ export function BannerCanvas({
   onPositionChange: (id: string, x: number, y: number) => void;
   onElementChange: (el: BannerElement) => void;
   cropMode?: boolean;
-  onCropDone?: (crop: CropRegion) => void;
+  cropImageUrl?: string;
+  cropImageDimensions?: { width: number; height: number } | null;
+  onCropDone?: (crop: CropRegion) => void | Promise<void>;
   onCropCancel?: () => void;
+  dragBgMode?: boolean;
+  onBgPositionChange?: (pos: { x: number; y: number }) => void;
+  onBgDragClose?: () => void;
+  originalImageDimensions?: { width: number; height: number } | null;
 }) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const drag = useRef<{ id: string; sx: number; sy: number; ex: number; ey: number } | null>(null);
   const [scale, setScale] = useState(1);
   const [editingId, setEditingId] = useState<string | null>(null);
   const elementsRef = useRef(banner.elements);
-
   useEffect(() => { elementsRef.current = banner.elements; }, [banner.elements]);
 
   useEffect(() => {
     if (!containerRef.current) return;
     const update = () => {
       if (!containerRef.current) return;
-      // Use more available space — subtract padding only
-      const available = containerRef.current.clientWidth - 48;
-      const availableH = containerRef.current.clientHeight - 80;
-      const scaleW = available / banner.width;
-      const scaleH = availableH / banner.height;
-      setScale(Math.min(1, scaleW, scaleH));
+      const w = containerRef.current.clientWidth - 64;
+      const h = containerRef.current.clientHeight - 80;
+      setScale(Math.min(w / banner.width, h / banner.height, 1));
     };
     update();
     const ro = new ResizeObserver(update);
@@ -207,114 +307,140 @@ export function BannerCanvas({
     return () => ro.disconnect();
   }, [banner.width, banner.height]);
 
-  useEffect(() => {
-    if (editingId && editingId !== selectedId) setEditingId(null);
-  }, [selectedId, editingId]);
-
-  const minSizes = SCREEN_MIN_SIZES[banner.screenType];
-
-  const initialCrop: CropRegion = {
-    x: 0,
-    y: 0,
-    w: minSizes.width,
-    h: minSizes.height,
-  };
-
+  // ── Element drag ──────────────────────────────────────────────────────────
   const onMouseDown = useCallback(
     (e: React.MouseEvent, id: string, ex: number, ey: number) => {
-      if (cropMode) return;
-      e.preventDefault();
-      e.stopPropagation();
+      if (dragBgMode || !canvasRef.current) return;
+      e.preventDefault(); e.stopPropagation();
       onSelect(id);
-      drag.current = { id, sx: e.clientX, sy: e.clientY, ex, ey };
+      const rect = canvasRef.current.getBoundingClientRect();
+      let lx = e.clientX, ly = e.clientY, cx = ex, cy = ey;
+      let raf: number | null = null;
       const move = (me: MouseEvent) => {
-        if (!drag.current || !canvasRef.current) return;
-        const rect = canvasRef.current.getBoundingClientRect();
-        const nx = Math.max(0, Math.min(100, drag.current.ex + ((me.clientX - drag.current.sx) / rect.width) * 100));
-        const ny = Math.max(0, Math.min(100, drag.current.ey + ((me.clientY - drag.current.sy) / rect.height) * 100));
-        onPositionChange(drag.current.id, nx, ny);
-        drag.current.sx = me.clientX;
-        drag.current.sy = me.clientY;
-        drag.current.ex = nx;
-        drag.current.ey = ny;
+        const dx = ((me.clientX - lx) / rect.width) * 100;
+        const dy = ((me.clientY - ly) / rect.height) * 100;
+        lx = me.clientX; ly = me.clientY;
+        cx = Math.max(0, Math.min(100, cx + dx));
+        cy = Math.max(0, Math.min(100, cy + dy));
+        if (raf) cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(() => onPositionChange(id, cx, cy));
       };
-      const up = () => {
-        drag.current = null;
-        window.removeEventListener("mousemove", move);
-        window.removeEventListener("mouseup", up);
-      };
+      const up = () => { if (raf) cancelAnimationFrame(raf); window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); };
       window.addEventListener("mousemove", move);
       window.addEventListener("mouseup", up);
     },
-    [onSelect, onPositionChange, cropMode],
+    [onSelect, onPositionChange, dragBgMode]
   );
 
+  // ── Resize ────────────────────────────────────────────────────────────────
   const onResizeMouseDown = useCallback(
     (e: React.MouseEvent, id: string) => {
-      e.preventDefault();
-      e.stopPropagation();
+      e.preventDefault(); e.stopPropagation();
       const el = elementsRef.current.find((x) => x.id === id);
       if (!el) return;
-      const startX = e.clientX, startY = e.clientY;
       const domEl = canvasRef.current?.querySelector(`[data-el-id="${id}"]`) as HTMLElement | null;
-      const startW = el.type === "TEXT" ? ((el as TextElement).width ?? domEl?.offsetWidth ?? 120) : ((el as ButtonElement).style?.width ?? domEl?.offsetWidth ?? 120);
-      const startH = el.type === "TEXT" ? ((el as TextElement).height ?? domEl?.offsetHeight ?? 40) : ((el as ButtonElement).style?.height ?? domEl?.offsetHeight ?? 44);
+      const sx = e.clientX, sy = e.clientY;
+      const sw = el.type === "TEXT" ? ((el as TextElement).width ?? domEl?.offsetWidth ?? 120) : ((el as ButtonElement).style?.width ?? domEl?.offsetWidth ?? 120);
+      const sh = el.type === "TEXT" ? ((el as TextElement).height ?? domEl?.offsetHeight ?? 40) : ((el as ButtonElement).style?.height ?? domEl?.offsetHeight ?? 44);
+      let raf: number | null = null;
       const move = (me: MouseEvent) => {
-        const newW = Math.max(20, startW + (me.clientX - startX) / scale);
-        const newH = Math.max(16, startH + (me.clientY - startY) / scale);
-        if (el.type === "TEXT") onElementChange({ ...el, width: newW, height: newH } as BannerElement);
-        else if (el.type === "BUTTON") onElementChange({ ...el, style: { ...(el as ButtonElement).style, width: newW, height: newH } } as BannerElement);
+        const nw = Math.max(20, sw + (me.clientX - sx) / scale);
+        const nh = Math.max(16, sh + (me.clientY - sy) / scale);
+        if (raf) cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(() => {
+          if (el.type === "TEXT") onElementChange({ ...el, width: nw, height: nh } as BannerElement);
+          else onElementChange({ ...el, style: { ...(el as ButtonElement).style, width: nw, height: nh } } as BannerElement);
+        });
       };
-      const up = () => {
-        window.removeEventListener("mousemove", move);
-        window.removeEventListener("mouseup", up);
-      };
+      const up = () => { if (raf) cancelAnimationFrame(raf); window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); };
       window.addEventListener("mousemove", move);
       window.addEventListener("mouseup", up);
     },
-    [scale, onElementChange],
+    [scale, onElementChange]
   );
 
-  const ResizeHandle = useCallback(
-    ({ id, color }: { id: string; color: string }) => (
-      <div
-        onMouseDown={(e) => onResizeMouseDown(e, id)}
-        style={{ position: "absolute", right: -6, bottom: -6, width: 14, height: 14, backgroundColor: color, border: "2.5px solid white", borderRadius: 3, cursor: "se-resize", zIndex: 9999, boxShadow: "0 1px 4px rgba(0,0,0,0.3)" }}
-      />
-    ),
-    [onResizeMouseDown],
+  const ResizeHandle = ({ id, color }: { id: string; color: string }) => (
+    <div onMouseDown={(e) => onResizeMouseDown(e, id)} style={{ position: "absolute", right: -5, bottom: -5, width: 12, height: 12, backgroundColor: color, border: "2px solid white", borderRadius: 3, cursor: "se-resize", zIndex: 9999, boxShadow: "0 1px 4px rgba(0,0,0,0.25)" }} />
   );
 
   const sorted = [...banner.elements].sort((a, b) => a.zIndex - b.zIndex);
+  const bgPos = getBgPosition(banner.backgroundPosition);
 
+  // ── Crop mode: full-screen crop UI ────────────────────────────────────────
+  if (cropMode && cropImageUrl && cropImageDimensions && onCropDone && onCropCancel) {
+    return (
+      <div className="flex-1 min-h-0 flex flex-col">
+        <CropCanvas
+          imageUrl={cropImageUrl}
+          imageWidth={cropImageDimensions.width}
+          imageHeight={cropImageDimensions.height}
+          bannerWidth={banner.width}
+          bannerHeight={banner.height}
+          onDone={onCropDone}
+          onCancel={onCropCancel}
+        />
+      </div>
+    );
+  }
+
+  // ── Normal canvas ─────────────────────────────────────────────────────────
   return (
     <div
       ref={containerRef}
-      className="flex-1 overflow-auto flex flex-col items-center justify-start pt-6 pb-6 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] bg-[size:20px_20px] min-w-0 px-6"
+      className="flex-1 overflow-auto flex flex-col items-center justify-start pt-6 pb-6 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] bg-[size:20px_20px] px-6"
       style={{ minHeight: 0 }}
     >
+      {dragBgMode && (
+        <div className="mb-3 text-xs font-semibold text-violet-600 bg-violet-50 border border-violet-200 px-3 py-1.5 rounded-full">
+          ✋ Drag mode — fine-tune background position
+        </div>
+      )}
+
       <div style={{ width: banner.width * scale, height: banner.height * scale, flexShrink: 0 }}>
         <div style={{ transform: `scale(${scale})`, transformOrigin: "top left", width: banner.width, height: banner.height }}>
           <div
             ref={canvasRef}
-            onClick={(e) => { if (e.target === e.currentTarget && !cropMode) onSelect(null); }}
+            onClick={(e) => { if (e.target === e.currentTarget && !dragBgMode) onSelect(null); }}
             style={{
-              width: banner.width,
-              height: banner.height,
+              width: banner.width, height: banner.height,
               backgroundColor: banner.backgroundColor,
-              backgroundImage: banner.backgroundImageUrl ? `url(${banner.backgroundImageUrl})` : undefined,
-              backgroundSize: banner.backgroundSize,
-              backgroundPosition: banner.backgroundPosition,
-              position: "relative",
-              overflow: "hidden",
-              boxShadow: "0 32px 64px -12px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.05)",
+              position: "relative", overflow: "hidden",
+              boxShadow: "0 32px 64px -12px rgba(0,0,0,0.3), 0 0 0 1px rgba(0,0,0,0.06)",
               borderRadius: 16,
-              cursor: cropMode ? "crosshair" : "default",
+              cursor: dragBgMode ? "grab" : "default",
             }}
           >
-            {sorted.map((el) => {
+            {/* BG Image — normal */}
+            {!dragBgMode && banner.backgroundImageUrl && (
+              <div style={{
+                position: "absolute", inset: 0,
+                backgroundImage: `url(${banner.backgroundImageUrl})`,
+                backgroundSize: banner.backgroundSize,
+                backgroundPosition: banner.backgroundPosition,
+                backgroundRepeat: "no-repeat",
+                pointerEvents: "none",
+              }} />
+            )}
+
+            {/* Fine-tune drag mode */}
+            {dragBgMode && banner.backgroundImageUrl && onBgPositionChange && onBgDragClose && (
+              <DraggableBg
+                imageUrl={banner.backgroundImageUrl}
+                containerWidth={banner.width}
+                containerHeight={banner.height}
+                imageWidth={originalImageDimensions?.width ?? banner.width * 2}
+                imageHeight={originalImageDimensions?.height ?? banner.height * 2}
+                position={bgPos}
+                onPositionChange={onBgPositionChange}
+                onClose={onBgDragClose}
+              />
+            )}
+
+            {/* Elements */}
+            {!dragBgMode && sorted.map((el) => {
               if (!el.isVisible) return null;
-              const isSelected = el.id === selectedId, isEditing = editingId === el.id;
+              const isSelected = el.id === selectedId;
+              const isEditing = editingId === el.id;
               const base: React.CSSProperties = {
                 position: "absolute",
                 left: `${el.positionX}%`,
@@ -323,14 +449,38 @@ export function BannerCanvas({
                 outlineOffset: 3,
                 userSelect: isEditing ? "text" : "none",
                 zIndex: el.zIndex,
-                pointerEvents: cropMode ? "none" : "auto",
+                pointerEvents: "auto",
               };
+
               if (el.type === "TEXT") {
                 const s = (el as TextElement).style;
                 return (
-                  <div
-                    key={el.id} data-el-id={el.id}
-                    style={{ ...base, fontFamily: s.fontFamily, fontSize: s.fontSize, fontWeight: s.fontWeight, fontStyle: s.fontStyle, lineHeight: s.lineHeight, letterSpacing: s.letterSpacing, textAlign: s.textAlign as any, textDecoration: s.textDecoration, textTransform: s.textTransform as any, color: s.color ?? "#000", backgroundColor: s.backgroundColor, padding: s.padding, borderRadius: s.borderRadius, border: s.border, textShadow: s.textShadow, boxShadow: s.boxShadow, width: (el as TextElement).width ?? "max-content", height: (el as TextElement).height, whiteSpace: "normal", wordBreak: "break-word", cursor: isEditing ? "text" : "move", overflow: "hidden" }}
+                  <div key={el.id} data-el-id={el.id}
+                    style={{
+                      ...base,
+                      fontFamily: s.fontFamily,
+                      // ✅ FIX: explicit px string so browser applies it correctly
+                      fontSize: s.fontSize != null ? `${s.fontSize}px` : undefined,
+                      fontWeight: s.fontWeight,
+                      fontStyle: s.fontStyle,
+                      lineHeight: s.lineHeight,
+                      letterSpacing: s.letterSpacing != null ? `${s.letterSpacing}px` : undefined,
+                      textAlign: s.textAlign as any,
+                      textDecoration: s.textDecoration,
+                      textTransform: s.textTransform as any,
+                      color: s.color ?? "#000",
+                      backgroundColor: s.backgroundColor,
+                      padding: s.padding,
+                      borderRadius: s.borderRadius,
+                      border: s.border,
+                      textShadow: s.textShadow,
+                      boxShadow: s.boxShadow,
+                      width: (el as TextElement).width != null ? `${(el as TextElement).width}px` : "max-content",
+                      maxWidth: (el as TextElement).maxWidth != null ? `${(el as TextElement).maxWidth}px` : undefined,
+                      height: (el as TextElement).height != null ? `${(el as TextElement).height}px` : undefined,
+                      whiteSpace: "normal", wordBreak: "break-word",
+                      cursor: isEditing ? "text" : "move", overflow: "hidden",
+                    }}
                     onMouseDown={(e) => { if (isEditing) return; onMouseDown(e, el.id, el.positionX, el.positionY); }}
                     onDoubleClick={(e) => { e.stopPropagation(); setEditingId(el.id); }}
                   >
@@ -348,12 +498,37 @@ export function BannerCanvas({
                   </div>
                 );
               }
+
               if (el.type === "BUTTON") {
                 const s = (el as ButtonElement).style;
                 return (
-                  <div
-                    key={el.id} data-el-id={el.id}
-                    style={{ ...base, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: s.fontSize, fontFamily: s.fontFamily, fontWeight: s.fontWeight, textTransform: s.textTransform as any, letterSpacing: s.letterSpacing, backgroundColor: s.backgroundColor ?? "#4f46e5", color: s.textColor ?? "#fff", borderRadius: s.borderRadius ?? 6, borderWidth: s.borderWidth ?? 0, borderColor: s.borderColor, borderStyle: (s.borderStyle ?? "solid") as any, paddingTop: isEditing ? 0 : (s.paddingTop ?? 10), paddingRight: isEditing ? 0 : (s.paddingRight ?? 24), paddingBottom: isEditing ? 0 : (s.paddingBottom ?? 10), paddingLeft: isEditing ? 0 : (s.paddingLeft ?? 24), boxShadow: s.boxShadow, opacity: s.opacity ?? 1, width: s.width, height: s.height, cursor: isEditing ? "text" : "move", overflow: "hidden" }}
+                  <div key={el.id} data-el-id={el.id}
+                    style={{
+                      ...base,
+                      display: "inline-flex", alignItems: "center", justifyContent: "center",
+                      // ✅ FIX: explicit px string
+                      fontSize: s.fontSize != null ? `${s.fontSize}px` : undefined,
+                      fontFamily: s.fontFamily,
+                      fontWeight: s.fontWeight,
+                      textTransform: s.textTransform as any,
+                      letterSpacing: s.letterSpacing != null ? `${s.letterSpacing}px` : undefined,
+                      backgroundColor: s.backgroundColor ?? "#4f46e5",
+                      color: s.textColor ?? "#fff",
+                      borderRadius: s.borderRadius ?? 6,
+                      borderWidth: s.borderWidth ?? 0,
+                      borderColor: s.borderColor,
+                      borderStyle: (s.borderStyle ?? "solid") as any,
+                      paddingTop: isEditing ? 0 : (s.paddingTop ?? 10),
+                      paddingRight: isEditing ? 0 : (s.paddingRight ?? 24),
+                      paddingBottom: isEditing ? 0 : (s.paddingBottom ?? 10),
+                      paddingLeft: isEditing ? 0 : (s.paddingLeft ?? 24),
+                      boxShadow: s.boxShadow,
+                      opacity: s.opacity ?? 1,
+                      // ✅ FIX: explicit px string
+                      width: s.width != null ? `${s.width}px` : undefined,
+                      height: s.height != null ? `${s.height}px` : undefined,
+                      cursor: isEditing ? "text" : "move", overflow: "hidden",
+                    }}
                     onMouseDown={(e) => { if (isEditing) return; onMouseDown(e, el.id, el.positionX, el.positionY); }}
                     onDoubleClick={(e) => { e.stopPropagation(); setEditingId(el.id); }}
                   >
@@ -374,34 +549,37 @@ export function BannerCanvas({
               return null;
             })}
 
-            {banner.elements.length === 0 && !cropMode && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none">
-                <Move className="h-8 w-8 opacity-20" />
-                <p className="text-sm opacity-30 font-medium">Add elements from the panel</p>
+            {banner.elements.length === 0 && !dragBgMode && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none">
+                <div className="h-14 w-14 rounded-2xl bg-white/60 backdrop-blur border border-slate-200 flex items-center justify-center">
+                  <Move className="h-6 w-6 text-slate-300" />
+                </div>
+                <p className="text-sm text-slate-400 font-medium">Add elements from the side panel</p>
               </div>
-            )}
-
-            {/* Crop Overlay */}
-            {cropMode && onCropDone && onCropCancel && (
-              <CropOverlay
-                bannerWidth={banner.width}
-                bannerHeight={banner.height}
-                minWidth={minSizes.width}
-                minHeight={minSizes.height}
-                initialCrop={initialCrop}
-                onDone={onCropDone}
-                onCancel={onCropCancel}
-              />
             )}
           </div>
         </div>
       </div>
-      <p className="text-xs text-slate-400 font-mono mt-4">
-        {banner.width} × {banner.height}px · {banner.screenType} · {Math.round(scale * 100)}%
-        {banner.width > minSizes.width || banner.height > minSizes.height ? (
-          <span className="ml-2 text-amber-500 font-semibold">⚠ Larger than ideal ({minSizes.width}×{minSizes.height})</span>
-        ) : null}
-      </p>
+
+      <div className="flex items-center gap-3 mt-4 text-[11px] text-slate-400 font-mono">
+        <span>{banner.width} × {banner.height}px</span>
+        <span className="opacity-40">·</span>
+        <span>{banner.screenType}</span>
+        <span className="opacity-40">·</span>
+        <span>{Math.round(scale * 100)}%</span>
+        {!dragBgMode && (
+          <>
+            <span className="opacity-40">·</span>
+            <span className="font-sans text-slate-300">Drag · Dbl-click to edit · ⌟ resize</span>
+          </>
+        )}
+      </div>
     </div>
   );
+}
+
+function getBgPosition(pos: string | undefined): { x: number; y: number } {
+  if (!pos || pos === "center") return { x: 0, y: 0 };
+  const m = pos.match(/(-?\d+(?:\.\d+)?)px\s+(-?\d+(?:\.\d+)?)px/);
+  return m ? { x: parseFloat(m[1]), y: parseFloat(m[2]) } : { x: 0, y: 0 };
 }
