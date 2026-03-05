@@ -104,6 +104,8 @@ const MainExpertise = () => {
     }
   };
 
+  console.log(mainExpertiseData)
+
   const deleteMainExpertise = async (mainExpertiseId: string, mainExpertiseName: string) => {
   const result = await Swal.fire({
     title: 'Are you sure?',
@@ -146,6 +148,9 @@ const MainExpertise = () => {
     }
   }
 };
+
+
+
 
 // Update the handleDeleteMainExpertise to keep the same signature:
 const handleDeleteMainExpertise = (row: MainExpertise) => {

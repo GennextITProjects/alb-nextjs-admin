@@ -13,7 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   const handleToggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
-  if (pathname === "/login" || pathname === "/super-admin-dashboard") {
+  if (pathname === "/login" || pathname === "/super-admin-dashboard" || pathname === "/banner") {
     return (
       <html lang="en">
         <body className="bg-gray-100 ">

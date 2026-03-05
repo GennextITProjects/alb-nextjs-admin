@@ -189,11 +189,11 @@ export const RouteName = [
   //   name: "Gift",
   //   icon: <GiftRouteSvg />,
   // },
-  // {
-  //   path: "/banner",
-  //   name: "Banner",
-  //   icon: <BannerRouteSvg />,
-  // },
+  {
+    path: "/banner",
+    name: "Banner",
+    icon: <BannerRouteSvg />,
+  },
   // {
   //   path: "/recharge",
   //   name: "Recharge",

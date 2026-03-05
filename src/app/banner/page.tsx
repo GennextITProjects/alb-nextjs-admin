@@ -238,12 +238,13 @@
 // export default Banner;
 
 
+import BannerManagement from '@/components/bannerNew/BannerManagement'
 import React from 'react'
 
 const page = () => {
   return (
-    <div className='p-20'>
-      Banner under progress...........
+    <div className=''>
+    <BannerManagement/>
     </div>
   )
 }
