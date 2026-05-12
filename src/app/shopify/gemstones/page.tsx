@@ -63,7 +63,7 @@ const ShopifyOrdersPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   const [statusFilter, setStatusFilter] = useState("");
-  const [gemstoneFilter, setGemstoneFilter] = useState("");
+  const [gemstoneFilter, setGemstoneFilter] = useState<any>(true);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
@@ -77,7 +77,7 @@ const ShopifyOrdersPage: React.FC = () => {
       setLoading(true);
       const params = new URLSearchParams();
       if (statusFilter) params.append("status", statusFilter);
-      if (gemstoneFilter !== "") params.append("is_gemstone", gemstoneFilter);
+      if (gemstoneFilter !== "") params.append("is_gemstone", gemstoneFilter.toString());
       if (startDate && endDate) {
         params.append("startDate", startDate);
         params.append("endDate", endDate);
