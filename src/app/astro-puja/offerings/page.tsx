@@ -95,16 +95,20 @@ const PujaOfferingsPage: React.FC = () => {
 
         if (result.isConfirmed) {
             const ok = await hardDelete(row._id);
-            ok
-                ? Swal.fire("Deleted!", `${row.name} permanently deleted.`, "success")
-                : Swal.fire("Error!", "Failed to delete.", "error");
-            if (ok) fetchAll();
+            if (ok) {
+                await Swal.fire("Deleted!", `${row.name} permanently deleted.`, "success");
+                fetchAll();
+            } else {
+                await Swal.fire("Error!", "Failed to delete.", "error");
+            }
         } else if (result.isDenied) {
             const ok = await softDelete(row._id);
-            ok
-                ? Swal.fire("Deactivated!", `${row.name} has been deactivated.`, "success")
-                : Swal.fire("Error!", "Failed to deactivate.", "error");
-            if (ok) fetchAll();
+            if (ok) {
+                await Swal.fire("Deactivated!", `${row.name} has been deactivated.`, "success");
+                fetchAll();
+            } else {
+                await Swal.fire("Error!", "Failed to deactivate.", "error");
+            }
         }
     };
 
