@@ -43,15 +43,23 @@ export function CropCanvas({
     return () => ro.disconnect();
   }, []);
 
-  const fitScale = Math.min(
+  // Scale to fit container, but scale UP if image is smaller than the crop box
+  const naturalScale = Math.min(
     (containerSize.w - 48) / imageWidth,
     (containerSize.h - 48) / imageHeight,
     1
   );
+  const minScale = Math.min(
+    (containerSize.w - 48) / bannerWidth,
+    (containerSize.h - 48) / bannerHeight
+  );
+  const fitScale = Math.max(naturalScale, minScale);
+
   const dispW = imageWidth * fitScale;
   const dispH = imageHeight * fitScale;
-  const cropDispW = Math.min(bannerWidth * fitScale, dispW);
-  const cropDispH = Math.min(bannerHeight * fitScale, dispH);
+  // Crop box always maintains exact banner ratio — never clamped
+  const cropDispW = bannerWidth * fitScale;
+  const cropDispH = bannerHeight * fitScale;
 
   const [boxPos, setBoxPos] = useState({ x: 0, y: 0 });
   useEffect(() => {
@@ -93,7 +101,7 @@ export function CropCanvas({
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#0f0f0f]">
+    <div className="flex flex-col h-full bg-[#0f0f0f] rounded-2xl">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3 bg-[#1a1a1a] border-b border-white/10 flex-shrink-0">
         <div className="flex items-center gap-3">

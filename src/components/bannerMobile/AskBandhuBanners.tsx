@@ -300,26 +300,37 @@ function AddView({
 
   const handleFile = async (file: File) => {
     if (!file.type.startsWith("image/")) {
-      addToast("error", "Please upload an image file");
-      return;
+        addToast("error", "Please upload an image file");
+        return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      addToast("error", "Image must be under 5 MB");
-      return;
+        addToast("error", "Image must be under 5 MB");
+        return;
     }
     const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const i = new Image();
-      const url = URL.createObjectURL(file);
-      i.onload = () => { URL.revokeObjectURL(url); resolve(i); };
-      i.onerror = reject;
-      i.src = url;
+        const i = new Image();
+        const url = URL.createObjectURL(file);
+        i.onload = () => { URL.revokeObjectURL(url); resolve(i); };
+        i.onerror = reject;
+        i.src = url;
     });
+
+    // ── Dimension guard ──────────────────────────────────────────
+    if (img.width < BANNER_W || img.height < BANNER_H) {
+        addToast(
+        "error",
+        `Image dimensions (${img.width} × ${img.height}px) are smaller than required ${BANNER_W} × ${BANNER_H}px`
+        );
+        return;
+    }
+    // ─────────────────────────────────────────────────────────────
+
     const blobUrl = URL.createObjectURL(file);
     setCropPendingUrl(blobUrl);
     setCropPendingFile(file);
     setCropPendingDims({ width: img.width, height: img.height });
     setCropMode(true);
-  };
+    };
 
   const handleCropDone = async (crop: CropRegion) => {
     if (!cropPendingUrl || !cropPendingFile) return;
@@ -411,9 +422,11 @@ function AddView({
   };
 
   // Crop mode takes over full screen
-  if (cropMode && cropPendingUrl && cropPendingDims) {
-    return (
-      <div className="min-h-screen flex flex-col">
+if (cropMode && cropPendingUrl && cropPendingDims) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <div className="w-full max-w-2xl h-[420px] rounded-2xl overflow-hidden shadow-2xl">
+       
         <CropCanvas
           imageUrl={cropPendingUrl}
           imageWidth={cropPendingDims.width}
@@ -423,6 +436,7 @@ function AddView({
           onDone={handleCropDone}
           onCancel={handleCropCancel}
         />
+              </div>
       </div>
     );
   }
