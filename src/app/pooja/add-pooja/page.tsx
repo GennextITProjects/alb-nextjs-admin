@@ -26,7 +26,6 @@ import PackagesTab from "@/components/puja/PackagesTab";
 import TestimonialsTab from "@/components/puja/TestimonialsTab";
 import FAQsTab from "@/components/puja/FAQsTab";
 import VedicProcedureTab from "@/components/puja/VedicProcedureTab";
-// 🆕 New Tab Imports
 import WhyPerformReasonsTab from "@/components/puja/WhyPerformReasonsTab";
 import AashirwadBoxTab from "@/components/puja/AashirwadBoxTab";
 import RitualProcessTab from "@/components/puja/RitualProcessTab";
@@ -46,7 +45,7 @@ interface PricingPackage {
   originalPrice?: number;
   discount?: string;
   isPopular: boolean;
-  badge?: string; // 🆕 Add this
+  badge?: string;
   features: string[];
   duration?: string;
   validity?: string;
@@ -74,18 +73,6 @@ interface ImageState {
   file: string;
   bytes: File | null;
   url: string;
-}
-
-interface PricingPackage {
-  id: number;
-  title: string;
-  price: number;
-  originalPrice?: number;
-  discount?: string;
-  isPopular: boolean;
-  features: string[];
-  duration?: string;
-  validity?: string;
 }
 
 interface Testimonial {
@@ -170,13 +157,19 @@ const AddPujaContent = () => {
   const [validationErrors, setValidationErrors] = useState<any[]>([]);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [hasAttemptedNext, setHasAttemptedNext] = useState(false);
+
+  // Image states
   const [mobileImage, setMobileImage] = useState<ImageState>({ file: '', bytes: null, url: '' });
   const [mobileImagePreview, setMobileImagePreview] = useState<string>('');
+  // 🆕 Desktop image state
+  const [desktopImage, setDesktopImage] = useState<ImageState>({ file: '', bytes: null, url: '' });
+  const [desktopImagePreview, setDesktopImagePreview] = useState<string>('');
+
   const [vedicProcedure, setVedicProcedure] = useState({
     title: '',
     description: ''
   });
-  
+
   // Main form state
   const [inputFieldDetail, setInputFieldDetail] = useState<InputFieldDetail>({
     categoryId: '',
@@ -211,7 +204,7 @@ const AddPujaContent = () => {
       icon: 'Star'
     }
   ]);
-  
+
   const [whyYouShould, setWhyYouShould] = useState([
     {
       _id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -239,7 +232,7 @@ const AddPujaContent = () => {
   const [galleryImages, setGalleryImages] = useState<File[]>([]);
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
 
-  // 🆕 NEW STATE VARIABLES
+  // New state variables
   const [whyPerformReasons, setWhyPerformReasons] = useState([
     {
       _id: `reason_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -270,21 +263,20 @@ const AddPujaContent = () => {
     }
   ]);
 
-  // ✅ Tabs - Correct IDs
   const tabs = [
-    { id: 0, label: 'Basic Info', icon: <Home className="w-4 h-4" /> },
-    { id: 1, label: 'Details', icon: <BookOpen className="w-4 h-4" /> },
-    { id: 2, label: 'Benefits', icon: <Star className="w-4 h-4" /> },
-    { id: 3, label: 'Vedic Procedure', icon: <BookOpen className="w-4 h-4" /> },
-    { id: 4, label: 'Who Should Book', icon: <Users className="w-4 h-4" /> },
-    { id: 5, label: 'Why You Should', icon: <Target className="w-4 h-4" /> },
-    { id: 6, label: 'Why Perform Reasons', icon: <Shield className="w-4 h-4" /> },
-    { id: 7, label: 'Aashirwad Box', icon: <Box className="w-4 h-4" /> },
-    { id: 8, label: 'Ritual Process', icon: <Clock className="w-4 h-4" /> },
-    { id: 9, label: 'Packages', icon: <BanknoteIcon className="w-4 h-4" /> },
-    { id: 10, label: 'Testimonials', icon: <MessageSquare className="w-4 h-4" /> },
-    { id: 11, label: 'FAQs', icon: <MessageSquare className="w-4 h-4" /> },
-    { id: 12, label: 'About', icon: <Info className="w-4 h-4" /> },
+    { id: 0,  label: 'Basic Info',           icon: <Home className="w-4 h-4" /> },
+    { id: 1,  label: 'Details',              icon: <BookOpen className="w-4 h-4" /> },
+    { id: 2,  label: 'Benefits',             icon: <Star className="w-4 h-4" /> },
+    { id: 3,  label: 'Vedic Procedure',      icon: <BookOpen className="w-4 h-4" /> },
+    { id: 4,  label: 'Who Should Book',      icon: <Users className="w-4 h-4" /> },
+    { id: 5,  label: 'Why You Should',       icon: <Target className="w-4 h-4" /> },
+    { id: 6,  label: 'Why Perform Reasons',  icon: <Shield className="w-4 h-4" /> },
+    { id: 7,  label: 'Aashirwad Box',        icon: <Box className="w-4 h-4" /> },
+    { id: 8,  label: 'Ritual Process',       icon: <Clock className="w-4 h-4" /> },
+    { id: 9,  label: 'Packages',             icon: <BanknoteIcon className="w-4 h-4" /> },
+    { id: 10, label: 'Testimonials',         icon: <MessageSquare className="w-4 h-4" /> },
+    { id: 11, label: 'FAQs',                 icon: <MessageSquare className="w-4 h-4" /> },
+    { id: 12, label: 'About',               icon: <Info className="w-4 h-4" /> },
   ];
 
   // Validation function for current tab
@@ -292,144 +284,88 @@ const AddPujaContent = () => {
     let dataToValidate: any = {};
 
     switch (activeTab) {
-      case 0: // Basic Info
-        dataToValidate = {
-          ...inputFieldDetail,
-          mainImage: image
-        };
+      case 0:
+        dataToValidate = { ...inputFieldDetail, mainImage: image };
         break;
 
-      case 1: // Details
+      case 1:
         dataToValidate = {
           pujaDetails: inputFieldDetail.pujaDetails,
           whyPerform: inputFieldDetail.whyPerform
         };
         break;
 
-      case 2: // Benefits
+      case 2: {
         const hasValidBenefit = benefits.some(b => b.title?.trim());
         if (!hasValidBenefit) {
-          setValidationErrors([{
-            path: 'benefits',
-            message: 'At least one benefit with a title is required.'
-          }]);
-          setFieldErrors({
-            'benefits': 'At least one benefit with a title is required.'
-          });
-          return { success: false, errors: [{ path: 'benefits', message: 'At least one benefit with a title is required.' }] };
+          const err = [{ path: 'benefits', message: 'At least one benefit with a title is required.' }];
+          setValidationErrors(err);
+          setFieldErrors({ 'benefits': err[0].message });
+          return { success: false, errors: err };
         }
-
         const benefitErrors: any[] = [];
         benefits.forEach((b, index) => {
           if (!b.title?.trim()) {
-            benefitErrors.push({
-              path: `benefits.${index}.title`,
-              message: `Benefit ${index + 1} title is required.`
-            });
+            benefitErrors.push({ path: `benefits.${index}.title`, message: `Benefit ${index + 1} title is required.` });
           }
         });
-
         if (benefitErrors.length > 0) {
           setValidationErrors(benefitErrors);
           const errors: Record<string, string> = {};
-          benefitErrors.forEach((err: any) => {
-            errors[err.path] = err.message;
-          });
+          benefitErrors.forEach((err: any) => { errors[err.path] = err.message; });
           setFieldErrors(errors);
           return { success: false, errors: benefitErrors };
         }
-
         setValidationErrors([]);
         setFieldErrors({});
         return { success: true, errors: null };
+      }
 
-      case 3: // Vedic Procedure
+      case 3:
         if (!vedicProcedure.title?.trim()) {
-          setValidationErrors([{
-            path: 'vedicProcedure.title',
-            message: 'Vedic procedure title is required.'
-          }]);
-          setFieldErrors({
-            'vedicProcedure.title': 'Vedic procedure title is required.'
-          });
-          return { success: false, errors: [{ path: 'vedicProcedure.title', message: 'Vedic procedure title is required.' }] };
+          const err = [{ path: 'vedicProcedure.title', message: 'Vedic procedure title is required.' }];
+          setValidationErrors(err);
+          setFieldErrors({ 'vedicProcedure.title': err[0].message });
+          return { success: false, errors: err };
         }
         if (!vedicProcedure.description?.trim()) {
-          setValidationErrors([{
-            path: 'vedicProcedure.description',
-            message: 'Vedic procedure description is required.'
-          }]);
-          setFieldErrors({
-            'vedicProcedure.description': 'Vedic procedure description is required.'
-          });
-          return { success: false, errors: [{ path: 'vedicProcedure.description', message: 'Vedic procedure description is required.' }] };
+          const err = [{ path: 'vedicProcedure.description', message: 'Vedic procedure description is required.' }];
+          setValidationErrors(err);
+          setFieldErrors({ 'vedicProcedure.description': err[0].message });
+          return { success: false, errors: err };
         }
         setValidationErrors([]);
         setFieldErrors({});
         return { success: true, errors: null };
 
-      case 4: // Who Should Book
-        dataToValidate = { whoShouldBook };
-        break;
-
-      case 5: // Why You Should
-        dataToValidate = { whyYouShould };
-        break;
-
-      case 6: // Why Perform Reasons
-        dataToValidate = { whyPerformReasons };
-        break;
-
-      case 7: // Aashirwad Box
-        dataToValidate = { aashirwadBox };
-        break;
-
-      case 8: // Ritual Process
-        dataToValidate = { ritualProcess };
-        break;
-
-      case 9: // Packages
-        dataToValidate = { pricingPackages };
-        break;
-
-      case 10: // Testimonials
-        dataToValidate = { testimonials };
-        break;
-
-      case 11: // FAQs
-        dataToValidate = { faqs };
-        break;
-
-      case 12: // About
-        dataToValidate = { about };
-        break;
-
-      default:
-        return { success: true, errors: null };
+      case 4:  dataToValidate = { whoShouldBook };      break;
+      case 5:  dataToValidate = { whyYouShould };       break;
+      case 6:  dataToValidate = { whyPerformReasons };  break;
+      case 7:  dataToValidate = { aashirwadBox };       break;
+      case 8:  dataToValidate = { ritualProcess };      break;
+      case 9:  dataToValidate = { pricingPackages };    break;
+      case 10: dataToValidate = { testimonials };       break;
+      case 11: dataToValidate = { faqs };               break;
+      case 12: dataToValidate = { about };              break;
+      default: return { success: true, errors: null };
     }
 
     const result = validateTab(activeTab, dataToValidate);
-
     if (!result.success && result.errors) {
       setValidationErrors(result.errors);
       const errors: Record<string, string> = {};
-      result.errors.forEach((err: any) => {
-        errors[err.path] = err.message;
-      });
+      result.errors.forEach((err: any) => { errors[err.path] = err.message; });
       setFieldErrors(errors);
     } else {
       setValidationErrors([]);
       setFieldErrors({});
     }
-
     return result;
   };
 
-  // Handle next tab
   const handleNextTab = () => {
     setHasAttemptedNext(true);
     const validation = validateCurrentTab();
-
     if (validation.success) {
       setActiveTab(prev => Math.min(tabs.length - 1, prev + 1));
       setHasAttemptedNext(false);
@@ -440,49 +376,24 @@ const AddPujaContent = () => {
 
   const getCurrentTabData = () => {
     switch (activeTab) {
-      case 0:
-        return {
-          categoryId: inputFieldDetail.categoryId,
-          pujaName: inputFieldDetail.pujaName,
-          price: inputFieldDetail.price,
-          adminCommission: inputFieldDetail.adminCommission,
-          overview: inputFieldDetail.overview,
-          duration: inputFieldDetail.duration,
-          mainImage: image
-        };
-      case 1:
-        return { pujaDetails: inputFieldDetail.pujaDetails, whyPerform: inputFieldDetail.whyPerform };
-      case 2:
-        return {
-          benefits: benefits.map(b => b.title?.trim()).filter(title => title !== '')
-        };
-      case 3:
-        return {
-          vedicProcedureTitle: vedicProcedure.title,
-          vedicProcedureDescription: vedicProcedure.description
-        };
-      case 4:
-        return { whoShouldBook };
-      case 5:
-        return { whyYouShould };
-      case 6:
-        return { whyPerformReasons };
-      case 7:
-        return { aashirwadBox };
-      case 8:
-        return { ritualProcess };
-      case 9:
-        return { pricingPackages };
-      case 10:
-        return { testimonials };
-      case 11:
-        return { faqs };
-      case 12:
-        return { about };
-      default:
-        return {};
+      case 0:  return { categoryId: inputFieldDetail.categoryId, pujaName: inputFieldDetail.pujaName, price: inputFieldDetail.price, adminCommission: inputFieldDetail.adminCommission, overview: inputFieldDetail.overview, duration: inputFieldDetail.duration, mainImage: image };
+      case 1:  return { pujaDetails: inputFieldDetail.pujaDetails, whyPerform: inputFieldDetail.whyPerform };
+      case 2:  return { benefits: benefits.map(b => b.title?.trim()).filter(title => title !== '') };
+      case 3:  return { vedicProcedureTitle: vedicProcedure.title, vedicProcedureDescription: vedicProcedure.description };
+      case 4:  return { whoShouldBook };
+      case 5:  return { whyYouShould };
+      case 6:  return { whyPerformReasons };
+      case 7:  return { aashirwadBox };
+      case 8:  return { ritualProcess };
+      case 9:  return { pricingPackages };
+      case 10: return { testimonials };
+      case 11: return { faqs };
+      case 12: return { about };
+      default: return {};
     }
-  };useEffect(() => {
+  };
+
+  useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
 
@@ -511,14 +422,8 @@ const AddPujaContent = () => {
             subTitle: pujaData.subTitle || ''
           });
 
-          // 🆕 Fetch new data
-          if (pujaData.whyPerformReasons) {
-            setWhyPerformReasons(pujaData.whyPerformReasons);
-          }
-
-          if (pujaData.aashirwadBox) {
-            setAashirwadBox(pujaData.aashirwadBox);
-          }
+          if (pujaData.whyPerformReasons) setWhyPerformReasons(pujaData.whyPerformReasons);
+          if (pujaData.aashirwadBox) setAashirwadBox(pujaData.aashirwadBox);
 
           if (pujaData.ritualProcess) {
             setRitualProcess(pujaData.ritualProcess.map((step: any, index: number) => ({
@@ -530,9 +435,7 @@ const AddPujaContent = () => {
             })));
           }
 
-          if (pujaData.about) {
-            setAbout(pujaData.about);
-          }
+          if (pujaData.about) setAbout(pujaData.about);
 
           if (pujaData.vedicProcedure) {
             setVedicProcedure({
@@ -540,42 +443,24 @@ const AddPujaContent = () => {
               description: pujaData.vedicProcedure.description || ''
             });
           }
-          // Add in the fetch data section
-if (pujaData.whyPerformReasons) {
-  setWhyPerformReasons(pujaData.whyPerformReasons);
-}
 
-if (pujaData.aashirwadBox) {
-  setAashirwadBox(pujaData.aashirwadBox);
-}
-
-if (pujaData.ritualProcess) {
-  setRitualProcess(pujaData.ritualProcess.map((step: any, index: number) => ({
-    _id: step._id || `step_${Date.now()}_${index}`,
-    title: step.title || '',
-    description: step.description || '',
-    icon: step.icon || '',
-    stepNumber: step.stepNumber || index + 1
-  })));
-}
-
-if (pujaData.about) {
-  setAbout(pujaData.about);
-}
-          if (pujaData.vedicProcedure) {
-            setVedicProcedure({
-              title: pujaData.vedicProcedure.title || '',
-              description: pujaData.vedicProcedure.description || ''
-            });
-          }
           if (pujaData.mainImage) {
             const imgUrl = pujaData.mainImage;
-            setImage({
-              file: imgUrl,
-              bytes: null,
-              url: `${process.env.NEXT_PUBLIC_IMAGE_URL3}${imgUrl}`
-            });
+            setImage({ file: imgUrl, bytes: null, url: `${process.env.NEXT_PUBLIC_IMAGE_URL3}${imgUrl}` });
             setImagePreview(`${process.env.NEXT_PUBLIC_IMAGE_URL3}${imgUrl}`);
+          }
+
+          if (pujaData.mobileImage) {
+            const imgUrl = pujaData.mobileImage;
+            setMobileImage({ file: imgUrl, bytes: null, url: `${process.env.NEXT_PUBLIC_IMAGE_URL3}${imgUrl}` });
+            setMobileImagePreview(`${process.env.NEXT_PUBLIC_IMAGE_URL3}${imgUrl}`);
+          }
+
+          // 🆕 Fetch desktopImage
+          if (pujaData.desktopImage) {
+            const imgUrl = pujaData.desktopImage;
+            setDesktopImage({ file: imgUrl, bytes: null, url: `${process.env.NEXT_PUBLIC_IMAGE_URL3}${imgUrl}` });
+            setDesktopImagePreview(`${process.env.NEXT_PUBLIC_IMAGE_URL3}${imgUrl}`);
           }
 
           if (pujaData.whyYouShould && Array.isArray(pujaData.whyYouShould)) {
@@ -585,63 +470,41 @@ if (pujaData.about) {
               description: item.description || '',
               icon: item.icon || 'Target'
             }));
-
-            setWhyYouShould(formattedWhyYouShould.length > 0 ? formattedWhyYouShould : [
-              {
-                _id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                title: '',
-                description: '',
-                icon: 'Target'
-              }
-            ]);
+            setWhyYouShould(formattedWhyYouShould.length > 0 ? formattedWhyYouShould : [{
+              _id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+              title: '', description: '', icon: 'Target'
+            }]);
           }
-
-          // In the useEffect where you fetch puja data, replace the benefits section:
 
           if (pujaData.benefits) {
             if (Array.isArray(pujaData.benefits) && pujaData.benefits.length > 0) {
-              // Check if it's old format (strings) or new format (objects)
               if (typeof pujaData.benefits[0] === 'string') {
-                // Old format: convert strings to objects
-                const formattedBenefits = pujaData.benefits.map((benefit: string, index: number) => ({
+                setBenefits(pujaData.benefits.map((benefit: string, index: number) => ({
                   _id: `benefit_${Date.now()}_${index}_${Math.random().toString(36).substr(2, 9)}`,
-                  title: benefit,
-                  description: '',
-                  icon: 'Star'
-                }));
-                setBenefits(formattedBenefits);
+                  title: benefit, description: '', icon: 'Star'
+                })));
               } else {
-                // New format: already objects
-                const formattedBenefits = pujaData.benefits.map((benefit: any, index: number) => ({
+                setBenefits(pujaData.benefits.map((benefit: any, index: number) => ({
                   _id: benefit._id || `benefit_${Date.now()}_${index}_${Math.random().toString(36).substr(2, 9)}`,
-                  title: benefit.title || '',
-                  description: benefit.description || '',
-                  icon: benefit.icon || 'Star'
-                }));
-                setBenefits(formattedBenefits);
+                  title: benefit.title || '', description: benefit.description || '', icon: benefit.icon || 'Star'
+                })));
               }
             } else {
-              // Empty benefits - keep one empty benefit
-              setBenefits([{
-                _id: `benefit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                title: '',
-                description: '',
-                icon: 'Star'
-              }]);
+              setBenefits([{ _id: `benefit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, title: '', description: '', icon: 'Star' }]);
             }
           }
 
           if (pujaData.whoShouldBook) {
             if (typeof pujaData.whoShouldBook === 'string') {
-              const whoShouldBookArray = pujaData.whoShouldBook.split(',').map((w: any) => w.trim()).filter((w: any) => w !== '');
-              setWhoShouldBook(whoShouldBookArray.length > 0 ? whoShouldBookArray : ['']);
+              const arr = pujaData.whoShouldBook.split(',').map((w: any) => w.trim()).filter((w: any) => w !== '');
+              setWhoShouldBook(arr.length > 0 ? arr : ['']);
             } else if (Array.isArray(pujaData.whoShouldBook)) {
               setWhoShouldBook(pujaData.whoShouldBook.filter((w: any) => w && w.trim() !== ''));
             }
           }
 
           if (pujaData.pricingPackages && pujaData.pricingPackages.length > 0) {
-            const mappedPackages = pujaData.pricingPackages.map((pkg: any, index: number) => ({
+            setPricingPackages(pujaData.pricingPackages.map((pkg: any, index: number) => ({
               id: index + 1,
               title: pkg.title || '',
               price: pkg.price || 0,
@@ -651,38 +514,19 @@ if (pujaData.about) {
               features: pkg.features || [],
               duration: pkg.duration,
               validity: pkg.validity
-            }));
-            setPricingPackages(mappedPackages);
+            })));
           }
 
           if (pujaData.testimonials && pujaData.testimonials.length > 0) {
-            const mappedTestimonials = pujaData.testimonials.map((testimonial: any, index: number) => ({
-              id: index + 1,
-              highlight: testimonial.highlight || '',
-              quote: testimonial.quote || '',
-              name: testimonial.name || '',
-              location: testimonial.location || ''
-            }));
-            setTestimonials(mappedTestimonials);
+            setTestimonials(pujaData.testimonials.map((t: any, index: number) => ({
+              id: index + 1, highlight: t.highlight || '', quote: t.quote || '', name: t.name || '', location: t.location || ''
+            })));
           }
 
           if (pujaData.faqs && pujaData.faqs.length > 0) {
-            const mappedFaqs = pujaData.faqs.map((faq: any, index: number) => ({
-              id: index + 1,
-              question: faq.question || '',
-              answer: faq.answer || ''
-            }));
-            setFaqs(mappedFaqs);
-          }
-
-          if (pujaData.mobileImage) {
-            const imgUrl = pujaData.mobileImage;
-            setMobileImage({
-              file: imgUrl,
-              bytes: null,
-              url: `${process.env.NEXT_PUBLIC_IMAGE_URL3}${imgUrl}`
-            });
-            setMobileImagePreview(`${process.env.NEXT_PUBLIC_IMAGE_URL3}${imgUrl}`);
+            setFaqs(pujaData.faqs.map((faq: any, index: number) => ({
+              id: index + 1, question: faq.question || '', answer: faq.answer || ''
+            })));
           }
         }
       }
@@ -693,18 +537,13 @@ if (pujaData.about) {
     fetchData();
   }, [editId]);
 
-  // Real-time validation on data change
+  // Real-time validation
   useEffect(() => {
-    // Only validate if user has attempted to go next
-    if (hasAttemptedNext) {
-      validateCurrentTab();
-    }
+    if (hasAttemptedNext) validateCurrentTab();
   }, [inputFieldDetail, image, benefits, whoShouldBook, whyYouShould, pricingPackages, testimonials, faqs, vedicProcedure, activeTab, hasAttemptedNext]);
 
-  // Handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
-
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
       setInputFieldDetail(prev => ({ ...prev, [name]: checked }));
@@ -713,27 +552,17 @@ if (pujaData.about) {
     }
   };
 
-  // Handle image upload
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-
-      // ✅ 3MB size validation
       if (file.size > 3 * 1024 * 1024) {
         setFieldErrors(prev => ({ ...prev, mainImage: 'Image size must be less than 3MB' }));
         e.target.value = '';
         return;
       }
-
-      // Clear error if valid
       setFieldErrors(prev => ({ ...prev, mainImage: '' }));
-
       const previewUrl = URL.createObjectURL(file);
-      setImage({
-        file: file.name,
-        bytes: file,
-        url: previewUrl
-      });
+      setImage({ file: file.name, bytes: file, url: previewUrl });
       setImagePreview(previewUrl);
     }
   };
@@ -748,17 +577,19 @@ if (pujaData.about) {
     setMobileImagePreview(previewUrl);
   };
 
-  // Handle gallery images
+  // 🆕 Desktop image upload handler
+  const handleDesktopImageUpload = (file: File, previewUrl: string) => {
+    setDesktopImage({ file: file.name, bytes: file, url: previewUrl });
+    setDesktopImagePreview(previewUrl);
+  };
+
   const handleGalleryImages = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files);
       setGalleryImages(prev => [...prev, ...files]);
-
       files.forEach(file => {
         const reader = new FileReader();
-        reader.onloadend = () => {
-          setGalleryPreviews(prev => [...prev, reader.result as string]);
-        };
+        reader.onloadend = () => { setGalleryPreviews(prev => [...prev, reader.result as string]); };
         reader.readAsDataURL(file);
       });
     }
@@ -775,7 +606,7 @@ if (pujaData.about) {
     template: Omit<T, 'id' | '_id'>
   ) => {
     if (array.length > 0 && 'id' in array[0] && typeof array[0].id === 'number') {
-      const newId = array.length > 0 ? Math.max(...array.map(item => item.id || 0)) + 1 : 1;
+      const newId = Math.max(...array.map(item => item.id || 0)) + 1;
       setArray([...array, { ...template, id: newId } as T]);
     } else {
       const uniqueId = `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -791,12 +622,8 @@ if (pujaData.about) {
     value: any
   ) => {
     setArray(array.map(item => {
-      if (item._id && item._id === identifier) {
-        return { ...item, [field]: value };
-      }
-      if (item.id && item.id === identifier) {
-        return { ...item, [field]: value };
-      }
+      if (item._id && item._id === identifier) return { ...item, [field]: value };
+      if (item.id && item.id === identifier) return { ...item, [field]: value };
       return item;
     }));
   };
@@ -807,95 +634,72 @@ if (pujaData.about) {
     identifier: number | string
   ) => {
     if (array.length > 1) {
-      setArray(array.filter(item => {
-        const matches_id = item._id && item._id === identifier;
-        const matches_id_numeric = item.id && item.id === identifier;
-        return !(matches_id || matches_id_numeric);
-      }));
+      setArray(array.filter(item => !(item._id === identifier || item.id === identifier)));
     }
   };
 
   const updatePackageFeature = (packageId: number, featureIndex: number, value: string) => {
-    setPricingPackages(packages =>
-      packages.map(pkg => {
-        if (pkg.id === packageId) {
-          const newFeatures = [...pkg.features];
-          newFeatures[featureIndex] = value;
-          return { ...pkg, features: newFeatures };
-        }
-        return pkg;
-      })
-    );
+    setPricingPackages(packages => packages.map(pkg => {
+      if (pkg.id === packageId) {
+        const newFeatures = [...pkg.features];
+        newFeatures[featureIndex] = value;
+        return { ...pkg, features: newFeatures };
+      }
+      return pkg;
+    }));
   };
 
   const addPackageFeature = (packageId: number) => {
-    setPricingPackages(packages =>
-      packages.map(pkg =>
-        pkg.id === packageId
-          ? { ...pkg, features: [...pkg.features, ''] }
-          : pkg
-      )
-    );
+    setPricingPackages(packages => packages.map(pkg =>
+      pkg.id === packageId ? { ...pkg, features: [...pkg.features, ''] } : pkg
+    ));
   };
 
   const removePackageFeature = (packageId: number, featureIndex: number) => {
-    setPricingPackages(packages =>
-      packages.map(pkg => {
-        if (pkg.id === packageId) {
-          const newFeatures = pkg.features.filter((_, i) => i !== featureIndex);
-          return { ...pkg, features: newFeatures.length > 0 ? newFeatures : [''] };
-        }
-        return pkg;
-      })
-    );
+    setPricingPackages(packages => packages.map(pkg => {
+      if (pkg.id === packageId) {
+        const newFeatures = pkg.features.filter((_, i) => i !== featureIndex);
+        return { ...pkg, features: newFeatures.length > 0 ? newFeatures : [''] };
+      }
+      return pkg;
+    }));
   };
 
   const handlePopularPackageChange = (packageId: number) => {
-    setPricingPackages(packages =>
-      packages.map(pkg => ({
-        ...pkg,
-        isPopular: pkg.id === packageId
-      }))
-    );
+    setPricingPackages(packages => packages.map(pkg => ({ ...pkg, isPopular: pkg.id === packageId })));
   };
 
-  // Final validation before submit
   const validateAllTabs = () => {
-  const validations = [
-  { tab: 0, data: { ...inputFieldDetail, mainImage: image } },
-  { tab: 1, data: { pujaDetails: inputFieldDetail.pujaDetails, whyPerform: inputFieldDetail.whyPerform } },
-  { 
-    tab: 2, 
-    data: { 
-      benefits: benefits.map(b => ({ 
-        title: b.title?.trim() || '', 
-        description: b.description?.trim() || '', 
-        icon: b.icon || 'Star' 
-      })).filter(b => b.title !== '') 
-    } 
-  },
-  {
-    tab: 3, data: {
-      vedicProcedureTitle: vedicProcedure.title,
-      vedicProcedureDescription: vedicProcedure.description
-    }
-  },
-  { tab: 4, data: { whoShouldBook } },
-  { tab: 5, data: { whyYouShould } },
-  { tab: 6, data: { whyPerformReasons } },  // ✅ was pricingPackages before
-  { tab: 7, data: { aashirwadBox } },
-  { tab: 8, data: { ritualProcess } },
-  { tab: 9, data: { pricingPackages } },    // ✅ moved to correct tab
-  { tab: 10, data: { testimonials } },
-  { tab: 11, data: { faqs } },
-  { tab: 12, data: { about } },
-];
+    const validations = [
+      { tab: 0,  data: { ...inputFieldDetail, mainImage: image } },
+      { tab: 1,  data: { pujaDetails: inputFieldDetail.pujaDetails, whyPerform: inputFieldDetail.whyPerform } },
+      {
+        tab: 2,
+        data: {
+          benefits: benefits.map(b => ({
+            title: b.title?.trim() || '',
+            description: b.description?.trim() || '',
+            icon: b.icon || 'Star'
+          })).filter(b => b.title !== '')
+        }
+      },
+      { tab: 3,  data: { vedicProcedureTitle: vedicProcedure.title, vedicProcedureDescription: vedicProcedure.description } },
+      { tab: 4,  data: { whoShouldBook } },
+      { tab: 5,  data: { whyYouShould } },
+      { tab: 6,  data: { whyPerformReasons } },
+      { tab: 7,  data: { aashirwadBox } },
+      { tab: 8,  data: { ritualProcess } },
+      { tab: 9,  data: { pricingPackages } },
+      { tab: 10, data: { testimonials } },
+      { tab: 11, data: { faqs } },
+      { tab: 12, data: { about } },
+    ];
+
     for (const { tab, data } of validations) {
       const result = validateTab(tab, data);
       if (!result.success) {
         setActiveTab(tab);
         setValidationErrors(result.errors || []);
-
         Swal.fire({
           icon: 'error',
           title: `Please complete ${tabs[tab].label}`,
@@ -910,98 +714,69 @@ if (pujaData.about) {
     return true;
   };
 
-  // Submit handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!validateAllTabs()) return;
 
     setSaving(true);
-
     try {
       const formData = new FormData();
 
       Object.entries(inputFieldDetail).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          formData.append(key, value.toString());
-        }
+        if (value !== undefined && value !== null) formData.append(key, value.toString());
       });
 
-      if (mobileImage.bytes) {
-        formData.append('mobileImage', mobileImage.bytes);
-      }
+      if (mobileImage.bytes)  formData.append('mobileImage', mobileImage.bytes);
+      // 🆕 Append desktopImage
+      if (desktopImage.bytes) formData.append('desktopImage', desktopImage.bytes);
+
       if (vedicProcedure.title || vedicProcedure.description) {
         formData.append('vedicProcedureTitle', vedicProcedure.title);
         formData.append('vedicProcedureDescription', vedicProcedure.description);
       }
 
-      const benefitsArray = benefits.map(benefit => ({
-        title: benefit.title?.trim() || '',
-        description: benefit.description?.trim() || '',
-        icon: benefit.icon || 'Star'
-      })).filter(benefit => benefit.title !== '');
-      formData.append("benefits", JSON.stringify(benefitsArray));
-      // formData.append("benefits", JSON.stringify(benefitsArray));
+      formData.append("benefits", JSON.stringify(
+        benefits.map(b => ({ title: b.title?.trim() || '', description: b.description?.trim() || '', icon: b.icon || 'Star' }))
+                .filter(b => b.title !== '')
+      ));
 
-      const whoShouldBookArray = whoShouldBook.map(item => item.trim()).filter(item => item !== '');
-      formData.append("whoShouldBook", JSON.stringify(whoShouldBookArray));
+      formData.append("whoShouldBook", JSON.stringify(
+        whoShouldBook.map(item => item.trim()).filter(Boolean)
+      ));
 
       formData.append("whyYouShould", JSON.stringify(
-        whyYouShould.map(item => ({
-          title: item.title,
-          description: item.description,
-          icon: item.icon,
-        }))
+        whyYouShould.map(item => ({ title: item.title, description: item.description, icon: item.icon }))
       ));
 
       formData.append("pricingPackages", JSON.stringify(pricingPackages));
-      formData.append("testimonials", JSON.stringify(testimonials));
-      formData.append("faqs", JSON.stringify(faqs));
+      formData.append("testimonials",    JSON.stringify(testimonials));
+      formData.append("faqs",            JSON.stringify(faqs));
 
-      // Add to handleSubmit
-formData.append("whyPerformReasons", JSON.stringify(
-  whyPerformReasons.map(item => ({
-    title: item.title,
-    description: item.description,
-    icon: item.icon,
-  }))
-));
+      formData.append("whyPerformReasons", JSON.stringify(
+        whyPerformReasons.map(item => ({ title: item.title, description: item.description, icon: item.icon }))
+      ));
 
-formData.append("aashirwadBox", JSON.stringify(
-  aashirwadBox.map(item => item.trim()).filter(Boolean)
-));
+      formData.append("aashirwadBox", JSON.stringify(
+        aashirwadBox.map(item => item.trim()).filter(Boolean)
+      ));
 
-formData.append("ritualProcess", JSON.stringify(
-  ritualProcess.map((item, index) => ({
-    title: item.title,
-    description: item.description,
-    icon: item.icon,
-    stepNumber: item.stepNumber || index + 1
-  }))
-));
+      formData.append("ritualProcess", JSON.stringify(
+        ritualProcess.map((item, index) => ({
+          title: item.title, description: item.description, icon: item.icon, stepNumber: item.stepNumber || index + 1
+        }))
+      ));
 
-formData.append("about", JSON.stringify(
-  about.map(item => ({
-    title: item.title,
-    content: item.content,
-    image: item.image
-  }))
-));
+      formData.append("about", JSON.stringify(
+        about.map(item => ({ title: item.title, content: item.content, image: item.image }))
+      ));
 
-      if (image.bytes) {
-        formData.append("image", image.bytes);
-      }
+      if (image.bytes) formData.append("image", image.bytes);
 
-      galleryImages.forEach((img) => {
-        formData.append("galleryImages", img);
-      });
+      galleryImages.forEach((img) => formData.append("galleryImages", img));
 
-      let success;
-      if (editId) {
-        success = await updatePuja(editId, formData);
-      } else {
-        success = await createPuja(formData);
-      }
+      const success = editId
+        ? await updatePuja(editId, formData)
+        : await createPuja(formData);
 
       if (success) {
         Swal.fire({
@@ -1009,9 +784,7 @@ formData.append("about", JSON.stringify(
           title: `Puja ${editId ? 'Updated' : 'Created'} Successfully!`,
           showConfirmButton: false,
           timer: 1500
-        }).then(() => {
-          router.push('/pooja');
-        });
+        }).then(() => router.push('/pooja'));
       } else {
         throw new Error(`Failed to ${editId ? 'update' : 'create'} puja`);
       }
@@ -1033,7 +806,7 @@ formData.append("about", JSON.stringify(
     );
   }
 
-   const renderTabContent = () => {
+  const renderTabContent = () => {
     const props = {
       inputFieldDetail,
       setInputFieldDetail,
@@ -1071,6 +844,10 @@ formData.append("about", JSON.stringify(
       mobileImagePreview,
       handleMobileImageUpload,
       handleMainImageUpload,
+      // 🆕 Pass desktop image props
+      desktopImage,
+      desktopImagePreview,
+      handleDesktopImageUpload,
       vedicProcedure,
       setVedicProcedure,
       whyPerformReasons,
@@ -1084,10 +861,8 @@ formData.append("about", JSON.stringify(
     };
 
     switch (activeTab) {
-      case 0:
-        return <BasicInfoTab {...props} />;
-      case 1:
-        return <DetailsTab {...props} />;
+      case 0:  return <BasicInfoTab {...props} />;
+      case 1:  return <DetailsTab {...props} />;
       case 2:
         return (
           <BenefitsTab
@@ -1107,29 +882,18 @@ formData.append("about", JSON.stringify(
             fieldErrors={fieldErrors}
           />
         );
-      case 4:
-        return <WhoShouldBookTab {...props} />;
-      case 5:
-        return <WhyPerformTab {...props} />;
-      case 6:
-        return <WhyPerformReasonsTab {...props} />;
-      case 7:
-        return <AashirwadBoxTab {...props} />;
-      case 8:
-        return <RitualProcessTab {...props} />;
-      case 9:
-        return <PackagesTab {...props} />;
-      case 10:
-        return <TestimonialsTab {...props} />;
-      case 11:
-        return <FAQsTab {...props} />;
-      case 12:
-        return <AboutTab {...props} />;
-      default:
-        return <BasicInfoTab {...props} />;
+      case 4:  return <WhoShouldBookTab {...props} />;
+      case 5:  return <WhyPerformTab {...props} />;
+      case 6:  return <WhyPerformReasonsTab {...props} />;
+      case 7:  return <AashirwadBoxTab {...props} />;
+      case 8:  return <RitualProcessTab {...props} />;
+      case 9:  return <PackagesTab {...props} />;
+      case 10: return <TestimonialsTab {...props} />;
+      case 11: return <FAQsTab {...props} />;
+      case 12: return <AboutTab {...props} />;
+      default: return <BasicInfoTab {...props} />;
     }
   };
-
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -1148,12 +912,9 @@ formData.append("about", JSON.stringify(
                 <h1 className="text-2xl font-bold">
                   {mode} Puja: {pujaName || 'New Puja'}
                 </h1>
-                <p className="text-red-100 mt-1">
-                  Fill in all required details step by step
-                </p>
+                <p className="text-red-100 mt-1">Fill in all required details step by step</p>
               </div>
             </div>
-
             <div className="flex items-center gap-4">
               {imagePreview && (
                 <div className="relative w-16 h-16 rounded-full overflow-hidden border-4 border-white shadow-lg">
@@ -1173,27 +934,20 @@ formData.append("about", JSON.stringify(
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
         <div className="container mx-auto px-6">
           <div className="flex overflow-x-auto py-2 scrollbar-hide">
-            {tabs.map((tab) => {
-              const tabData = getCurrentTabData();
-              const isValid = validateTab(tab.id, tabData).success;
-
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-3 whitespace-nowrap font-medium text-sm transition-colors border-b-2 relative ${activeTab === tab.id
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-3 whitespace-nowrap font-medium text-sm transition-colors border-b-2 relative ${
+                  activeTab === tab.id
                     ? 'text-red-600 border-red-600 bg-red-50'
                     : 'text-gray-600 hover:text-gray-900 border-transparent hover:border-gray-300'
-                    }`}
-                >
-                  {tab.icon}
-                  {tab.label}
-                  {/* {activeTab > tab.id && isValid && (
-                    <CheckCircle className="w-4 h-4 text-green-500 absolute -top-1 -right-1" />
-                  )} */}
-                </button>
-              );
-            })}
+                }`}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -1209,7 +963,6 @@ formData.append("about", JSON.stringify(
               <div className="text-sm text-gray-500">
                 Step {activeTab + 1} of {tabs.length}
               </div>
-
               <div className="flex items-center gap-3">
                 <button
                   type="button"
@@ -1217,13 +970,14 @@ formData.append("about", JSON.stringify(
                     setActiveTab(prev => Math.max(0, prev - 1));
                     setValidationErrors([]);
                     setFieldErrors({});
-                    setHasAttemptedNext(false); // Reset validation state
+                    setHasAttemptedNext(false);
                   }}
                   disabled={activeTab === 0}
-                  className={`px-6 py-2.5 text-sm font-medium rounded-lg transition-all ${activeTab === 0
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
+                  className={`px-6 py-2.5 text-sm font-medium rounded-lg transition-all ${
+                    activeTab === 0
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
                 >
                   Previous
                 </button>
@@ -1258,9 +1012,6 @@ formData.append("about", JSON.stringify(
                 )}
               </div>
             </div>
-
-            {/* Validation Errors - Below Navigation */}
-            {/* REMOVED - No summary box needed */}
           </div>
         </form>
       </div>
@@ -1268,7 +1019,6 @@ formData.append("about", JSON.stringify(
   );
 };
 
-// Main Component with Suspense
 const AddPuja = () => {
   return (
     <Suspense fallback={
