@@ -380,7 +380,11 @@ function BroadcastNotificationContent() {
     <div className="min-h-screen bg-gray-50">
       {/* Top bar */}
       <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-        <div>
+        <div className=" flex gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-500 to-slate-700 flex items-center justify-center shadow-sm flex-shrink-0">
+            <img src="/image.png" alt="image" className="w-10 h-10 rounded-xl" />
+          </div>
+          <div>
           <h1 className="text-lg font-semibold text-gray-900">Broadcast Notification</h1>
           <div className="flex items-center gap-2 mt-0.5">
             <p className="text-xs text-gray-500">Send push notifications to registered devices</p>
@@ -392,6 +396,11 @@ function BroadcastNotificationContent() {
             )}
           </div>
         </div>
+        </div>
+
+
+        
+
         <button
           onClick={() => router.back()}
           className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition"
